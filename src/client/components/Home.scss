@@ -1,0 +1,22 @@
+.screen {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.wallpaper {
+    position: absolute;
+    overflow: hidden;
+    // pointer-events: none;
+}
+
+.wallpaper-landscape {
+    width: 100%;
+    height: auto;
+}
+
+.wallpaper-portrait {
+    width: auto;
+    height: 100%;
+}

@@ -1,0 +1,155 @@
+{
+  "name": "lidcer-website",
+  "version": "1.1.0",
+  "author": "Lidcer",
+  "description": "Lidcer Website",
+  "main": "index.js",
+  "engines": {
+    "node": "12.13.0"
+  },
+  "scripts": {
+    "test": "jest",
+    "clean": "rimraf dist",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "start": "node index.js",
+    "start:prod": "cross-env NODE_ENV=production node index.js",
+    "type-check-client": "tsc -p ./src/client/tsconfig.json",
+    "build-client": "cross-env NODE_ENV=production TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack -p",
+    "build-server": "tsc -b src",
+    "dev-client": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack-dev-server -w",
+    "dev-server": "tsc-watch --noClear -b ./src/tsconfig.json --onSuccess \"node index.js\"",
+    "dev": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run dev-server\" \"npm run dev-client\"",
+    "build": "concurrently --prefix \"[{name}]\" --names \"SERVER,CLIENT\" -c \"bgBlue.bold,bgGreen.bold\" \"npm run build-server\" \"npm run build-client\""
+  },
+  "keywords": [
+    "typescript",
+    "react",
+    "starter-kit",
+    "webpack",
+    "fullstack",
+    "express",
+    "express4",
+    "node"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lidcer/Lindows.git"
+  },
+  "license": "MIT",
+  "jest": {
+    "roots": [
+      "<rootDir>/src"
+    ],
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$",
+    "snapshotSerializers": [
+      "enzyme-to-json/serializer"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>/src/client/setupEnzyme.ts"
+    ],
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "globals": {
+      "ts-jest": {
+        "tsConfig": "<rootDir>/src/client/tsconfig-for-tests.json"
+      }
+    }
+  },
+  "dependencies": {
+    "@babel/plugin-proposal-decorators": "^7.8.3",
+    "@fortawesome/fontawesome-free-solid": "^5.0.13",
+    "@fortawesome/fontawesome-svg-core": "^1.2.27",
+    "@fortawesome/free-solid-svg-icons": "^5.12.1",
+    "@fortawesome/react-fontawesome": "^0.1.8",
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
+    "compress-str": "^1.0.2",
+    "dotenv": "^8.2.0",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "find-up": "^4.1.0",
+    "fingerprintjs2": "^2.1.0",
+    "loadsh": "0.0.4",
+    "lodash": "^4.17.15",
+    "mobile-detect": "^1.4.4",
+    "moment": "^2.24.0",
+    "react-svg": "^11.0.10",
+    "react-svg-loader": "^3.0.3",
+    "run": "^1.4.0",
+    "styled-components": "^5.0.0",
+    "tslib": "^1.10.0",
+    "ua-parser-js": "^0.7.21"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.3",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-numeric-separator": "^7.8.3",
+    "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
+    "@babel/plugin-transform-runtime": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
+    "@babel/preset-react": "^7.8.3",
+    "@babel/preset-typescript": "^7.8.3",
+    "@material-ui/core": "^4.9.0",
+    "@types/cssnano": "^4.0.0",
+    "@types/enzyme": "^3.10.4",
+    "@types/express": "^4.17.2",
+    "@types/fingerprintjs2": "^2.0.0",
+    "@types/jest": "^24.9.1",
+    "@types/node": "^12.12.18",
+    "@types/react": "^16.9.19",
+    "@types/ua-parser-js": "^0.7.33",
+    "@types/webpack": "^4.41.3",
+    "@types/webpack-bundle-analyzer": "^2.13.3",
+    "@types/webpack-dev-server": "^3.9.0",
+    "@types/webpack-manifest-plugin": "^2.1.0",
+    "@typescript-eslint/eslint-plugin": "^2.17.0",
+    "@typescript-eslint/parser": "^2.17.0",
+    "babel-loader": "^8.0.6",
+    "concurrently": "^5.1.0",
+    "core-js": "^3.6.4",
+    "cross-env": "^7.0.0",
+    "css-loader": "^3.4.2",
+    "cssnano": "^4.1.10",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.2",
+    "enzyme-to-json": "^3.4.3",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.9.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-react": "^7.18.0",
+    "file-loader": "^5.0.2",
+    "http-proxy-middleware": "^0.20.0",
+    "jest": "^25.1.0",
+    "node-sass": "^4.13.1",
+    "postcss-loader": "^3.0.0",
+    "prettier": "^1.19.1",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
+    "request": "^2.88.0",
+    "rimraf": "^3.0.0",
+    "sass-loader": "^8.0.2",
+    "style-loader": "^1.1.3",
+    "ts-jest": "^25.0.0",
+    "ts-node": "^8.6.2",
+    "tsc-watch": "^4.1.0",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^3.7.5",
+    "url-loader": "^3.0.0",
+    "webpack": "^4.41.5",
+    "webpack-bundle-analyzer": "^3.6.0",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1",
+    "webpack-manifest-plugin": "^2.2.0"
+  }
+}

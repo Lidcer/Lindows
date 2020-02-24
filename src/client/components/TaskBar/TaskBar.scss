@@ -1,0 +1,196 @@
+.aero {
+    filter: blur(6px);
+    backdrop-filter: blur(6px);
+    z-index: 20000 !important;
+}
+
+.hover {
+
+    transition: background-color 0.05s ease-out;
+
+    &:hover {
+        background-color: rgba($color: #ffffff, $alpha: 0.15);
+        transition: background-color 0.05s ease-out;
+    }
+}
+
+.task-bar {
+    color: white;
+    opacity: 100;
+    user-select: none;
+    overflow: hidden;
+    position: absolute;
+    z-index: 20010 !important;
+}
+
+.task-bar-background {
+    position: absolute;
+    z-index: 20005 !important;
+    opacity: 0.90;
+    background-color: black;
+    background-image: url(/assets/images/noise.png);
+
+}
+
+.task-bar-bottom {
+    position: absolute;
+    z-index: 10;
+    bottom: 0;
+    width: 100%;
+    height: 30pt;
+}
+
+.task-bar-top {
+    position: absolute;
+    z-index: 10;
+    top: 0;
+    width: 100%;
+    height: 30pt;
+}
+
+.task-bar-left {
+    position: absolute;
+    z-index: 10;
+    height: 100%;
+    width: 50pt;
+}
+
+.task-bar-right {
+    position: absolute;
+    height: 100%;
+    right: 0;
+    width: 50pt;
+}
+
+.task-bar-grid-hor {
+    display: grid;
+    grid-template-columns: repeat(2, min-content) auto repeat(5, min-content);
+    grid-template-rows: 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.task-bar-grid-ver {
+    display: grid;
+    grid-template-rows: repeat(2, min-content) auto repeat(5, min-content);
+    grid-template-columns: 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.task-bar-clock-hor {
+    @extend .hover;
+
+    font-size: 10pt;
+    text-align: center;
+    width: auto;
+    padding: 4pt;
+    //padding-right: 1pt;
+}
+
+.task-bar-clock-ver {
+    @extend .hover;
+
+    font-size: 8pt;
+
+    text-align: center;
+    width: 100%;
+    //padding: 0;
+    //padding-right: 1pt;
+
+    p {
+        padding: 0;
+        margin: 0;
+    }
+}
+
+
+.task-bar-show-desktop-hor {
+    @extend .hover;
+
+    width: 5pt;
+    height: 100%;
+    border-left: 1px solid rgba($color: #ffffff, $alpha: 0.25);
+
+}
+
+.task-bar-show-desktop-ver {
+    @extend .hover;
+
+    height: 5pt;
+    width: 100%;
+    border-top: 1px solid rgba($color: #ffffff, $alpha: 0.25);
+}
+
+
+.task-bar-start-btn-ver {
+    @extend .hover;
+    padding: 5pt;
+    //padding-left: 13pt;
+
+    text-align: center;
+
+    img {
+        height: 20pt;
+    }
+}
+
+.task-bar-start-btn-hor {
+    @extend .hover;
+    text-align: center;
+    padding: 5pt;
+    height: 20pt;
+
+    img {
+        height: 20pt;
+    }
+}
+
+.task-bar-notification-hor {
+    @extend .hover;
+    padding: 8pt;
+    font-size: 15pt;
+}
+
+.task-bar-notification-ver {
+    @extend .hover;
+    //text-align: center;
+    padding: 5pt 0;
+    align-items: center;
+    align-content: center;
+    text-align: center;
+    width: 100%;
+    font-size: 12pt;
+
+
+}
+
+.task-bar-open-icons {
+    height: 28pt;
+    width: 30pt;
+    padding-left: 7pt;
+    margin: 0;
+    align-items: center;
+    align-self: auto;
+
+    display: inline-flex;
+
+
+    border-bottom: 1pt solid #76b9ed;
+
+    &:hover {
+        background-color: transparentize($color: #ffffff, $amount: 0.75);
+    }
+
+}
+
+.task-bar-open-icon-active {
+    background-color: transparentize($color: #ffffff, $amount: 0.75);
+}
+
+.task-bar-icon {
+    height: 20pt;
+    width: 20pt;
+    padding: 0;
+    margin: 0;
+}

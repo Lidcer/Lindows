@@ -1,0 +1,42 @@
+.terminal {
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-name {
+    color: red;
+}
+
+.terminal-input {
+    background-color: transparent;
+    // border: none;
+    left: 0;
+    right: 0;
+    color: white;
+    size: auto;
+    white-space: pre;
+}
+
+.terminal-command-content {
+    white-space: pre;
+}
+
+
+.terminal-blinking-cursor {
+    color: white;
+    animation: 1s terminal-blink step-end infinite;
+    position: absolute;
+    margin-left: -2px;
+}
+
+@keyframes terminal-blink {
+
+    from,
+    to {
+        color: transparent;
+    }
+
+    50% {
+        color: white;
+    }
+}

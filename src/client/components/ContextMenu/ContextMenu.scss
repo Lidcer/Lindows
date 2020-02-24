@@ -1,0 +1,70 @@
+.context-menu {
+    position: fixed;
+    z-index: 999999;
+    color: white;
+    background-color: #2b2b2b;
+    border: 1px solid #808080;
+    padding: 5pt 2pt;
+
+}
+
+.context-menu-item {
+    padding: 5pt;
+
+    display: flex;
+
+    &:hover {
+        background-color: rgba($color: #ffffff, $alpha: 0.15);
+    }
+
+    img {
+        height: 10pt;
+        width: 10pt;
+        padding-right: 5pt;
+    }
+
+    svg {
+        height: 10pt;
+        width: 10pt;
+        padding-left: 5pt;
+        right: 0;
+    }
+
+}
+
+.context-column {
+    width: 100%;
+}
+
+.context-separator {
+    width: 100%;
+    height: 1px;
+    margin: 2pt 0pt;
+    background-color: #808080;
+    border-bottom: 1 solid #808080;
+}
+
+.context-empty-space {
+    height: 10pt;
+    width: 10pt;
+    padding-right: 5pt;
+}
+
+.context-disabled {
+    color: #616161;
+    padding: 5pt;
+
+    display: flex;
+
+    &:hover {
+        background-color: inherit;
+    }
+
+    img {
+        filter: grayscale(100%);
+    }
+
+    svg {
+        filter: grayscale(100%);
+    }
+}

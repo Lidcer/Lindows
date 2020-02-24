@@ -1,0 +1,17 @@
+.start-menu {
+    position: absolute;
+    width: 200pt;
+    height: 50pt;
+
+    background-color: black;
+    background-image: url(/assets/images/noise.png);
+    z-index: 500;
+}
+
+.start-menu-bottom {
+    bottom: 30pt;
+
+    transition: width 0.2s, height 0.2s;
+
+
+}

@@ -1,0 +1,33 @@
+.blue-screen {
+    position: absolute;
+    background-color: #0078d7;
+    color: white;
+    height: 100%;
+    width: 100%;
+}
+
+.bsod {
+    padding-left: 20%;
+    padding-right: 20%;
+
+}
+
+.bsod-title {
+    font-size: 10rem;
+    padding-top: 10vh;
+}
+
+.bsod-content {
+    font-size: 2rem;
+    padding-top: 1vh;
+}
+
+.bsod-waiting {
+    font-size: 2rem;
+    padding-top: 5vh;
+}
+
+.bsod-stop-code {
+    font-size: 1rem;
+    padding-top: 5vh;
+}
