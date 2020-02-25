@@ -1,4 +1,6 @@
-import { IWindow, IBounds } from '../BaseWindow/BaseWindow';
+import { IWindow, IBounds, BaseWindow } from '../BaseWindow/BaseWindow';
+
+import { random } from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface TerminalCommand {
@@ -12,12 +14,14 @@ export class TerminalCommand {
   private _command: string;
   private _args: string[];
   private _iWindow: IWindow;
-  private destroyed = false;
   private _IBounds: IBounds;
+  pr;
+  private destroyed = false;
 
-  constructor(entry?: string, window?: IWindow, bounds?: IBounds) {
+  constructor(entry?: string, window?: IWindow, bounds?: IBounds, iTerminal?: BaseWindow) {
     if (window) this._iWindow = { ...window };
     if (bounds) this._IBounds = { ...bounds };
+    if (iTerminal) this[random(0, 9999)] = iTerminal;
 
     if (!entry) return;
     this._args = entry.replace(/ \s/g, '').split(' ');
@@ -32,6 +36,10 @@ export class TerminalCommand {
 
   get content() {
     return this._content;
+  }
+
+  get args() {
+    return this._args;
   }
 
   get command() {
@@ -52,6 +60,10 @@ export class TerminalCommand {
 
   set _window(window: IWindow) {
     this._iWindow = { ...window };
+  }
+
+  isArg(arg: string): boolean {
+    return this._args.map(e => e.toLowerCase()).includes(arg.toLowerCase());
   }
 
   finish() {

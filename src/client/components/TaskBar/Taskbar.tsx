@@ -104,7 +104,7 @@ export class TaskBar extends React.Component<{}, IState> {
     if (indexOf !== -1) {
       state.runningApps.splice(indexOf, 1);
     }
-    this.setState(state)
+    this.setState(state);
     //console.log(`''`, !!app);
   };
 
@@ -131,17 +131,22 @@ export class TaskBar extends React.Component<{}, IState> {
     }
 
     const active = window.active ? window.active : !!sameInstance.find(a => a.active);
-    const multipleInstance = sameInstance.length > 1 ? 'task-bar-icon' : '';
+    const multipleInstance = sameInstance.length > 1;
     return (
       <div
         key={index}
         //  onClick={() => this.openAppClick(app)}
-        className={`task-bar-open-icons ${active ? 'task-bar-open-icon-active' : ''}`}
+        className={`task-bar-open-icons`}
       >
         <img className='task-bar-icon' src={window.state.options.image} alt={window.state.options.title} />
+        {multipleInstance ? this.multipleInstances() : null}
       </div>
     );
   };
+
+  multipleInstances() {
+    return <div className='task-bar-extended'></div>;
+  }
 
   generateIcons = (app: BaseWindow, index: number) => {
     return (

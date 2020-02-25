@@ -123,7 +123,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           terminalCommand.content = this.renderContentEmpty(entry);
           terminalCommand.finish();
           variables.history.push(terminalCommand);
-          variables.active = onTerminalCommand(this.options, this.bounds, entry);
+          variables.active = onTerminalCommand(this.options, this.bounds, entry, this);
 
           variables.history.push(variables.active);
           variables.active.onChange = () => {
@@ -162,7 +162,7 @@ export class Terminal extends BaseWindow<ITerminal> {
               this.currentTabSuggestion = uniq(
                 onTab(entry2)
                   .map(e => e.toLowerCase())
-                  .filter(e => e.startsWith(lastArgs))
+                  .filter(e => e.startsWith(lastArgs)),
               );
             }
             if (this.currentTabSuggestion[0]) {

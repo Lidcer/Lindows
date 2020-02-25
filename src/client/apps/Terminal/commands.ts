@@ -1,4 +1,4 @@
-import { IWindow, IBounds } from '../BaseWindow/BaseWindow';
+import { IWindow, IBounds, BaseWindow } from '../BaseWindow/BaseWindow';
 import { BaseCommand } from './commands/BaseCommand';
 import { TerminalCommand } from './TerminalCommand';
 
@@ -6,7 +6,7 @@ import { TerminalCommand } from './TerminalCommand';
 import * as neofetch from './commands/leofetch';
 import * as terminal from './commands/terminal';
 import * as taskManager from './commands/taskManager';
-import * as bluescreen from './commands/bluescreen';
+import * as take from './commands/take';
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 interface Commands {
@@ -18,14 +18,14 @@ export const COMMANDS: Commands[] = [
   { commands: neofetch.COMMANDS, object: tr => new neofetch.Leofetch(tr) },
   { commands: terminal.COMMANDS, object: tr => new terminal.Terminal(tr) },
   { commands: taskManager.COMMANDS, object: tr => new taskManager.TaskManager(tr) },
-  { commands: bluescreen.COMMANDS, object: tr => new bluescreen.Bluescreen(tr) },
+  { commands: take.COMMANDS, object: tr => new take.Take(tr) },
 ];
 
-export function onTerminalCommand(options: IWindow, bounds: IBounds, entry: string) {
+export function onTerminalCommand(options: IWindow, bounds: IBounds, entry: string, iTerminal: BaseWindow) {
   const args = entry.replace(/ \s/g, '').split(' ');
   const command = args.shift();
   const commandClass = COMMANDS.find(o => o.commands.find(c => c.toLowerCase() === command.toLowerCase()));
-  const tr = new TerminalCommand(entry, options, bounds);
+  const tr = new TerminalCommand(entry, options, bounds, iTerminal);
 
   if (commandClass) {
     setTimeout(() => {
