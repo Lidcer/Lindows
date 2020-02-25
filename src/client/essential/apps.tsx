@@ -1,6 +1,6 @@
-import { Terminal } from './apps/Terminal/Terminal';
-import { TaskManager } from './apps/TaskManager/TaskManager';
-import { processor } from './essential/processor';
+import { Terminal } from '../apps/Terminal/Terminal';
+import { TaskManager } from '../apps/TaskManager/TaskManager';
+import { processor } from './processor';
 import React from 'react';
 
 export declare type reactGeneratorFunction = (id: number) => JSX.Element;
@@ -11,7 +11,7 @@ interface AllApps {
   app: reactGeneratorFunction;
 }
 
-const allApps: AllApps[] = [
+export const allApps: AllApps[] = [
   { name: 'terminal', app: (id: number) => <Terminal key={id} id={id}></Terminal> },
   {
     name: 'taskmanager',

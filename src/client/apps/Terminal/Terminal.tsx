@@ -189,7 +189,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           if (variables.afterCursor.length !== 0) {
             const newAfterCursor = variables.afterCursor.split('');
             const addCharacter = newAfterCursor.shift();
-            variables.beforeCursor = `${variables.beforeCursor} ${addCharacter} `;
+            variables.beforeCursor = `${variables.beforeCursor}${addCharacter}`;
             variables.afterCursor = newAfterCursor.join('');
           }
           break;

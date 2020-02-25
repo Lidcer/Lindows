@@ -1,6 +1,6 @@
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
-import { launchApp } from '../../../apps';
+import { launchApp } from '../../../essential/apps';
 
 export const COMMANDS = ['lterminal'];
 

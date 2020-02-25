@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { processor } from '../../essential/processor';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
-import { StartMenu } from '../StartMenu/StartMenu';
+import { StartMenu, IStartMenuProps } from '../StartMenu/StartMenu';
 
 interface IState {
   time: string;
@@ -64,7 +64,7 @@ export class TaskBar extends React.Component<{}, IState> {
   render() {
     return (
       <>
-        {this.state.startMenu ? <StartMenu></StartMenu> : null}
+        {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu}></StartMenu> : null}
         <div className={this.getNavBarPosition('aero')}></div>
         <div className={this.getNavBarPosition('task-bar-background')}></div>
         <div className={this.getNavBarPosition(`task-bar-grid-${this.orientation} task-bar`)}>
@@ -85,11 +85,18 @@ export class TaskBar extends React.Component<{}, IState> {
             <p>{this.state.date}</p>
           </div>
           {this.getIcon()}
-          <div className={`task-bar-show-desktop-${this.orientation}`}></div>
+          <div className={`task-bar-show-desktop-${this.orientation}`} onClick={this.showDesktop}></div>
         </div>
       </>
     );
   }
+
+  appClickStartMenu = (name: string) => {
+    console.log('working');
+    this.setState({
+      startMenu: false,
+    });
+  };
 
   onAppAdd = (window: BaseWindow) => {
     const state = { ...this.state };
@@ -195,6 +202,11 @@ export class TaskBar extends React.Component<{}, IState> {
       default:
         return false;
     }
+  }
+
+  private showDesktop(event: React.MouseEvent) {
+    const pross = processor.processes.filter(a => !a.minimized);
+    console.log(pross.length);
   }
 
   getNavBarPosition(classes: string) {

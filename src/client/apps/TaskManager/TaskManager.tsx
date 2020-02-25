@@ -29,7 +29,7 @@ export class TaskManager extends BaseWindow {
     return (
       <div className='task-manager'>
         <span>
-          {processor.getProcesses().length} | {processor.getProcesses().filter(e => e.minimized).length}
+          {processor.processes.length} | {processor.processes.filter(e => e.minimized).length}
         </span>
         <table>
           <tbody>
@@ -49,7 +49,7 @@ export class TaskManager extends BaseWindow {
   }
 
   killAll = () => {
-    processor.getProcesses().forEach(e => {
+    processor.processes.forEach(e => {
       if (e !== this) e.exit();
     });
     setTimeout(() => {
@@ -66,7 +66,7 @@ export class TaskManager extends BaseWindow {
   };
 
   get renderList() {
-    return processor.getProcesses().map(this.getItem);
+    return processor.processes.map(this.getItem);
   }
 
   getItem = (window: BaseWindow, index: number) => {

@@ -4,7 +4,7 @@ import fingerprintjs from 'fingerprintjs2';
 import { UAParser } from 'ua-parser-js';
 import { random } from 'lodash';
 import React from 'react';
-import { reactGeneratorFunction } from '../apps';
+import { reactGeneratorFunction } from './apps';
 import * as MobileDetect from 'mobile-detect';
 import { browserStorage } from './browserStorage';
 
@@ -113,7 +113,7 @@ class IProcessor extends EventEmitter {
     return this._uptime;
   }
 
-  getProcesses() {
+  get processes() {
     return this.lindowsProcesses;
   }
 

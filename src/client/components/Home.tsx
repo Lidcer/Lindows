@@ -8,7 +8,7 @@ import Axios from 'axios';
 import { Terminal } from '../apps/Terminal/Terminal';
 import { TaskManager } from '../apps/TaskManager/TaskManager';
 import { processor } from '../essential/processor';
-import { launchApp } from '../apps';
+import { launchApp } from '../essential/apps';
 import { HotKeyHandler, Keypress } from '../essential/apphotkeys';
 import { StartMenu } from './StartMenu/StartMenu';
 import { BlueScreen } from './BlueScreen/BlueScreen';
@@ -106,7 +106,7 @@ export class Home extends React.Component<{}, IState> {
     this.terminal.on('combination', this.openTerminal);
     this.killActiveWindow = new HotKeyHandler([Keypress.Alt, Keypress.Four], true);
     this.killActiveWindow.on('combination', () => {
-      const active = processor.getProcesses().find(p => p.active);
+      const active = processor.processes.find(p => p.active);
       if (active) active.exit();
     });
 

@@ -15,3 +15,14 @@
 
 
 }
+
+
+.task-bar-item {
+    height: 10pt;
+    border-radius: 5pt;
+    padding: 10pt;
+
+    &:hover {
+        background-color: transparentize($color: #ffffff, $amount: 0.75);
+    }
+}
