@@ -1,5 +1,13 @@
 import { EventEmitter } from 'events';
 
+import * as Axios from 'axios';
+
+console.log('sending')
+Axios.default.post('/api/v1/users', {
+  firstName: 'Finn',
+  lastName: 'Williams'
+})
+
 export enum Keypress {
   Q = 81,
   W = 87,
