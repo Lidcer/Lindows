@@ -6,10 +6,8 @@ import { faTimes, faWindowMaximize, faWindowMinimize, faWindowRestore } from '@f
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { processor } from '../../essential/processor';
 import { random, clamp } from 'lodash';
-import { HotKeyHandler, Keypress } from '../../essential/apphotkeys';
-import { keys } from '@material-ui/core/styles/createBreakpoints';
 
-const defaultImage = './assets/images/unknown-app.svg';
+const DEFAULT_APP_IMAGE = './assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
   id: number;
@@ -47,6 +45,12 @@ export interface IBaseWindowState {
   height: number;
   active: boolean;
   variables?: any;
+}
+
+export interface IManifest {
+  launchName: string; // lowercase cannot without spaces
+  fullAppName: string; // displayed name on app
+  icon: string; // Default app icon
 }
 
 export interface IBounds {
@@ -709,7 +713,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
       minimizeButton: options.minimizeButton === undefined ? 'shown' : options.minimizeButton,
       maximized: options.maximized === undefined ? false : options.maximized,
       minimized: options.minimized === undefined ? false : options.minimized,
-      image: options.image === undefined ? defaultImage : options.image,
+      image: options.image === undefined ? DEFAULT_APP_IMAGE : options.image,
       showIcon: options.showIcon === undefined ? true : options.showIcon,
       title: options.title === undefined ? 'Lindow app' : options.title,
       maximizeRestoreDownButton:

@@ -1,7 +1,7 @@
 import { TerminalCommand } from '../TerminalCommand';
 
 export abstract class BaseCommand {
-  constructor(protected terminalCommand: TerminalCommand) { }
+  constructor(protected terminalCommand: TerminalCommand) {}
 
   public abstract onStart(): void;
 

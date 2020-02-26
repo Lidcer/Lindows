@@ -1,4 +1,4 @@
-import { BaseWindow, IWindow, IBaseWindowProps } from '../BaseWindow/BaseWindow';
+import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import { uniq } from 'lodash';
 import React from 'react';
 import './Terminal.scss';
@@ -15,6 +15,12 @@ interface ITerminal {
   active: TerminalCommand;
   history: TerminalCommand[];
 }
+
+export const manifest: IManifest = {
+  fullAppName: 'Terminal',
+  launchName: 'lterminal',
+  icon: './assets/images/appsIcons/Terminal.svg',
+};
 
 export class Terminal extends BaseWindow<ITerminal> {
   private currentTabSuggestion: string[] = [];
@@ -37,7 +43,7 @@ export class Terminal extends BaseWindow<ITerminal> {
     this.changeOptions({
       showIcon: true,
       title: 'Terminal',
-      image: './assets/images/terminal.svg',
+      image: manifest.icon,
     });
   }
 

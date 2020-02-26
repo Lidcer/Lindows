@@ -6,23 +6,43 @@
     background-color: black;
     background-image: url(/assets/images/noise.png);
     z-index: 500;
+    padding: 5pt;
 }
 
 .start-menu-bottom {
     bottom: 30pt;
 
     transition: width 0.2s, height 0.2s;
-
-
 }
 
 
 .task-bar-item {
-    height: 10pt;
-    border-radius: 5pt;
-    padding: 10pt;
+    margin: 1pt;
+    height: 25pt;
+    padding: 1pt;
+    padding-left: 10pt;
+
+    font-size: 12pt;
+
+    color: white;
 
     &:hover {
         background-color: transparentize($color: #ffffff, $amount: 0.75);
+        border: 1pt solid rgba(255, 255, 255, 0.5);
     }
+
+    img {
+
+        padding: 0;
+        margin: 1pt;
+        width: 22pt;
+        height: 22pt;
+    }
+
+    span {
+        position: relative;
+        left: 10pt;
+        bottom: 10pt;
+    }
+
 }

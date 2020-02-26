@@ -29,8 +29,11 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
 
   renderApps() {
     return allApps.map((e, i) => (
-      <div className='task-bar-item' key={i} onClick={() => this.runApp(e.name)}>
-        {e.name}
+      <div key={i}>
+        <div className='task-bar-item' key={i} onClick={() => this.runApp(e.manifest.launchName)}>
+          <img src={e.manifest.icon} alt={e.manifest.launchName} />
+          <span>{e.manifest.fullAppName}</span>
+        </div>
       </div>
     ));
   }

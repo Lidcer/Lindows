@@ -3,6 +3,12 @@ import React from 'react';
 import { processor } from '../../essential/processor';
 import './taskManager.scss';
 
+export const manifest: IManifest = {
+  fullAppName: 'TaskManager',
+  launchName: 'taskmgr',
+  icon: './assets/images/appsIcons/TaskManager.svg',
+};
+
 export class TaskManager extends BaseWindow {
   private selected: BaseWindow;
   constructor(props: IBaseWindowProps) {
@@ -11,7 +17,7 @@ export class TaskManager extends BaseWindow {
   onStartUp() {
     this.changeOptions({
       title: 'Task Manager',
-      image: './assets/images/TaskManager.svg',
+      image: manifest.icon,
     });
 
     processor.on('appAdd', this.update);
