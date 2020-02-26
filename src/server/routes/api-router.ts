@@ -9,7 +9,6 @@ export function apiRouter() {
   router.use(bodyParser.json());
 
   router.post('/api/v1/users', (req, res) => {
-    console.log(req.body, req.params, req);
     userPost(req, res);
   });
 

@@ -1,5 +1,4 @@
 import { Mongoose, ConnectionOptions } from 'mongoose';
-import { getUserById } from '../db';
 import { DATABASE_CONNECTION_STRING } from '../config';
 
 const options: ConnectionOptions = {
@@ -22,3 +21,5 @@ export function connectToDB(): Promise<void> {
       });
   });
 }
+
+connectToDB();
