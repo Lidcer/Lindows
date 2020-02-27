@@ -18,7 +18,7 @@ export interface IMongooseUserSchema extends Document {
   permissions: string[];
 }
 
-interface accountResponse {
+interface IAccountResponse {
   _id: string;
   permissions: string[];
 }
@@ -51,10 +51,10 @@ const UserSchema = new Schema(
 const MongoUser = mongoose.model<IMongooseUserSchema>('User', UserSchema);
 
 export function getUserById(): Promise<void> {
-  return new Promise((resolve, reject) => {});
+  return new Promise((resolve, reject) => { });
 }
 
-export function createUser(username: string, email: string, password: string, ip: string): Promise<accountResponse> {
+export function createUser(username: string, email: string, password: string, ip: string): Promise<IAccountResponse> {
   return new Promise(async (resolve, rejects) => {
     let hashedPassword: string;
     try {
@@ -75,7 +75,7 @@ export function createUser(username: string, email: string, password: string, ip
       });
       const result = await schema.save();
 
-      const response: accountResponse = {
+      const response: IAccountResponse = {
         _id: result._id,
         permissions: [],
       };
