@@ -12,6 +12,7 @@ import { launchApp } from '../essential/apps';
 import { HotKeyHandler, Keypress } from '../essential/apphotkeys';
 import { StartMenu } from './StartMenu/StartMenu';
 import { BlueScreen } from './BlueScreen/BlueScreen';
+import { connect } from 'socket.io-client';
 //import mySvg from '../../../assets/images/bliss.svg';
 
 interface IState {

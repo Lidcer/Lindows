@@ -1,6 +1,7 @@
 import React from 'react';
 import './Cursor.scss';
 import { EventEmitter } from 'events';
+import { webSocket } from '../../websocetComunication';
 interface IState {
   cursorType: CursorType;
   cursor: {
@@ -58,12 +59,18 @@ export class Cursor extends React.Component<{}, IState> {
   componentDidMount() {
     window.addEventListener('mousemove', this.mouseMove, false);
     mousePointer.on('change', this.onMouseChangeFixPos);
+    webSocket.on('mousemove', this.remoteMouseMove);
   }
 
   componentWillUnmount() {
     window.removeEventListener('mousemove', this.mouseMove, false);
     mousePointer.removeListener('change', this.onMouseChangeFixPos);
+    webSocket.on('mousemove', this.remoteMouseMove);
   }
+
+  remoteMouseMove = (mouse: any) => {
+    this.setState(mouse);
+  };
 
   onMouseChangeFixPos = (cursorType: CursorType) => {
     switch (cursorType) {
@@ -136,6 +143,11 @@ export class Cursor extends React.Component<{}, IState> {
     }
 
     deg = this.correctAngle(deg);
+
+    //DEV CODE REMOVE
+    webSocket.emit('mousemove', {
+      cursor: { x, y, rotate: deg },
+    });
 
     this.setState({
       cursor: {
