@@ -5,9 +5,15 @@ export interface IUserDTO {
   imageUrl: string;
 }
 
-export interface IAccountRequest {
+export interface IAccountRegisterRequest {
   username: string;
   password: string;
   passwordRepeat: string;
+  email: string;
+}
+
+export interface IAccountLoginRequest {
+  username: string;
+  password: string;
   email: string;
 }

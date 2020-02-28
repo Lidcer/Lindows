@@ -1,6 +1,8 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
-import { userGet, userPost } from './users';
+import { registerUser, loginUser, resetPassword, deleteAccount, changeEmail, verifyUser } from './users';
+
+export const verificationApi = '/api/v1/users/verifyAccount/';
 
 export function apiRouter() {
   const router = Router();
@@ -8,21 +10,28 @@ export function apiRouter() {
   // parse application/json
   router.use(bodyParser.json());
 
-  router.post('/api/v1/users', (req, res) => {
-    userPost(req, res);
+  router.post('/api/v1/users/register', (req, res) => {
+    registerUser(req, res);
   });
 
-  router.get('/api/v1/users/:userId', (req, res) => {
-    userGet(req, res);
+  router.get('/api/v1/users/login', (req, res) => {
+    loginUser(req, res);
   });
 
-  router.get('/api/v1/', (req, res) => {
-    const userId = req.params.userId;
-    res.json({ test: 'setse' });
+  router.get(`${verificationApi}:verificationCodeId`, (req, res) => {
+    verifyUser(req, res);
   });
 
-  router.post('/api/set-user', (req, res) => {
-    res.send(`ok`);
+  router.post('/api/v1/users/reset_password', (req, res) => {
+    resetPassword(req, res);
+  });
+
+  router.post('/api/v1/users/change_email', (req, res) => {
+    changeEmail(req, res);
+  });
+
+  router.post('/api/v1/users/delete_account', (req, res) => {
+    deleteAccount(req, res);
   });
 
   return router;

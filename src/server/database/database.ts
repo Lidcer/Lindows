@@ -5,6 +5,7 @@ const options: ConnectionOptions = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
   useFindAndModify: true,
+  useCreateIndex: true,
 };
 
 export const mongoose = new Mongoose();

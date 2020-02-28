@@ -2,6 +2,8 @@ import { Schema, model, Document } from 'mongoose';
 import { mongoose } from './database';
 import { hashPassword } from './passwordHasher';
 import * as Joi from '@hapi/joi';
+import { resolve } from 'dns';
+import { rejects } from 'assert';
 
 export interface IMongooseUserSchema extends Document {
   username: string;
@@ -50,11 +52,48 @@ const UserSchema = new Schema(
 
 const MongoUser = mongoose.model<IMongooseUserSchema>('User', UserSchema);
 
-export function getUserById(): Promise<void> {
-  return new Promise((resolve, reject) => { });
+export function getUserById(id: string): Promise<IMongooseUserSchema> {
+  return new Promise((resolve, reject) => {
+    MongoUser.findById(id)
+      .then(user => {
+        resolve(user);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
 }
 
-export function createUser(username: string, email: string, password: string, ip: string): Promise<IAccountResponse> {
+export function findUserByName(username: string): Promise<IMongooseUserSchema> {
+  return new Promise((resolve, reject) => {
+    MongoUser.findOne({ username })
+      .then(users => {
+        resolve(users);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+}
+
+export function findUserByEmail(email: string): Promise<IMongooseUserSchema> {
+  return new Promise((resolve, reject) => {
+    MongoUser.findOne({ email })
+      .then(users => {
+        resolve(users);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+}
+
+export function registerUserInDatabase(
+  username: string,
+  email: string,
+  password: string,
+  ip: string,
+): Promise<IAccountResponse> {
   return new Promise(async (resolve, rejects) => {
     let hashedPassword: string;
     try {
@@ -86,16 +125,3 @@ export function createUser(username: string, email: string, password: string, ip
     }
   });
 }
-
-export const userAccount = Joi.object({
-  username: Joi.string()
-    .alphanum()
-    .min(3)
-    .max(30)
-    .required(),
-
-  password: Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$')),
-  repeatPassword: Joi.ref('password'),
-
-  email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
-}).with('password', 'repeatPassword');
