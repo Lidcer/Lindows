@@ -60,12 +60,14 @@ export class Cursor extends React.Component<{}, IState> {
     window.addEventListener('mousemove', this.mouseMove, false);
     mousePointer.on('change', this.onMouseChangeFixPos);
     webSocket.on('mousemove', this.remoteMouseMove);
+    document.getElementsByTagName('body')[0].style.cursor = 'none';
   }
 
   componentWillUnmount() {
     window.removeEventListener('mousemove', this.mouseMove, false);
     mousePointer.removeListener('change', this.onMouseChangeFixPos);
     webSocket.on('mousemove', this.remoteMouseMove);
+    document.getElementsByTagName('body')[0].style.cursor = '';
   }
 
   remoteMouseMove = (mouse: any) => {

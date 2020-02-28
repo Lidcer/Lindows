@@ -1,6 +1,7 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import './AccountManager.scss';
 import React from 'react';
+import { AccountManagerWebpage } from './AccountManagerWebpage';
 
 export const manifest: IManifest = {
   fullAppName: 'Account Manager',
@@ -19,6 +20,6 @@ export class AccountManager extends BaseWindow {
     });
   }
   renderInside() {
-    return <div>Working</div>;
+    return <AccountManagerWebpage window={true}></AccountManagerWebpage>;
   }
 }

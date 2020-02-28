@@ -1,8 +1,8 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
-import { registerUser, loginUser, resetPassword, deleteAccount, changeEmail, verifyUser } from './users';
+import { registerUser, loginUser, deleteAccount, changeEmail, verifyUser, changePassword } from './users';
 
-export const verificationApi = '/api/v1/users/verifyAccount/';
+export const verificationApi = '/api/v1/users/verify/';
 
 export function apiRouter() {
   const router = Router();
@@ -23,7 +23,7 @@ export function apiRouter() {
   });
 
   router.post('/api/v1/users/reset_password', (req, res) => {
-    resetPassword(req, res);
+    changePassword(req, res);
   });
 
   router.post('/api/v1/users/change_email', (req, res) => {

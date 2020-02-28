@@ -1,9 +1,20 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { registerUserInDatabase, findUserByName, findUserByEmail } from '../database/Users';
+import {
+  registerUserInDatabase,
+  findUserByName,
+  findUserByEmail,
+  getUserByAccountOrEmail,
+  changePasswordOnAccount,
+} from '../database/Users';
 import { PRIVATE_KEY } from '../config';
-import { registerUserJoi, loginUserJoi } from '../../shared/joi';
-import { IAccountRegisterRequest, IAccountLoginRequest } from '../../shared/ApiRequests';
+import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi } from '../../shared/joi';
+import {
+  IAccountRegisterRequest,
+  IAccountLoginRequest,
+  IAccountChangePasswordRequest,
+  IAccountChangeEmailRequest,
+} from '../../shared/ApiRequests';
 import { verifyPassword } from '../database/passwordHasher';
 import { sendMail } from '../mail';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
@@ -16,10 +27,8 @@ interface IUserResolve {
 export async function registerUser(req: Request, res: Response) {
   const accountRequest: IAccountRegisterRequest = req.body;
 
-  const obj = registerUserJoi.validate(accountRequest);
-  if (obj.error) {
-    return res.status(400).json(obj);
-  }
+  const joiResult = registerUserJoi.validate(accountRequest);
+  if (joiResult.error) return res.status(400).json(joiResult);
 
   try {
     const userUserName = await findUserByName(accountRequest.username);
@@ -38,7 +47,7 @@ export async function registerUser(req: Request, res: Response) {
       req.ip,
     );
     const code = generateVerificationCode();
-    await addVerificationCodeToDatabase(result._id, code, 'mail-verification');
+    await addVerificationCodeToDatabase(result._id, code, 'verify-account');
     const verificationUrl = `${req.host}${verificationApi}${code}`;
 
     const text = `Please verify your account on: ${verificationUrl}`;
@@ -62,13 +71,8 @@ export async function loginUser(req: Request, res: Response) {
     return res.status(400).json(obj);
   }
 
-  const userUserName = await findUserByName(accountLoginRequest.username);
-  const userEmail = await findUserByEmail(accountLoginRequest.email);
-
-  const user = userUserName ? userUserName : userEmail;
-  if (!user) {
-    if (userEmail || userUserName) return res.status(400).json({ error: 'User does not exist' });
-  }
+  const user = await getUserByAccountOrEmail(accountLoginRequest.username, accountLoginRequest.email);
+  if (!user) return res.status(400).json({ error: 'User does not exist' });
 
   //TODO: Add spam protection
   try {
@@ -99,12 +103,55 @@ export function deleteAccount(req: Request, res: Response) {
   return res.status(501);
 }
 
-export function resetPassword(req: Request, res: Response) {
-  return res.status(501);
+export async function changePassword(req: Request, res: Response) {
+  const accountChangePasswordRequest: IAccountChangePasswordRequest = req.body;
+
+  const joiResult = changePasswordJoi.validate(accountChangePasswordRequest);
+  if (joiResult.error) return res.status(400).json(joiResult);
+
+  const user = await getUserByAccountOrEmail(accountChangePasswordRequest.username, accountChangePasswordRequest.email);
+  if (!user) return res.status(400).json({ error: 'User does not exist' });
+
+  try {
+    const code = generateVerificationCode();
+    await addVerificationCodeToDatabase(user._id, code, 'password-change', accountChangePasswordRequest.newPassword);
+
+    const verificationUrl = `${req.host}${verificationApi}${code}`;
+    const text = `Please verify your new password on: ${verificationUrl}`;
+    const html = `Please verify your new password on: <a>${verificationUrl}</a>`;
+
+    await sendMail(accountChangePasswordRequest.email, 'Verification code', text, html);
+
+    await changePasswordOnAccount(user, accountChangePasswordRequest.newPassword);
+    return res.status(200).json({ status: 'Success' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
-export function changeEmail(req: Request, res: Response) {
-  return res.status(501);
+export async function changeEmail(req: Request, res: Response) {
+  const accountChangeEmailRequest: IAccountChangeEmailRequest = req.body;
+
+  const joiResult = changeEmailJoi.validate(accountChangeEmailRequest);
+  if (joiResult.error) return res.status(400).json(joiResult);
+
+  const user = await getUserByAccountOrEmail(accountChangeEmailRequest.username, accountChangeEmailRequest.email);
+  if (!user) return res.status(400).json({ error: 'User does not exist' });
+
+  try {
+    const code = generateVerificationCode();
+    await addVerificationCodeToDatabase(user._id, code, 'email-change', accountChangeEmailRequest.newEmail);
+
+    const verificationUrl = `${req.host}${verificationApi}${code}`;
+    const text = `Please verify your new email on: ${verificationUrl}`;
+    const html = `Please verify your new email on: <a>${verificationUrl}</a>`;
+
+    await sendMail(accountChangeEmailRequest.newEmail, 'Verification code', text, html);
+
+    return res.status(200).json({ status: 'Email sent' });
+  } catch (error) {
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 }
 
 export function userGet(req: Request, res: Response) {

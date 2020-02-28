@@ -76,13 +76,15 @@
   grid-row-gap: 0px;
 }
 
+
 .task-bar-clock-hor {
   @extend .hover;
 
   font-size: 10pt;
   text-align: center;
   width: auto;
-  padding: 4pt;
+  height: auto;
+  padding: 0 4pt;
   //padding-right: 1pt;
 }
 
@@ -93,13 +95,9 @@
 
   text-align: center;
   width: 100%;
-  //padding: 0;
+  padding: 0;
   //padding-right: 1pt;
 
-  p {
-    padding: 0;
-    margin: 0;
-  }
 }
 
 .task-bar-show-desktop-hor {
@@ -134,7 +132,6 @@
   @extend .hover;
   text-align: center;
   padding: 5pt;
-  height: 20pt;
 
   img {
     height: 20pt;

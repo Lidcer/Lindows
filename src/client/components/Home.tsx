@@ -143,6 +143,7 @@ export class Home extends React.Component<{}, IState> {
         this.setState({ ready: true });
       };
       processor.on('infoReady', update);
+      launchApp('accountmgr');
     }
 
     if (!customWallpaper) return;

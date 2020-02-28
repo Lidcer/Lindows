@@ -81,8 +81,8 @@ export class TaskBar extends React.Component<{}, IState> {
           <p></p>
 
           <div className={`task-bar-clock-${this.orientation}`}>
-            <p>{this.state.time}</p>
-            <p>{this.state.date}</p>
+            <div>{this.state.time}</div>
+            <div>{this.state.date}</div>
           </div>
           {this.getIcon()}
           <div className={`task-bar-show-desktop-${this.orientation}`} onClick={this.showDesktop}></div>

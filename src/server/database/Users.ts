@@ -1,9 +1,6 @@
 import { Schema, model, Document } from 'mongoose';
 import { mongoose } from './database';
 import { hashPassword } from './passwordHasher';
-import * as Joi from '@hapi/joi';
-import { resolve } from 'dns';
-import { rejects } from 'assert';
 
 export interface IMongooseUserSchema extends Document {
   username: string;
@@ -122,6 +119,49 @@ export function registerUserInDatabase(
       resolve(response);
     } catch (error) {
       return rejects(error);
+    }
+  });
+}
+
+export function getUserByAccountOrEmail(username: string, email?: string): Promise<IMongooseUserSchema> {
+  return new Promise(async (resolve, reject) => {
+    if (!email) email = username;
+
+    const userUserName = await findUserByName(username);
+    if (userUserName) {
+      resolve(userUserName);
+      return;
+    }
+    const userEmail = await findUserByEmail(email);
+    if (userEmail) {
+      resolve(userEmail);
+      return;
+    }
+    reject();
+  });
+}
+
+export function changePasswordOnAccount(user: IMongooseUserSchema, newPassword: string): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const hashedPassword = await hashPassword(newPassword);
+      user.password = hashedPassword;
+      user.save();
+      resolve();
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+export function changeEmailOnAccount(user: IMongooseUserSchema, email: string): Promise<void> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      user.email = email;
+      user.save();
+      resolve();
+    } catch (error) {
+      reject(error);
     }
   });
 }
