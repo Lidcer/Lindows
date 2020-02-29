@@ -2,10 +2,18 @@ import React from 'react';
 import './BaseWindow.scss';
 import { mousePointer, CursorType } from '../../components/Cursor/Cursor';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes, faWindowMaximize, faWindowMinimize, faWindowRestore } from '@fortawesome/free-solid-svg-icons';
+
+import {
+  faTimes,
+  faWindowMaximize,
+  faWindowMinimize,
+  faWindowRestore,
+  faFile,
+} from '@fortawesome/free-solid-svg-icons';
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { processor } from '../../essential/processor';
 import { random, clamp } from 'lodash';
+import { browserStorage } from '../../essential/browserStorage';
 
 const DEFAULT_APP_IMAGE = './assets/images/unknown-app.svg';
 
@@ -23,11 +31,16 @@ export interface IWindow {
   startPos?: 'center' | 'random' | 'card';
   width?: number;
   height?: number;
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
   windowType?: 'borderless' | 'windowed' | 'fullscreen';
   resizable?: boolean;
   closeButton?: 'shown' | 'disabled' | 'hidden';
   maximizeRestoreDownButton?: 'shown' | 'disabled' | 'hidden';
   minimizeButton?: 'shown' | 'disabled' | 'hidden';
+  redirectToWebpageButton?: string;
   maximized?: boolean;
   minimized?: boolean;
   image?: string;
@@ -78,12 +91,13 @@ export interface BaseWindow<A = {}> extends React.Component<IBaseWindowProps, IB
   onClose?(): void;
   onFocus?(): void;
   onBlur?(): void;
+  _onReady?(): void;
   resize?(width: number, height: number): void;
 }
 
 export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IBaseWindowState> {
-  private readonly minHeight = 250;
-  private readonly minWidth = 250;
+  private minHeight = 250;
+  private minWidth = 250;
   private titleBarOffsetX: number;
   private titleBarOffsetY: number;
   private isWindowMoving = false;
@@ -96,21 +110,28 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
   private ref: React.RefObject<HTMLDivElement>;
   private wasActive = false;
   private ignoreMouse = false;
-  private isPhone = null;
+  private phone = null;
   private destroyed = false;
-
+  private manifest: IManifest;
   private memorizedState = {
     x: 0,
     y: 0,
   };
 
-  constructor(props: IBaseWindowProps, options?: IWindow, variables?: Readonly<A>) {
+  constructor(props: IBaseWindowProps, manifest: IManifest, options?: IWindow, variables?: Readonly<A>) {
     super(props);
-    this.isPhone = processor.mobileDetect().phone();
-
+    this.manifest = manifest;
+    Object.seal(this.manifest);
+    this.phone = processor.mobileDetect().phone();
     this.ref = React.createRef();
+    this.minWidth = options && options.minWidth ? options.minWidth : this.minWidth;
+    this.minHeight = options && options.minHeight ? options.minHeight : this.minHeight;
+
     let width = options && options.width ? options.width : this.minWidth;
     let height = options && options.height ? options.height : this.minHeight;
+    if (height < this.minHeight) height = this.minHeight;
+    if (width < this.minWidth) width = this.minWidth;
+
     width = clamp(width, 0, window.innerWidth);
     height = clamp(height, 0, window.innerHeight);
     const verifiedOptions = this.verifyOptions(options);
@@ -175,6 +196,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     this.monitorInterval = setInterval(this.monitor);
 
     if (this.onStartUp) this.onStartUp();
+    if (this._onReady) this._onReady();
   }
 
   componentWillUnmount() {
@@ -244,6 +266,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
           {this.renderIcon()}
           {this.renderTitleBarTitle()}
           <div className='title-bar-right'>
+            {this.renderRedirectToWebpage()}
             {this.renderMinimize()}
             {this.renderMaximizeRestoreDown()}
             {this.renderExit()}
@@ -283,6 +306,29 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     }
     return null;
   }
+
+  private renderRedirectToWebpage = () => {
+    if (!!this.state.options.redirectToWebpageButton) {
+      return (
+        <span className='title-bar-buttons title-bar-button-hover' onClick={this.redirect}>
+          <FontAwesomeIcon icon={faFile}></FontAwesomeIcon>
+        </span>
+      );
+    } else {
+      return null;
+    }
+  };
+
+  private redirect = async () => {
+    this.minimize();
+    try {
+      await processor.saveState();
+      document.location.href = this.state.options.redirectToWebpageButton;
+    } catch (error) {
+      //TODO: add message box
+      console.log('unable to launch');
+    }
+  };
 
   private renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
@@ -714,6 +760,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
       maximized: options.maximized === undefined ? false : options.maximized,
       minimized: options.minimized === undefined ? false : options.minimized,
       image: options.image === undefined ? DEFAULT_APP_IMAGE : options.image,
+      redirectToWebpageButton: options.redirectToWebpageButton || options.redirectToWebpageButton,
       showIcon: options.showIcon === undefined ? true : options.showIcon,
       title: options.title === undefined ? 'Lindow app' : options.title,
       maximizeRestoreDownButton:
@@ -766,6 +813,10 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     this.setState(state);
   }
 
+  get isPhone() {
+    return this.phone;
+  }
+
   get flashing(): boolean {
     return false;
   }
@@ -776,5 +827,9 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
   get onlyOne() {
     return !!this.props.onlyOne;
+  }
+
+  get _manifest() {
+    return { ...this.manifest };
   }
 }

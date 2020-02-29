@@ -1,4 +1,4 @@
-import { BaseWindow, IBaseWindowProps } from '../BaseWindow/BaseWindow';
+import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
 import { processor } from '../../essential/processor';
 import './taskManager.scss';
@@ -12,7 +12,7 @@ export const manifest: IManifest = {
 export class TaskManager extends BaseWindow {
   private selected: BaseWindow;
   constructor(props: IBaseWindowProps) {
-    super(props);
+    super(props, manifest);
   }
   onStartUp() {
     this.changeOptions({

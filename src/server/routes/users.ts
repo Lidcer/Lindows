@@ -6,6 +6,9 @@ import {
   findUserByEmail,
   getUserByAccountOrEmail,
   changePasswordOnAccount,
+  IAccountResponse,
+  getUserById,
+  IMongooseUserSchema,
 } from '../database/Users';
 import { PRIVATE_KEY } from '../config';
 import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi } from '../../shared/joi';
@@ -76,7 +79,7 @@ export async function loginUser(req: Request, res: Response) {
 
   //TODO: Add spam protection
   try {
-    const verified = verifyPassword(accountLoginRequest.password, user.password);
+    const verified = await verifyPassword(accountLoginRequest.password, user.password);
     if (!verified) {
       return res.status(400).json({ error: 'WrongPassword' });
     }
@@ -84,9 +87,37 @@ export async function loginUser(req: Request, res: Response) {
     return res.status(500).json({ error: 'Internal server error' });
   }
 
-  const jwtToken = jwt.sign(user, PRIVATE_KEY);
+  const result: IAccountResponse = {
+    _id: user._id,
+    permissions: user.permissions,
+  };
+
+  const jwtToken = jwt.sign(result, PRIVATE_KEY);
+
   res.header('x-auth-token', jwtToken);
-  res.json({ status: 'Success' });
+  res.json({ status: 'Success', username: user.username, email: user.email });
+}
+
+export async function checkUser(req: Request, res: Response) {
+  const token = req.headers['x-auth-token'];
+  if (typeof token !== 'string') return res.status(400);
+  if (!token) return res.status(400);
+
+  const decoded = jwt.decode(token) as IAccountResponse;
+  if (!decoded._id) return res.status(400);
+  let user: IMongooseUserSchema;
+  try {
+    user = await getUserById(decoded._id);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  if (!user) return res.status(400).json({ error: 'Account has been removed from database' });
+  if (user.banned) return res.status(400).json({ error: 'Account has been banned' });
+  if (user.compromised) return res.status(400).json({ error: 'Account has been compromised' });
+  res.status(200).json({ status: 'Success', username: user.username, email: user.email });
+  user.lastOnlineAt = Date.now();
 }
 
 export async function verifyUser(req: Request, res: Response) {

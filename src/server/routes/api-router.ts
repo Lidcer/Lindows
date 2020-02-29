@@ -1,6 +1,6 @@
 import bodyParser from 'body-parser';
 import { Router } from 'express';
-import { registerUser, loginUser, deleteAccount, changeEmail, verifyUser, changePassword } from './users';
+import { registerUser, loginUser, deleteAccount, changeEmail, verifyUser, changePassword, checkUser } from './users';
 
 export const verificationApi = '/api/v1/users/verify/';
 
@@ -14,8 +14,12 @@ export function apiRouter() {
     registerUser(req, res);
   });
 
-  router.get('/api/v1/users/login', (req, res) => {
+  router.post('/api/v1/users/login', (req, res) => {
     loginUser(req, res);
+  });
+
+  router.get('/api/v1/users/checkAccount', (req, res) => {
+    checkUser(req, res);
   });
 
   router.get(`${verificationApi}:verificationCodeId`, (req, res) => {

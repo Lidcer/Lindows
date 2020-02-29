@@ -27,7 +27,8 @@ export class Terminal extends BaseWindow<ITerminal> {
   constructor(props: IBaseWindowProps) {
     super(
       props,
-      { width: 500 },
+      manifest,
+      { width: 500, showIcon: true, title: 'Terminal', image: manifest.icon },
       {
         afterCursor: '',
         beforeCursor: '',

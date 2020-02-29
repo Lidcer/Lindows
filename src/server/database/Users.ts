@@ -5,6 +5,8 @@ import { hashPassword } from './passwordHasher';
 export interface IMongooseUserSchema extends Document {
   username: string;
   password: string;
+  compromised: boolean;
+  banned: boolean;
   createdAt: number;
   lastOnlineAt: number;
   profilePix: string;
@@ -17,7 +19,7 @@ export interface IMongooseUserSchema extends Document {
   permissions: string[];
 }
 
-interface IAccountResponse {
+export interface IAccountResponse {
   _id: string;
   permissions: string[];
 }
@@ -29,6 +31,8 @@ const UserSchema = new Schema(
     email: { type: String, required: true, unique: true },
     createdAt: { type: Number, required: true },
     lastOnlineAt: { type: Number, required: true },
+    compromised: Boolean,
+    banned: Boolean,
     ip: [String],
     note: String,
     profilePix: String,
@@ -100,6 +104,8 @@ export function registerUserInDatabase(
         password: hashedPassword,
         createdAt: Date.now(),
         lastOnlineAt: Date.now(),
+        banned: false,
+        compromised: false,
         note: '',
         settings: '',
         email,

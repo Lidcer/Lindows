@@ -5,14 +5,10 @@ import { ContextMenu, IElement } from './ContextMenu/ContextMenu';
 import { SelectBox, IPos } from './SelectBox/SelectBox';
 import './Home.scss';
 import Axios from 'axios';
-import { Terminal } from '../apps/Terminal/Terminal';
-import { TaskManager } from '../apps/TaskManager/TaskManager';
 import { processor } from '../essential/processor';
 import { launchApp } from '../essential/apps';
 import { HotKeyHandler, Keypress } from '../essential/apphotkeys';
-import { StartMenu } from './StartMenu/StartMenu';
 import { BlueScreen } from './BlueScreen/BlueScreen';
-import { connect } from 'socket.io-client';
 //import mySvg from '../../../assets/images/bliss.svg';
 
 interface IState {
@@ -133,17 +129,18 @@ export class Home extends React.Component<{}, IState> {
     processor.on('appRemove', this.updateView);
     this.updateDimensions();
     window.addEventListener('resize', this.updateDimensions, false);
-    if (processor.deviceInfo) {
+
+    const processorReady = () => {
       this.setState({
         ready: true,
       });
+
+      processor.removeListener('ready', processorReady);
+    };
+    if (processor.isReady) {
+      processorReady();
     } else {
-      const update = () => {
-        processor.removeListener('infoReady', update);
-        this.setState({ ready: true });
-      };
-      processor.on('infoReady', update);
-      launchApp('accountmgr');
+      processor.on('ready', processorReady);
     }
 
     if (!customWallpaper) return;
@@ -205,7 +202,7 @@ export class Home extends React.Component<{}, IState> {
   }
 
   get processApps() {
-    return processor.getRunningApps().map((a, i) => {
+    return processor.runningApps.map((a, i) => {
       return a.app;
     });
   }

@@ -31,5 +31,4 @@ export interface IAccountChangeEmailRequest {
   email: string;
   password: string;
   newEmail: string;
-
 }
