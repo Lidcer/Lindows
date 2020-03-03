@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+
 import {
   registerUserInDatabase,
   findUserByName,
@@ -22,10 +23,6 @@ import { verifyPassword } from '../database/passwordHasher';
 import { sendMail } from '../mail';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
 import { verificationApi } from './api-router';
-
-interface IUserResolve {
-  error?: string;
-}
 
 export async function registerUser(req: Request, res: Response) {
   const accountRequest: IAccountRegisterRequest = req.body;
@@ -185,17 +182,26 @@ export async function changeEmail(req: Request, res: Response) {
   }
 }
 
-export function userGet(req: Request, res: Response) {
-  const userId = req.params.userId;
-  const jsonRep: IUserResolve = {};
+export function uploadImage(req: Request, res: Response) {
+  if (req.files === null) return res.status(400).json({ error: 'No files' });
 
-  if (!userId) {
-    jsonRep.error = 'Missing ID';
-    return res.status(400).json(jsonRep);
-  } else if (!/^\d+$/.test(userId)) {
-    jsonRep.error = 'ID is not valid';
-    return res.status(400).json(jsonRep);
-  }
+  const file = req.files.file;
+  console.log(file);
+
+  res.json({ msg: 'ok' });
+}
+
+export function userGet(req: Request, res: Response) {
+  // const userId = req.params.userId;
+  // const jsonRep: IUser = {};
+
+  // if (!userId) {
+  //   jsonRep.error = 'Missing ID';
+  //   return res.status(400).json(jsonRep);
+  // } else if (!/^\d+$/.test(userId)) {
+  //   jsonRep.error = 'ID is not valid';
+  //   return res.status(400).json(jsonRep);
+  // }
 
   return res.json({ e: 'e' });
 }

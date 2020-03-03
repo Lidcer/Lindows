@@ -28,9 +28,11 @@ interface IAccountState {
     password: string;
     newPassword: string;
     repeatPassword: string;
+    file?: File;
   };
   logined: boolean;
   currentUserName: string;
+  avatar: string;
   email: string;
   warn: string;
   info: string;
@@ -61,6 +63,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       logined: false,
       currentUserName: '',
       email: '',
+      avatar: './assets/images/appsIcons/AccountManager.svg',
       info: '',
       warn: '',
     };
@@ -103,7 +106,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       return (
         <>
           {this.navigationBar}
-          <div className='m-5'>{this.renderTab}</div>
+          <div className='m-2'>{this.renderTab}</div>
           {this.state.warn ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.warn}</div> : null}
         </>
       );
@@ -112,7 +115,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         <div className='account-manager'>
           <div className='account-manager-window'>
             {this.navigationBar}
-            <div className='m-5'>{this.renderTab}</div>
+            <div className={this.props.window ? '' : 'm-5'}>{this.renderTab}</div>
             {this.state.warn ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.warn}</div> : null}
           </div>
         </div>
@@ -176,7 +179,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get registerRender() {
     return (
       <>
-        <form>
+        <form className='account-manager-form'>
           <h5>Username</h5>
           <input
             type='text'
@@ -265,7 +268,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get loginRender() {
     return (
       <>
-        <form>
+        <form className='account-manager-form'>
           <h5>Username or mail</h5>
           <input
             type='text'
@@ -334,19 +337,32 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get settingsRender() {
     return (
       <>
-        <form>
-          <h5>{this.state.currentUserName}</h5>
-
-          <h5>Password</h5>
-          <input
-            type='Change Password'
-            className='form-control'
-            value={this.state.login.password}
-            onChange={e => {
-              this.loginChange(e, 'password');
-            }}
-            placeholder='password'
-          ></input>
+        <form className='account-manager-form' onSubmit={this.accountSettings}>
+          <div className='d-flex'>
+            <div>
+              <img
+                className='w-100'
+                src={this.state.avatar}
+                alt={this.state.currentUserName}
+                onClick={this.uploadImage}
+              ></img>
+            </div>
+            <div>
+              <h4>{this.state.currentUserName}</h4>
+              <h5>Password</h5>
+              <input
+                type='Change Password'
+                className='form-control'
+                value={this.state.login.password}
+                onChange={e => {
+                  this.loginChange(e, 'password');
+                }}
+                placeholder='password'
+              ></input>
+              <input type='file' name='imgUploader' multiple onChange={this.filesSelected}></input>
+              {this.state.accountChange.file ? this.renderUpdateImageButton() : null}
+            </div>
+          </div>
 
           <br />
 
@@ -385,7 +401,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
               onChange={e => {
                 this.settingsChange(e, 'newMail');
               }}
-              placeholder='password'
+              placeholder='Change Email'
             ></input>
             <button className='btn btn-lrs m-2' onClick={this.changeMail}>
               Change mail
@@ -400,15 +416,52 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       </>
     );
   }
+
+  renderUpdateImageButton() {
+    return (
+      <button className='btn btn-lrs m-2' onClick={this.uploadImage}>
+        Alter profile
+      </button>
+    );
+  }
+
+  filesSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files[0];
+    const state = { ...this.state };
+    state.accountChange.file = file;
+    this.setState(state);
+    console.log(event);
+  };
+
+  accountSettings = (event: React.FormEvent) => {
+    console.log(event);
+  };
+
+  uploadImage = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    console.log(this.state.accountChange.file);
+    const formData = new FormData();
+    formData.append('file', this.state.accountChange.file);
+
+    try {
+      const res = await Axios.post('/api/v1/users/changeAvatar', formData);
+      console.log(res);
+    } catch (error) {
+      console.error(error);
+    }
+    //reader.onload = imageIsLoaded;
+    //reader.readAsDataURL(this.files[0]);
+  };
+
   settingsChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
     const state = { ...this.state };
     state.accountChange[type] = event.target.value;
     this.setState(state);
   };
 
-  changePassword = () => {};
+  changePassword = () => { };
 
-  changeMail = () => {};
+  changeMail = () => { };
 
   logout = () => {
     localStorage.removeItem('auth');

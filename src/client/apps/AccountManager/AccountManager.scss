@@ -16,6 +16,23 @@
   margin: auto;
 }
 
+.account-manager-form {
+  // background-color: black;
+
+  h5 {
+    font-size: 1rem;
+  }
+
+  input {
+    padding: 2pt;
+  }
+
+  button {
+    padding: 2pt;
+  }
+
+}
+
 .account-manager-window {
   position: absolute;
   background-color: #2b2b2b;

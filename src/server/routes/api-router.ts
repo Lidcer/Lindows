@@ -1,6 +1,16 @@
 import bodyParser from 'body-parser';
+import * as fileUpload from 'express-fileupload';
 import { Router } from 'express';
-import { registerUser, loginUser, deleteAccount, changeEmail, verifyUser, changePassword, checkUser } from './users';
+import {
+  registerUser,
+  loginUser,
+  deleteAccount,
+  changeEmail,
+  verifyUser,
+  changePassword,
+  checkUser,
+  uploadImage,
+} from './users';
 
 export const verificationApi = '/api/v1/users/verify/';
 
@@ -9,6 +19,7 @@ export function apiRouter() {
   router.use(bodyParser.urlencoded({ extended: false }));
   // parse application/json
   router.use(bodyParser.json());
+  router.use(fileUpload.default());
 
   router.post('/api/v1/users/register', (req, res) => {
     registerUser(req, res);
@@ -20,6 +31,10 @@ export function apiRouter() {
 
   router.get('/api/v1/users/checkAccount', (req, res) => {
     checkUser(req, res);
+  });
+
+  router.post('/api/v1/users/changeAvatar', (req, res) => {
+    uploadImage(req, res);
   });
 
   router.get(`${verificationApi}:verificationCodeId`, (req, res) => {
