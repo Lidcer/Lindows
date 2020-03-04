@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
+import { TOKEN_HEADER } from '../../shared/constants';
 
 import {
   registerUserInDatabase,
@@ -10,6 +11,8 @@ import {
   IAccountResponse,
   getUserById,
   IMongooseUserSchema,
+  changeAvatar,
+  getUserImage,
 } from '../database/Users';
 import { PRIVATE_KEY } from '../config';
 import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi } from '../../shared/joi';
@@ -23,6 +26,7 @@ import { verifyPassword } from '../database/passwordHasher';
 import { sendMail } from '../mail';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
 import { verificationApi } from './api-router';
+import fileUpload = require('express-fileupload');
 
 export async function registerUser(req: Request, res: Response) {
   const accountRequest: IAccountRegisterRequest = req.body;
@@ -56,7 +60,7 @@ export async function registerUser(req: Request, res: Response) {
     sendMail(accountRequest.email, 'Verification code', text, html).catch(console.error);
 
     const jwtToken = jwt.sign(result, PRIVATE_KEY);
-    res.header('x-auth-token', jwtToken);
+    res.header(TOKEN_HEADER, jwtToken);
     res.json({ status: 'Success' });
   } catch (error) {
     return res.status(500).json({ error: 'Internal server error' });
@@ -91,17 +95,14 @@ export async function loginUser(req: Request, res: Response) {
 
   const jwtToken = jwt.sign(result, PRIVATE_KEY);
 
-  res.header('x-auth-token', jwtToken);
+  res.header(TOKEN_HEADER, jwtToken);
   res.json({ status: 'Success', username: user.username, email: user.email });
 }
 
 export async function checkUser(req: Request, res: Response) {
-  const token = req.headers['x-auth-token'];
-  if (typeof token !== 'string') return res.status(400);
-  if (!token) return res.status(400);
+  const decoded = getTokenData(req, res);
+  if (!decoded) return;
 
-  const decoded = jwt.decode(token) as IAccountResponse;
-  if (!decoded._id) return res.status(400);
   let user: IMongooseUserSchema;
   try {
     user = await getUserById(decoded._id);
@@ -113,7 +114,11 @@ export async function checkUser(req: Request, res: Response) {
   if (!user) return res.status(400).json({ error: 'Account has been removed from database' });
   if (user.banned) return res.status(400).json({ error: 'Account has been banned' });
   if (user.compromised) return res.status(400).json({ error: 'Account has been compromised' });
-  res.status(200).json({ status: 'Success', username: user.username, email: user.email });
+
+  const response = { status: 'Success', username: user.username, email: user.email, avatar: null };
+  if (user.avatar) response.avatar = getUserImage(user);
+
+  res.status(200).json(response);
   user.lastOnlineAt = Date.now();
 }
 
@@ -182,13 +187,25 @@ export async function changeEmail(req: Request, res: Response) {
   }
 }
 
-export function uploadImage(req: Request, res: Response) {
+export async function uploadImage(req: Request, res: Response) {
   if (req.files === null) return res.status(400).json({ error: 'No files' });
+  const decoded = getTokenData(req, res);
+  if (!decoded) return;
 
-  const file = req.files.file;
-  console.log(file);
+  const files = req.files.file;
+  let file: fileUpload.UploadedFile;
+  if (Array.isArray(files)) file = file[0];
+  else file = files;
 
-  res.json({ msg: 'ok' });
+  if (!/.(jpg|png|gif|bmp)$/g.test(file.name)) return res.status(400).json({ error: 'Unknown File format' });
+
+  try {
+    const user = await getUserById(decoded._id);
+    await changeAvatar(user, file.data);
+    res.status(200).json({ avatar: getUserImage(user) });
+  } catch (error) {
+    return res.status(400).json({ error: 'Internal server error' });
+  }
 }
 
 export function userGet(req: Request, res: Response) {
@@ -204,4 +221,25 @@ export function userGet(req: Request, res: Response) {
   // }
 
   return res.json({ e: 'e' });
+}
+
+function getTokenData(req: Request, res: Response): IAccountResponse | null {
+  if (!req.headers[TOKEN_HEADER]) {
+    res.status(400).json({ error: 'Missing token' });
+    return null;
+  }
+  const token = req.headers[TOKEN_HEADER];
+  if (typeof token !== 'string') {
+    res.status(400);
+    return null;
+  }
+  if (!token) {
+    res.status(400);
+    return null;
+  }
+  const data = jwt.decode(token) as IAccountResponse;
+  if (data._id && data.permissions) return data;
+
+  res.status(400);
+  return null;
 }

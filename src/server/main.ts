@@ -7,6 +7,7 @@ import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 import { socketConnection } from './websocket/SocketHandler';
 import { setupMail } from './mail';
+import { setupDatabase } from './database/database';
 
 //sendgrid, mandrill, mailgun
 console.info(`*******************************************`);
@@ -26,11 +27,11 @@ const http = app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);
 });
 
-setupMail();
-
 export const io = listen(http);
 
-//io.on('connect', e => console.log('e', e));
 io.on('connection', s => {
   socketConnection(s);
 });
+
+setupMail();
+setupDatabase();

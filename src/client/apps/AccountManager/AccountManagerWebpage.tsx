@@ -2,7 +2,8 @@ import './AccountManager.scss';
 import React from 'react';
 import { IAccountRegisterRequest, IAccountLoginRequest } from '../../../shared/ApiRequests';
 import { registerUserJoi, loginUserJoi } from '../../../shared/joi';
-import Axios from 'axios';
+import { TOKEN_HEADER } from '../../../shared/constants';
+import Axios, { AxiosRequestConfig } from 'axios';
 
 interface IAccountProps {
   window?: boolean;
@@ -38,7 +39,10 @@ interface IAccountState {
   info: string;
 }
 
+const DEFAULT_AVATAR = './assets/images/appsIcons/AccountManager.svg';
+
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
+  private token = '';
   constructor(props: IAccountProps) {
     super(props);
     this.state = {
@@ -63,31 +67,39 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       logined: false,
       currentUserName: '',
       email: '',
-      avatar: './assets/images/appsIcons/AccountManager.svg',
+      avatar: DEFAULT_AVATAR,
       info: '',
       warn: '',
     };
   }
 
   componentDidMount() {
-    const token = localStorage.getItem('auth');
-    if (token) {
-      Axios.get('/api/v1/users/checkAccount', {
-        headers: {
-          'x-auth-token': token,
-        },
-      })
+    this.checkAccount();
+  }
+  private checkAccount() {
+    console.log('checkng account');
+    if (!this.token) this.token = localStorage.getItem('auth');
+    if (this.token) {
+      const axiosRequestConfig: AxiosRequestConfig = {
+        headers: {},
+      };
+      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
+      Axios.get('/api/v1/users/checkAccount', axiosRequestConfig)
         .then(response => {
+          console.log('??????');
           if (response && response.data && typeof response.data === 'object') {
+            console.log(response.data);
+            const avatar = response.data.avatar || DEFAULT_AVATAR;
             this.setState({
               logined: true,
               currentUserName: response.data.username,
               email: response.data.email,
+              avatar,
             });
           }
         })
         .catch(err => {
-          console.log('some weird shiasdt');
+          this.logOut();
           console.log(err);
         });
       console.log('some weird shit');
@@ -95,6 +107,17 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     } else {
       this.setState({ show: 'register' });
     }
+  }
+
+  logOut() {
+    this.token = undefined;
+    localStorage.removeItem('auth');
+    this.setState({
+      currentUserName: undefined,
+      avatar: DEFAULT_AVATAR,
+      logined: false,
+      email: undefined,
+    });
   }
 
   render() {
@@ -252,7 +275,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       Axios.post(`${document.location.origin}/api/v1/users/register`, accountRegisterRequest)
         .then(response => {
           this.setState({ show: 'accountSettings' });
-          localStorage.setItem('auth', response.headers['x-auth-token']);
+          localStorage.setItem('auth', response.headers[TOKEN_HEADER]);
         })
         .catch((error: any) => {
           this.setState({ show: 'register' });
@@ -320,7 +343,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       Axios.post(`${document.location.origin}/api/v1/users/login`, accountLoginRequest)
         .then(response => {
           this.setState({ show: 'accountSettings' });
-          localStorage.setItem('auth', response.headers['x-auth-token']);
+          localStorage.setItem('auth', response.headers[TOKEN_HEADER]);
         })
         .catch((error: any) => {
           this.setState({ show: 'login' });
@@ -339,14 +362,15 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       <>
         <form className='account-manager-form' onSubmit={this.accountSettings}>
           <div className='d-flex'>
-            <div>
-              <img
-                className='w-100'
-                src={this.state.avatar}
-                alt={this.state.currentUserName}
-                onClick={this.uploadImage}
-              ></img>
-            </div>
+            <img
+              className='m-1'
+              height='200px'
+              width='200px'
+              src={this.state.avatar}
+              alt={this.state.currentUserName}
+              onClick={this.uploadImage}
+            ></img>
+
             <div>
               <h4>{this.state.currentUserName}</h4>
               <h5>Password</h5>
@@ -439,13 +463,27 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   uploadImage = async (event: React.MouseEvent) => {
     event.preventDefault();
-    console.log(this.state.accountChange.file);
     const formData = new FormData();
     formData.append('file', this.state.accountChange.file);
 
     try {
-      const res = await Axios.post('/api/v1/users/changeAvatar', formData);
-      console.log(res);
+      const axiosRequestConfig: AxiosRequestConfig = {
+        headers: {},
+      };
+      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
+      axiosRequestConfig.headers['Content-Type'] = 'multipart-form-data';
+      // axiosRequestConfig.onUploadProgress = (processEvent:Axios. ) => {
+      //   console.log(e);
+      // }
+      await Axios.post('/api/v1/users/changeAvatar', formData, axiosRequestConfig).then(res => {
+        const state = { ...this.state };
+        if (res.data && res.data && res.data.avatar) {
+          state.avatar = res.data.avatar;
+        } else state.avatar = null;
+        state.accountChange.file = undefined;
+        this.setState(this.state);
+        this.checkAccount();
+      });
     } catch (error) {
       console.error(error);
     }

@@ -11,6 +11,7 @@ import {
   checkUser,
   uploadImage,
 } from './users';
+import { imagesPath } from '../database/Users';
 
 export const verificationApi = '/api/v1/users/verify/';
 
@@ -53,5 +54,8 @@ export function apiRouter() {
     deleteAccount(req, res);
   });
 
+  router.get(`/${imagesPath.join('/')}`, (req, res) => {
+    res.send(403).json({ error: 'Not Allowed' });
+  });
   return router;
 }
