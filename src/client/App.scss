@@ -1,8 +1,32 @@
 @import 'animate.css';
 
+$scrollbarBG: transpalante;
+$thumbBG: rgb(64, 64, 64);
+
+
 * {
     margin: 0;
     padding: 0;
     user-select: none;
     overflow: hidden;
+
+    &::-webkit-scrollbar {
+        width: 11px;
+    }
+
+
+    scrollbar-width: thin;
+    scrollbar-color: $thumbBG $scrollbarBG;
+
+
+    &::-webkit-scrollbar-track {
+        background: $scrollbarBG;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: $thumbBG;
+        border-radius: 6px;
+        border: 3px solid $scrollbarBG;
+    }
+
 }
