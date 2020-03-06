@@ -1,21 +1,21 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
-import './AccountManager.scss';
+import './Lype.scss';
 import React from 'react';
-import { AccountManagerWebpage } from './AccountManagerWebpage';
+import { LypeWebpage } from './LypeWebpage';
 
 export const manifest: IManifest = {
-  fullAppName: 'Account Manager',
-  launchName: 'accountmgr',
-  icon: './assets/images/appsIcons/AccountManager.svg',
+  fullAppName: 'Lype',
+  launchName: 'lype',
+  icon: './assets/images/appsIcons/Lype.svg',
 };
 
-export class AccountManager extends BaseWindow {
+export class Lype extends BaseWindow {
   constructor(props: IBaseWindowProps) {
     super(props, manifest, {
-      title: 'Account Manager',
+      title: 'Lype',
       image: manifest.icon,
-      redirectToWebpageButton: 'account',
-      minHeight: 575,
+      redirectToWebpageButton: 'lype',
+      minHeight: 400,
       minWidth: 400,
     });
   }
@@ -29,6 +29,6 @@ export class AccountManager extends BaseWindow {
   }
 
   renderInside() {
-    return <AccountManagerWebpage window={true}></AccountManagerWebpage>;
+    return <LypeWebpage window={true}></LypeWebpage>;
   }
 }

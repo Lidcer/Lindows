@@ -1,6 +1,7 @@
 import { Terminal, manifest as terminalManifest } from '../apps/Terminal/Terminal';
 import { TaskManager, manifest as taskManagerManifest } from '../apps/TaskManager/TaskManager';
 import { AccountManager, manifest as accountManagerManifest } from '../apps/AccountManager/AccountManager';
+import { Lype, manifest as lypeManifest } from '../apps/Lype/Lype';
 
 import { processor } from './processor';
 import React from 'react';
@@ -23,6 +24,10 @@ export const allApps: AllApps[] = [
   {
     manifest: accountManagerManifest,
     app: (id: number, props?: any) => <AccountManager key={id} id={id} onlyOne={true} {...props}></AccountManager>,
+  },
+  {
+    manifest: lypeManifest,
+    app: (id: number, props?: any) => <Lype key={id} id={id} onlyOne={true} {...props}></Lype>,
   },
 ];
 
