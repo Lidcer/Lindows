@@ -13,6 +13,12 @@ export class LypeWebpage extends React.Component<IAccountProps, {}> {
     super(props);
   }
 
+  componentDidMount() {
+
+
+
+  }
+
   render() {
     return (
       <>
@@ -48,7 +54,7 @@ export class LypeWebpage extends React.Component<IAccountProps, {}> {
   }
 
   renderMessages() {
-    //TODO: render messges
+    //TODO: render message
     const fakeMessages: string[] = [];
     for (let i = 0; i < 99; i++) {
       fakeMessages.push(`${i} bla bla bla`);

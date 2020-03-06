@@ -16,6 +16,9 @@
   }
 
   .chat {
+    display: flex;
+    justify-content: end;
+    flex-direction: column;
     right: 0;
     top: 0;
     height: 100%;
@@ -23,35 +26,42 @@
 
     .header {
       background-color: rgb(21, 21, 21);
-      height: 10%;
+      height: 100pt;
+      overflow: hidden;
+      flex: none;
     }
 
     .footer {
       display: flex;
+      justify-content: space-around;
       flex-direction: column;
       background-color: rgb(16, 16, 16);
-      height: 85%;
+      height: auto;
 
       .messages {
-
-        background-color: rgb(8, 8, 8);
+        background-color: rgb(24, 24, 24);
+        flex: auto;
+        height: auto;
         overflow: auto;
       }
 
       .input {
-        height: 20%;
+        height: 40pt;
+        width: 100%;
         bottom: 0;
-        background-color: rgb(10, 10, 10);
+        flex: none;
+        background-color: rgb(4, 4, 4);
+
 
         input {
           background-color: rgb(64, 64, 64);
           width: calc(100% - 20px);
           margin: 10px;
           padding: 10pt;
-          height: 20px;
+          height: 30px;
           color: white;
           border: none;
-          border-right: 5px;
+          border-radius: 5px;
         }
       }
 
