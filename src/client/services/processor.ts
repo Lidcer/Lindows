@@ -1,13 +1,9 @@
 import { BaseWindow, IManifest } from '../apps/BaseWindow/BaseWindow';
 import { EventEmitter } from 'events';
-import fingerprintjs from 'fingerprintjs2';
-import { UAParser } from 'ua-parser-js';
 import { random } from 'lodash';
-import React from 'react';
-import { reactGeneratorFunction, appConstructorGenerator } from './apps';
-import * as MobileDetect from 'mobile-detect';
-import { browserStorage } from './browserStorage';
-import { faItalic } from '@fortawesome/free-solid-svg-icons';
+import { reactGeneratorFunction, appConstructorGenerator } from '../essential/apps';
+import { IBrowserStorage } from './browserStorage';
+import { IFingerpriner } from './fingerprinter';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -20,84 +16,57 @@ interface IDisplayingApp {
   app: JSX.Element;
   state?: any;
 }
-declare interface IProcessor {
+export declare interface IProcessor {
   on(event: 'appAdd', listener: (object: BaseWindow) => void): this;
   on(event: 'appRemove', listener: (object: BaseWindow) => void): this;
-  on(event: 'ready', listener: () => void): this;
   on(event: 'appDisplayingAdd', listener: (object: IDisplayingApp) => void): this;
 }
 
-class IProcessor extends EventEmitter {
+export class IProcessor extends EventEmitter {
   private readonly browserStorageKey = '__processor';
   private lindowsProcesses: BaseWindow[] = [];
   private displaying: IDisplayingApp[] = [];
-  private info: fingerprintjs.Component[];
   private user = `Guest${random(1000, 9999)}`;
   private _uptime: number = 0;
   private _mobileDetect: MobileDetect;
   private _frontend = 'Lindows 1.0 Alpha';
   private processID = 0;
-  private ready = false;
-  private isBrowserStorageReady = false;
+
   private displayAppQueue: reactGeneratorFunction[] = [];
 
-  constructor() {
+  constructor(private browserStorage: IBrowserStorage, private fingerprinter: IFingerpriner) {
     super();
-
-    if (browserStorage.isReady) {
-      this.isBrowserStorageReady = true;
-      this.setReady();
-    } else {
-      const makeBrowserStorageReady = () => {
-        this.isBrowserStorageReady = true;
-        browserStorage.removeListener('ready', makeBrowserStorageReady);
-        this.setReady();
-      };
-      browserStorage.on('ready', makeBrowserStorageReady);
-    }
     this._uptime = Date.now();
-    fingerprintjs.get(result => {
-      this.info = result;
-      const userAgent = result.find(e => e.key === 'userAgent');
-      if (userAgent) {
-        this._mobileDetect = new MobileDetect.default(userAgent.value);
-      }
-      this.setReady();
-    });
+    this.setReady();
   }
 
   private setReady() {
-    if (this.info && this.isBrowserStorageReady && !this.ready) {
-      this.ready = true;
-      this.emit('ready');
+    this.displayAppQueue.forEach(app => this.addApp(app));
+    this.displayAppQueue = [];
 
-      this.displayAppQueue.forEach(app => this.addApp(app));
-      this.displayAppQueue = [];
+    const storage = this.browserStorage.getStorage(this.browserStorageKey);
+    if (storage) {
+      try {
+        const json: IStringifiedProcess[] = JSON.parse(storage);
+        if (Array.isArray(json)) {
+          json.forEach(app => {
+            const launchName = app.manifest.launchName;
+            const appConstructor = appConstructorGenerator(launchName);
 
-      const storage = browserStorage.getStorage(this.browserStorageKey);
-      if (storage) {
-        try {
-          const json: IStringifiedProcess[] = JSON.parse(storage);
-          if (Array.isArray(json)) {
-            json.forEach(app => {
-              const launchName = app.manifest.launchName;
-              const appConstructor = appConstructorGenerator(launchName);
+            const id = this.processID++;
+            const customProps = { ...app.props };
+            customProps.id = id;
+            customProps.key = id;
+            const jsxElement = appConstructor(id, customProps);
 
-              const id = this.processID++;
-              const customProps = { ...app.props };
-              customProps.id = id;
-              customProps.key = id;
-              const jsxElement = appConstructor(id, customProps);
-
-              const displayingApp: IDisplayingApp = { processID: id, app: jsxElement, state: app.state };
-              this.displaying.push(displayingApp);
-              this.emit('appDisplayingAdd', displayingApp);
-            });
-          }
-        } catch (_) {}
+            const displayingApp: IDisplayingApp = { processID: id, app: jsxElement, state: app.state };
+            this.displaying.push(displayingApp);
+            this.emit('appDisplayingAdd', displayingApp);
+          });
+        }
+      } catch (_) {
+        /* ignored */
       }
-
-      //appConstructorGenerator
     }
   }
 
@@ -110,9 +79,10 @@ class IProcessor extends EventEmitter {
   }
 
   get deviceInfo() {
-    const info = this.info.find(e => e.key === 'userAgent');
-    if (!info) return undefined;
-    return new UAParser(info.value);
+    return null;
+    // const info = this.info.find(e => e.key === 'userAgent');
+    //if (!info) return undefined;
+    //return new UAParser(info.value);
   }
 
   get browser() {
@@ -167,10 +137,6 @@ class IProcessor extends EventEmitter {
   }
 
   addApp = (reactGeneratorFunction: reactGeneratorFunction) => {
-    if (!this.ready) {
-      this.displayAppQueue.push(reactGeneratorFunction);
-      return;
-    }
     const id = this.processID++;
     const jsxElement = reactGeneratorFunction(id);
     const displayingApp: IDisplayingApp = { processID: id, app: jsxElement };
@@ -182,7 +148,7 @@ class IProcessor extends EventEmitter {
     return new Promise(async (resolve, reject) => {
       const stringifiedProcesses = this.stringify;
       try {
-        await browserStorage.store(this.browserStorageKey, stringifiedProcesses);
+        await this.browserStorage.store(this.browserStorageKey, stringifiedProcesses);
         resolve();
       } catch (error) {
         reject(error);
@@ -218,10 +184,4 @@ class IProcessor extends EventEmitter {
   get frontend() {
     return this._frontend;
   }
-
-  get isReady() {
-    return this.ready;
-  }
 }
-
-export const processor = new IProcessor();

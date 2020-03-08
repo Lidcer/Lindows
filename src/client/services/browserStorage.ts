@@ -1,12 +1,11 @@
 import * as compress from 'compress-str';
 import { EventEmitter } from 'events';
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-declare interface BrowserStorage {
-  on(event: 'ready', listener: () => void): this;
+export declare interface IBrowserStorage {
+  on(event: 'ready', listener: (browserStorage: this) => void): this;
 }
 
-class BrowserStorage extends EventEmitter {
+export class IBrowserStorage extends EventEmitter {
   private readonly storageName = 'lindows';
   private ready = false;
   private data: any = {};
@@ -37,7 +36,7 @@ class BrowserStorage extends EventEmitter {
       .catch(() => this.save());
 
     this.ready = true;
-    this.emit('ready');
+    this.emit('ready', this);
   }
 
   store(key: string, value: any): Promise<void> {
@@ -79,5 +78,3 @@ class BrowserStorage extends EventEmitter {
     return this.ready;
   }
 }
-
-export const browserStorage = new BrowserStorage();

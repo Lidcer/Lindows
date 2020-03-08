@@ -9,6 +9,28 @@ export function setupMail() {
   else console.warn('sendgrid api has not been found mails are not going to be sent.');
 }
 
+export function sendNewVerificationMail(email: string, verificationUrl: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const text = `Please verify your new email on: ${verificationUrl}`;
+    const html = `Please verify your new email on: <a>${verificationUrl}</a>`;
+
+    sendMail(email, 'Verification code', text, html)
+      .then(() => resolve())
+      .catch(err => reject(err));
+  });
+}
+
+export function sendVerificationMail(email: string, verificationUrl: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const text = `Please verify your account on: ${verificationUrl}`;
+    const html = `Please verify your account on: <a>${verificationUrl}</a>`;
+
+    sendMail(email, 'Verification code', text, html)
+      .then(() => resolve())
+      .catch(err => reject(err));
+  });
+}
+
 export function sendMail(
   recipient: string,
   subject: string,

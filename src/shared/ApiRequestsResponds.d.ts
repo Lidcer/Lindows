@@ -19,16 +19,27 @@ export interface IAccountLoginRequest {
 }
 
 export interface IAccountChangePasswordRequest {
-  username: string;
-  email: string;
   oldPassword: string;
   newPassword: string;
-  repeatPassword: string;
+  repeatNewPassword: string;
 }
 
 export interface IAccountChangeEmailRequest {
-  username: string;
-  email: string;
   password: string;
-  newEmail: string;
+  email: string;
 }
+
+export interface IResponse<T> {
+  error?: string;
+  details?: any;
+  message?: string;
+  success?: T;
+}
+
+export interface IAccount {
+  id: string;
+  username: string;
+  avatar?: string;
+}
+
+export declare type IAccountResponse = IResponse<IAccount>;

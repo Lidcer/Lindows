@@ -1,6 +1,6 @@
 import Joi from '@hapi/joi';
 
-const passwordRexExp = new RegExp('^[a-zA-Z0-9]{3,30}$');
+const passwordRexExp = new RegExp('^[a-zA-Z0-9]{3,100}$');
 
 const registerUserJoi = Joi.object({
   username: Joi.string()
@@ -22,18 +22,16 @@ const loginUserJoi = Joi.object({
 });
 
 const changePasswordJoi = Joi.object({
-  username: Joi.string(),
-  email: Joi.string(),
   oldPassword: Joi.string(),
   newPassword: Joi.string().pattern(passwordRexExp),
-  repeatPassword: Joi.ref('password'),
-}).with('password', 'repeatPassword');
+  repeatNewPassword: Joi.ref('password'),
+}).with('newPassword', 'repeatPassword');
 
 const changeEmailJoi = Joi.object({
   username: Joi.string(),
   email: Joi.string(),
   password: Joi.string(),
   newEmail: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
-})
+});
 
 export { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi };

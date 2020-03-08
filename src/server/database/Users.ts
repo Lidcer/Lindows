@@ -42,11 +42,6 @@ export interface IMongooseUserSchema extends Document {
   permissions: string[];
 }
 
-export interface IAccountResponse {
-  _id: string;
-  permissions: string[];
-}
-
 const UserSchema = new Schema(
   {
     username: { type: String, required: true, unique: true },
@@ -117,7 +112,7 @@ export function registerUserInDatabase(
   email: string,
   password: string,
   ip: string,
-): Promise<IAccountResponse> {
+): Promise<IMongooseUserSchema> {
   return new Promise(async (resolve, rejects) => {
     let hashedPassword: string;
     try {
@@ -138,14 +133,9 @@ export function registerUserInDatabase(
         ip: [ip],
         permissions: [],
       });
-      const result = await schema.save();
+      await schema.save();
 
-      const response: IAccountResponse = {
-        _id: result._id,
-        permissions: [],
-      };
-
-      resolve(response);
+      resolve(schema);
     } catch (error) {
       return rejects(error);
     }

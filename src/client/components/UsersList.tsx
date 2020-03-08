@@ -6,7 +6,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import React from 'react';
 import { NavLink, Route } from 'react-router-dom';
-import { IUserDTO } from '../../shared/ApiRequests';
+import { IUserDTO } from '../../shared/ApiRequestsResponds';
 import { loadUsersAPI } from '../utils/api-facade';
 import { User } from './User';
 import { getUserFullName } from '../../shared/utils';

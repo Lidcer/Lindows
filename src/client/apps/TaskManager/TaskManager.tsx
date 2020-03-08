@@ -1,7 +1,7 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
-import { processor } from '../../essential/processor';
 import './taskManager.scss';
+import { services } from '../../services/services';
 
 export const manifest: IManifest = {
   fullAppName: 'TaskManager',
@@ -20,11 +20,11 @@ export class TaskManager extends BaseWindow {
       image: manifest.icon,
     });
 
-    processor.on('appAdd', this.update);
+    services.processor.on('appAdd', this.update);
   }
 
   onClose() {
-    processor.removeListener('appAdd', this.update);
+    services.processor.removeListener('appAdd', this.update);
   }
 
   update = () => {
@@ -35,7 +35,7 @@ export class TaskManager extends BaseWindow {
     return (
       <div className='task-manager'>
         <span>
-          {processor.processes.length} | {processor.processes.filter(e => e.minimized).length}
+          {services.processor.processes.length} | {services.processor.processes.filter(e => e.minimized).length}
         </span>
         <table>
           <tbody>
@@ -55,7 +55,7 @@ export class TaskManager extends BaseWindow {
   }
 
   killAll = () => {
-    processor.processes.forEach(e => {
+    services.processor.processes.forEach(e => {
       if (e !== this) e.exit();
     });
     setTimeout(() => {
@@ -72,7 +72,7 @@ export class TaskManager extends BaseWindow {
   };
 
   get renderList() {
-    return processor.processes.map(this.getItem);
+    return services.processor.processes.map(this.getItem);
   }
 
   getItem = (window: BaseWindow, index: number) => {

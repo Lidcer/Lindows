@@ -1,4 +1,4 @@
-import { IUserDTO } from '../shared/ApiRequests';
+import { IUserDTO } from '../shared/ApiRequestsResponds';
 
 export const users: IUserDTO[] = [];
 

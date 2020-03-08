@@ -11,9 +11,8 @@ import {
   faFile,
 } from '@fortawesome/free-solid-svg-icons';
 import { navBarPos } from '../../components/TaskBar/TaskBar';
-import { processor } from '../../essential/processor';
+import { services } from '../../services/services';
 import { random, clamp } from 'lodash';
-import { browserStorage } from '../../essential/browserStorage';
 
 const DEFAULT_APP_IMAGE = './assets/images/unknown-app.svg';
 
@@ -122,7 +121,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     super(props);
     this.manifest = manifest;
     Object.seal(this.manifest);
-    this.phone = processor.mobileDetect().phone();
+    this.phone = services.fingerprinter.mobile.phone();
     this.ref = React.createRef();
     this.minWidth = options && options.minWidth ? options.minWidth : this.minWidth;
     this.minHeight = options && options.minHeight ? options.minHeight : this.minHeight;
@@ -182,9 +181,9 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
     window.addEventListener('mouseup', this.mouseUp, false);
     window.addEventListener('touchend', this.touchEnd, false);
-    processor.startProcess(this);
+    services.processor.startProcess(this);
     this.changeActiveState(true);
-    processor.makeActive(this);
+    services.processor.makeActive(this);
 
     setTimeout(() => {
       if (!this.destroyed)
@@ -212,7 +211,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     window.removeEventListener('mouseup', this.mouseUp, false);
     window.removeEventListener('touchend', this.touchEnd, false);
 
-    processor.killProcess(this);
+    services.processor.killProcess(this);
     clearInterval(this.monitorInterval);
     if (this.onClose) this.onClose();
   }
@@ -322,7 +321,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
   private redirect = async () => {
     this.minimize();
     try {
-      await processor.saveState();
+      await services.processor.saveState();
       document.location.href = this.state.options.redirectToWebpageButton;
     } catch (error) {
       //TODO: add message box
@@ -627,7 +626,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     if (this.state.active) this.wasActive = true;
     else this.wasActive = false;
 
-    if (active && doProcess) processor.makeActive(this);
+    if (active && doProcess) services.processor.makeActive(this);
     if (active !== this.state.active) {
       this.setState({ active });
 
@@ -706,7 +705,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
       animate: 'out',
     });
     setTimeout(() => {
-      processor.killProcess(this);
+      services.processor.killProcess(this);
     }, 200);
   };
 

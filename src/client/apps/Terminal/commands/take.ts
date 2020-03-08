@@ -1,7 +1,7 @@
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
 import { launchApp } from '../../../essential/apps';
-import { processor } from '../../../essential/processor';
+import { services } from '../../../services/services';
 
 export const COMMANDS = ['take'];
 
@@ -21,9 +21,9 @@ export class Take extends BaseCommand {
       this.terminalCommand.finish();
       return;
     } else if (this.terminalCommand.isArg('killall')) {
-      const processes = processor.processes;
+      const processes = services.processor.processes;
       const size = processes.length;
-      processor.processes.forEach(app => {
+      services.processor.processes.forEach(app => {
         app.exit();
       });
 

@@ -1,9 +1,7 @@
 import './AccountManager.scss';
 import React from 'react';
-import { IAccountRegisterRequest, IAccountLoginRequest } from '../../../shared/ApiRequests';
-import { registerUserJoi, loginUserJoi } from '../../../shared/joi';
-import { TOKEN_HEADER } from '../../../shared/constants';
-import Axios, { AxiosRequestConfig } from 'axios';
+import { services } from '../../services/services';
+import { IAccountInfo } from '../../services/account';
 
 interface IAccountProps {
   window?: boolean;
@@ -35,14 +33,13 @@ interface IAccountState {
   currentUserName: string;
   avatar: string;
   email: string;
-  warn: string;
+  error: string;
   info: string;
 }
 
 const DEFAULT_AVATAR = './assets/images/appsIcons/AccountManager.svg';
 
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
-  private token = '';
   constructor(props: IAccountProps) {
     super(props);
     this.state = {
@@ -69,55 +66,8 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       email: '',
       avatar: DEFAULT_AVATAR,
       info: '',
-      warn: '',
+      error: '',
     };
-  }
-
-  componentDidMount() {
-    this.checkAccount();
-  }
-  private checkAccount() {
-    console.log('checkng account');
-    if (!this.token) this.token = localStorage.getItem('auth');
-    if (this.token) {
-      const axiosRequestConfig: AxiosRequestConfig = {
-        headers: {},
-      };
-      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-      Axios.get('/api/v1/users/checkAccount', axiosRequestConfig)
-        .then(response => {
-          console.log('??????');
-          if (response && response.data && typeof response.data === 'object') {
-            console.log(response.data);
-            const avatar = response.data.avatar || DEFAULT_AVATAR;
-            this.setState({
-              logined: true,
-              currentUserName: response.data.username,
-              email: response.data.email,
-              avatar,
-            });
-          }
-        })
-        .catch(err => {
-          this.logOut();
-          console.log(err);
-        });
-      console.log('some weird shit');
-      this.setState({ show: 'accountSettings' });
-    } else {
-      this.setState({ show: 'register' });
-    }
-  }
-
-  logOut() {
-    this.token = undefined;
-    localStorage.removeItem('auth');
-    this.setState({
-      currentUserName: undefined,
-      avatar: DEFAULT_AVATAR,
-      logined: false,
-      email: undefined,
-    });
   }
 
   render() {
@@ -130,22 +80,24 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         <>
           {this.navigationBar}
           <div className='m-2'>{this.renderTab}</div>
-          {this.state.warn ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.warn}</div> : null}
+          {this.state.error ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.error}</div> : null}
         </>
       );
     else
       return (
-        <div className='account-manager'>
-          <div className='account-manager-window'>
+        <div className='services.account-manager'>
+          <div className='services.account-manager-window'>
             {this.navigationBar}
+            {this.state.error ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.error}</div> : null}
             <div
               className={
-                this.props.window ? 'h-100 account-manager-form-content' : 'p-5 h-100 account-manager-form-content'
+                this.props.window
+                  ? 'h-100 services.account-manager-form-content'
+                  : 'p-5 h-100 services.account-manager-form-content'
               }
             >
               {this.renderTab}
             </div>
-            {this.state.warn ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.warn}</div> : null}
           </div>
         </div>
       );
@@ -155,47 +107,43 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     return (
       <div className='p-2 btn-lrs'>
         <ul className='nav nav-tabs'>
-          <li className='nav-item'>
-            <button
-              className={`nav-link${this.state.show === 'login' ? ' active' : ''}`}
-              onClick={() => this.switchTab('login')}
-            >
-              login
-            </button>
-          </li>
-          <li className='nav-item'>
-            <button
-              className={`nav-link${this.state.show === 'register' ? ' active' : ''}`}
-              onClick={() => this.switchTab('register')}
-            >
-              register
-            </button>
-          </li>
-          <li className='nav-item'>
-            <button
-              className={`nav-link${this.state.show === 'accountSettings' ? ' active' : ''}`}
-              onClick={() => this.switchTab('accountSettings')}
-            >
-              settings
-            </button>
-          </li>
+          {this.state.logined ? (
+            <>
+              <li className='nav-item'>
+                <button
+                  className={`nav-link${this.state.show === 'login' ? ' active' : ''}`}
+                  onClick={() => this.switchTab('login')}
+                >
+                  login
+                </button>
+              </li>
+            </>
+          ) : null}
+          {this.state.logined ? (
+            <>
+              <li className='nav-item'>
+                <button
+                  className={`nav-link${this.state.show === 'register' ? ' active' : ''}`}
+                  onClick={() => this.switchTab('register')}
+                >
+                  register
+                </button>
+              </li>
+            </>
+          ) : null}
+          {!this.state.logined ? (
+            <li className='nav-item'>
+              <button
+                className={`nav-link${this.state.show === 'accountSettings' ? ' active' : ''}`}
+                onClick={() => this.switchTab('accountSettings')}
+              >
+                settings
+              </button>
+            </li>
+          ) : null}
         </ul>
       </div>
     );
-  }
-
-  switchTab = (tab: ShowOptions) => {
-    this.setState({ show: tab });
-  };
-
-  get show() {
-    switch (this.state.show) {
-      case 'register':
-        return this.registerRender;
-
-      default:
-        return null;
-    }
   }
 
   get renderTab() {
@@ -208,7 +156,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get registerRender() {
     return (
       <>
-        <form className='account-manager-form'>
+        <form className='services.account-manager-form'>
           <h5>Username</h5>
           <input
             type='text'
@@ -257,47 +205,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     );
   }
 
-  registerChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
-    const state = { ...this.state };
-    state.register[type] = event.target.value;
-    this.setState(state);
-  };
-
-  register = (event: React.MouseEvent) => {
-    event.preventDefault();
-    const accountRegisterRequest: IAccountRegisterRequest = {
-      email: this.state.register.email,
-      password: this.state.register.password,
-      repeatPassword: this.state.register.repeatPassword,
-      username: this.state.register.username,
-    };
-
-    const valid = registerUserJoi.validate(accountRegisterRequest);
-
-    if (valid.error) this.setState({ warn: valid.error.message });
-    else {
-      this.setState({ warn: '' });
-      this.setState({ show: 'none' });
-      Axios.post(`${document.location.origin}/api/v1/users/register`, accountRegisterRequest)
-        .then(response => {
-          this.setState({ show: 'accountSettings' });
-          localStorage.setItem('auth', response.headers[TOKEN_HEADER]);
-        })
-        .catch((error: any) => {
-          this.setState({ show: 'register' });
-          if (error && error.response && error.response.data && error.response.data.error) {
-            this.setState({ warn: error.response.data.error });
-          } else {
-            this.setState({ warn: 'Internal server error' });
-          }
-        });
-    }
-  };
-
   get loginRender() {
     return (
       <>
-        <form className='account-manager-form'>
+        <form className='services.account-manager-form'>
           <h5>Username or mail</h5>
           <input
             type='text'
@@ -326,47 +237,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     );
   }
 
-  loginChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
-    const state = { ...this.state };
-    state.login[type] = event.target.value;
-    this.setState(state);
-  };
-
-  login = (event: React.MouseEvent) => {
-    event.preventDefault();
-    const accountLoginRequest: IAccountLoginRequest = {
-      email: this.state.login.usernameOrEmail,
-      password: this.state.login.password,
-      username: this.state.login.usernameOrEmail,
-    };
-
-    const valid = loginUserJoi.validate(accountLoginRequest);
-
-    if (valid.error) this.setState({ warn: valid.error.message });
-    else {
-      this.setState({ warn: '' });
-      this.setState({ show: 'none' });
-      Axios.post(`${document.location.origin}/api/v1/users/login`, accountLoginRequest)
-        .then(response => {
-          this.setState({ show: 'accountSettings' });
-          localStorage.setItem('auth', response.headers[TOKEN_HEADER]);
-        })
-        .catch((error: any) => {
-          this.setState({ show: 'login' });
-          console.log(error);
-          if (error && error.response && error.response.data && error.response.data.error) {
-            this.setState({ warn: error.response.data.error });
-          } else {
-            this.setState({ warn: 'Internal server error' });
-          }
-        });
-    }
-  };
-
   get settingsRender() {
     return (
       <>
-        <form className='account-manager-form' onSubmit={this.accountSettings}>
+        <form className='services.account-manager-form' onSubmit={this.accountSettings}>
           <div className='d-flex'>
             <img
               className='m-1'
@@ -396,7 +270,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
           <br />
 
-          <div className='account-manager-section'>
+          <div className='services.account-manager-section'>
             <h5>new Password</h5>
             <input
               type='password'
@@ -422,7 +296,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
             </button>
           </div>
           <br />
-          <div className='account-manager-section'>
+          <div className='services.account-manager-section'>
             <h5>Change mail</h5>
             <input
               type='text'
@@ -447,6 +321,62 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     );
   }
 
+  componentDidMount() {
+    this.checkAccount();
+  }
+
+  private checkAccount() {
+    //services.account.services.account
+  }
+
+  switchTab = (tab: ShowOptions) => {
+    this.setState({ show: tab });
+  };
+
+  get show() {
+    switch (this.state.show) {
+      case 'register':
+        return this.registerRender;
+      default:
+        return null;
+    }
+  }
+
+  registerChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+    const state = { ...this.state };
+    state.register[type] = event.target.value;
+    this.setState(state);
+  };
+
+  register = (event: React.MouseEvent) => {
+    event.preventDefault();
+    services.account
+      .register(
+        this.state.register.username,
+        this.state.register.email,
+        this.state.register.password,
+        this.state.register.repeatPassword,
+      )
+      .then(this.setAccount)
+      .catch(this.showError)
+      .finally(this.clearPasswordFields);
+  };
+
+  loginChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+    const state = { ...this.state };
+    state.login[type] = event.target.value;
+    this.setState(state);
+  };
+
+  login = (event: React.MouseEvent) => {
+    event.preventDefault();
+    services.account
+      .login(this.state.login.usernameOrEmail, this.state.login.password)
+      .then(this.setAccount)
+      .catch(this.showError)
+      .finally(this.clearPasswordFields);
+  };
+
   renderUpdateImageButton() {
     return (
       <button className='btn btn-lrs m-2' onClick={this.uploadImage}>
@@ -469,32 +399,13 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   uploadImage = async (event: React.MouseEvent) => {
     event.preventDefault();
-    const formData = new FormData();
-    formData.append('file', this.state.accountChange.file);
-
-    try {
-      const axiosRequestConfig: AxiosRequestConfig = {
-        headers: {},
-      };
-      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-      axiosRequestConfig.headers['Content-Type'] = 'multipart-form-data';
-      // axiosRequestConfig.onUploadProgress = (processEvent:Axios. ) => {
-      //   console.log(e);
-      // }
-      await Axios.post('/api/v1/users/changeAvatar', formData, axiosRequestConfig).then(res => {
-        const state = { ...this.state };
-        if (res.data && res.data && res.data.avatar) {
-          state.avatar = res.data.avatar;
-        } else state.avatar = null;
-        state.accountChange.file = undefined;
-        this.setState(this.state);
-        this.checkAccount();
-      });
-    } catch (error) {
-      console.error(error);
-    }
-    //reader.onload = imageIsLoaded;
-    //reader.readAsDataURL(this.files[0]);
+    services.account
+      .changeAvatar(this.state.accountChange.password, this.state.accountChange.file, e => {
+        console.log(e);
+      })
+      .then(this.setAccount)
+      .catch(this.showError)
+      .finally(this.clearPasswordFields);
   };
 
   settingsChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
@@ -503,14 +414,50 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     this.setState(state);
   };
 
-  changePassword = () => { };
+  changePassword = () => {
+    services.account
+      .changePassword(
+        this.state.accountChange.password,
+        this.state.accountChange.newEmail,
+        this.state.accountChange.repeatPassword,
+      )
+      .then(this.setAccount)
+      .catch(this.showError)
+      .finally(this.clearPasswordFields);
+  };
 
-  changeMail = () => { };
+  changeMail = () => {
+    services.account
+      .changeEmail(this.state.accountChange.password, this.state.accountChange.email)
+      .then(this.setAccount)
+      .catch(this.showError)
+      .finally(this.clearPasswordFields);
+  };
+  setAccount = (account: IAccountInfo) => {
+    this.setState({
+      logined: true,
+      avatar: account.avatar,
+      currentUserName: account.username,
+    });
+  };
+
+  showError = (error: any) => {
+    if (error.message) this.setState({ error: error.message });
+    else error.toString();
+  };
+
+  clearPasswordFields = () => {
+    const state = { ...this.state };
+    state.accountChange.password = '';
+    state.register.password = '';
+    state.register.repeatPassword = '';
+  };
 
   logout = () => {
-    localStorage.removeItem('auth');
+    services.account.logout();
     this.setState({
       logined: false,
+      avatar: DEFAULT_AVATAR,
       currentUserName: '',
       email: '',
     });

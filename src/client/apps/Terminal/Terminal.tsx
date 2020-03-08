@@ -2,9 +2,9 @@ import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindo
 import { uniq } from 'lodash';
 import React from 'react';
 import './Terminal.scss';
-import { processor } from '../../essential/processor';
 import { onTerminalCommand, onTab } from './commands';
 import { TerminalCommand } from './TerminalCommand';
+import { services } from '../../services/services';
 //TODO: add html parser
 
 interface ITerminal {
@@ -32,8 +32,8 @@ export class Terminal extends BaseWindow<ITerminal> {
       {
         afterCursor: '',
         beforeCursor: '',
-        deviceInfo: processor.browser ? processor.browser : 'Unknown',
-        userName: processor.userName,
+        deviceInfo: services.processor.browser ? services.processor.browser : 'Unknown',
+        userName: services.processor.userName,
         active: undefined,
         history: [],
       },

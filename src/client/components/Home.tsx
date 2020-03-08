@@ -2,13 +2,13 @@ import React from 'react';
 import { TaskBar } from './TaskBar/TaskBar';
 import { Cursor } from './Cursor/Cursor';
 import { ContextMenu, IElement } from './ContextMenu/ContextMenu';
-import { SelectBox, IPos } from './SelectBox/SelectBox';
+import { SelectBox } from './SelectBox/SelectBox';
 import './Home.scss';
 import Axios from 'axios';
-import { processor } from '../essential/processor';
 import { launchApp } from '../essential/apps';
 import { HotKeyHandler, Keypress } from '../essential/apphotkeys';
 import { BlueScreen } from './BlueScreen/BlueScreen';
+import { services, IServices } from '../services/services';
 //import mySvg from '../../../assets/images/bliss.svg';
 
 interface IState {
@@ -57,13 +57,9 @@ export class Home extends React.Component<{}, IState> {
 
   constructor(props) {
     super(props);
-    window.onerror = message => {
-      this.setState({ blueScreen: message.toString() });
-    };
-
     this.state = {
       blueScreen: '',
-      ready: false,
+      ready: services.isReady,
       landscape: true,
       selectionBox: {
         shown: false,
@@ -80,6 +76,9 @@ export class Home extends React.Component<{}, IState> {
           y: 0,
         },
       },
+    };
+    window.onerror = message => {
+      this.setState({ blueScreen: message.toString() });
     };
   }
 
@@ -99,11 +98,23 @@ export class Home extends React.Component<{}, IState> {
   };
 
   componentDidMount() {
+    const serviceReady = () => {
+      this.setState({
+        ready: true,
+      });
+      services.processor.on('appDisplayingAdd', this.updateView);
+      services.processor.on('appRemove', this.updateView);
+      services.removeListener('allReady', serviceReady);
+    };
+    if (!services.isReady) {
+      services.on('allReady', serviceReady);
+    } else serviceReady();
+
     this.terminal = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.T], true);
     this.terminal.on('combination', this.openTerminal);
     this.killActiveWindow = new HotKeyHandler([Keypress.Alt, Keypress.Four], true);
     this.killActiveWindow.on('combination', () => {
-      const active = processor.processes.find(p => p.active);
+      const active = services.processor.processes.find(p => p.active);
       if (active) active.exit();
     });
 
@@ -124,24 +135,8 @@ export class Home extends React.Component<{}, IState> {
       Keypress.A,
     ]);
     this.blueScreen.on('combination', this.showBlueScreen);
-
-    processor.on('appDisplayingAdd', this.updateView);
-    processor.on('appRemove', this.updateView);
     this.updateDimensions();
     window.addEventListener('resize', this.updateDimensions, false);
-
-    const processorReady = () => {
-      this.setState({
-        ready: true,
-      });
-
-      processor.removeListener('ready', processorReady);
-    };
-    if (processor.isReady) {
-      processorReady();
-    } else {
-      processor.on('ready', processorReady);
-    }
 
     if (!customWallpaper) return;
     Axios.get(customWallpaper, {
@@ -167,10 +162,9 @@ export class Home extends React.Component<{}, IState> {
     this.terminal.destroy();
     this.killActiveWindow.destroy();
     this.blueScreen.destroy();
-    processor.removeListener('appDisplayingAdd', this.updateView);
-    processor.removeListener('appRemove', this.updateView);
+    services.processor.removeListener('appDisplayingAdd', this.updateView);
+    services.processor.removeListener('appRemove', this.updateView);
   }
-
   updateDimensions = () => {
     //if (this.state.wallpaper) return;
     let landscape: boolean;
@@ -202,7 +196,7 @@ export class Home extends React.Component<{}, IState> {
   }
 
   get processApps() {
-    return processor.runningApps.map((a, i) => {
+    return services.processor.runningApps.map((a, i) => {
       return a.app;
     });
   }

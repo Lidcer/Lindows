@@ -3,9 +3,9 @@ import moment from 'moment';
 import './TaskBar.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
-import { processor } from '../../essential/processor';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
-import { StartMenu, IStartMenuProps } from '../StartMenu/StartMenu';
+import { StartMenu } from '../StartMenu/StartMenu';
+import { services } from '../../services/services';
 
 interface IState {
   time: string;
@@ -41,16 +41,16 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   componentDidMount() {
-    processor.on('appAdd', this.updateTaskBar);
-    processor.on('appRemove', this.updateTaskBar);
-    processor.on('appAdd', this.onAppAdd);
-    processor.on('appRemove', this.onAppRemove);
+    services.processor.on('appAdd', this.updateTaskBar);
+    services.processor.on('appRemove', this.updateTaskBar);
+    services.processor.on('appAdd', this.onAppAdd);
+    services.processor.on('appRemove', this.onAppRemove);
     this.timeOutFunction = setInterval(this.updateTaskBar, 1000);
   }
 
   componentWillUnmount() {
-    processor.removeListener('appAdd', this.updateTaskBar);
-    processor.removeListener('appRemove', this.updateTaskBar);
+    services.processor.removeListener('appAdd', this.updateTaskBar);
+    services.processor.removeListener('appRemove', this.updateTaskBar);
     clearTimeout(this.timeOutFunction);
   }
 
@@ -205,7 +205,7 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   private showDesktop(event: React.MouseEvent) {
-    const pross = processor.processes.filter(a => !a.minimized);
+    const pross = services.processor.processes.filter(a => !a.minimized);
     console.log(pross.length);
   }
 

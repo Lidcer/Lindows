@@ -2,10 +2,9 @@ import { Terminal, manifest as terminalManifest } from '../apps/Terminal/Termina
 import { TaskManager, manifest as taskManagerManifest } from '../apps/TaskManager/TaskManager';
 import { AccountManager, manifest as accountManagerManifest } from '../apps/AccountManager/AccountManager';
 import { Lype, manifest as lypeManifest } from '../apps/Lype/Lype';
-
-import { processor } from './processor';
 import React from 'react';
 import { IManifest } from '../apps/BaseWindow/BaseWindow';
+import { services } from '../services/services';
 
 export declare type reactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -34,7 +33,7 @@ export const allApps: AllApps[] = [
 export function launchApp(appName: string) {
   const app = appConstructorGenerator(appName);
   if (app) {
-    processor.addApp(app);
+    services.processor.addApp(app);
     return true;
   }
   return false;

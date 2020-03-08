@@ -10,7 +10,7 @@ import {
   changePassword,
   checkUser,
   uploadImage,
-} from './users';
+} from './apiUsers';
 import { imagesPath } from '../database/Users';
 
 export const verificationApi = '/api/v1/users/verify/';
