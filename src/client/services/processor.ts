@@ -16,6 +16,7 @@ interface IDisplayingApp {
   app: JSX.Element;
   state?: any;
 }
+
 export declare interface IProcessor {
   on(event: 'appAdd', listener: (object: BaseWindow) => void): this;
   on(event: 'appRemove', listener: (object: BaseWindow) => void): this;
@@ -44,7 +45,7 @@ export class IProcessor extends EventEmitter {
     this.displayAppQueue.forEach(app => this.addApp(app));
     this.displayAppQueue = [];
 
-    const storage = this.browserStorage.getStorage(this.browserStorageKey);
+    const storage = this.browserStorage.getItem(this.browserStorageKey);
     if (storage) {
       try {
         const json: IStringifiedProcess[] = JSON.parse(storage);
@@ -148,7 +149,7 @@ export class IProcessor extends EventEmitter {
     return new Promise(async (resolve, reject) => {
       const stringifiedProcesses = this.stringify;
       try {
-        await this.browserStorage.store(this.browserStorageKey, stringifiedProcesses);
+        await this.browserStorage.setItem(this.browserStorageKey, stringifiedProcesses);
         resolve();
       } catch (error) {
         reject(error);

@@ -273,7 +273,7 @@ export class IAccount extends EventEmitter {
   }
 
   public get account(): IAccountInfo {
-    if (this.username) return null;
+    if (!this.username) return null;
     return {
       accountId: this.accountId,
       username: this.username,

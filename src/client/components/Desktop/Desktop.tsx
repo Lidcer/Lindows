@@ -1,14 +1,14 @@
 import React from 'react';
-import { TaskBar } from './TaskBar/TaskBar';
-import { Cursor } from './Cursor/Cursor';
-import { ContextMenu, IElement } from './ContextMenu/ContextMenu';
-import { SelectBox } from './SelectBox/SelectBox';
-import './Home.scss';
+import { TaskBar } from '../TaskBar/TaskBar';
+import { Cursor } from '../Cursor/Cursor';
+import { ContextMenu, IElement } from '../ContextMenu/ContextMenu';
+import { SelectBox } from '../SelectBox/SelectBox';
+import './Desktop.scss';
 import Axios from 'axios';
-import { launchApp } from '../essential/apps';
-import { HotKeyHandler, Keypress } from '../essential/apphotkeys';
-import { BlueScreen } from './BlueScreen/BlueScreen';
-import { services, IServices } from '../services/services';
+import { launchApp } from '../../essential/apps';
+import { HotKeyHandler, Keypress } from '../../essential/apphotkeys';
+import { BlueScreen } from '../BlueScreen/BlueScreen';
+import { services, IServices } from '../../services/services';
 //import mySvg from '../../../assets/images/bliss.svg';
 
 interface IState {
@@ -49,7 +49,7 @@ const wallpaperContextMenu: IElement[] = [
   { content: 'Personalize', picture: './assets/images/browserSettings.svg' },
 ];
 
-export class Home extends React.Component<{}, IState> {
+export class Desktop extends React.Component<{}, IState> {
   private terminal: HotKeyHandler;
   private blueScreen: HotKeyHandler;
   private taskManager: HotKeyHandler;

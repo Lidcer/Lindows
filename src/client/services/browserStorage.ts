@@ -19,6 +19,7 @@ export class IBrowserStorage extends EventEmitter {
     const data = localStorage.getItem(this.storageName);
     if (!data) {
       await this.save();
+      this.emit('ready', this);
       return this;
     }
     await compress
@@ -39,7 +40,7 @@ export class IBrowserStorage extends EventEmitter {
     this.emit('ready', this);
   }
 
-  store(key: string, value: any): Promise<void> {
+  setItem(key: string, value: any): Promise<void> {
     return new Promise(async (resolve, reject) => {
       if (key.length < 3) return reject(new Error('key must have more than 3 characters'));
       this.data[key] = value;
@@ -51,7 +52,7 @@ export class IBrowserStorage extends EventEmitter {
       }
     });
   }
-  getStorage(key: string) {
+  getItem(key: string) {
     return this.data[key];
   }
 
@@ -72,6 +73,10 @@ export class IBrowserStorage extends EventEmitter {
 
   load() {
     return this.data;
+  }
+
+  clear() {
+    localStorage.clear();
   }
 
   get isReady() {

@@ -12,6 +12,7 @@ import {
   uploadImage,
 } from './apiUsers';
 import { imagesPath } from '../database/Users';
+import { apiIp } from './apiIP';
 
 export const verificationApi = '/api/v1/users/verify/';
 
@@ -52,6 +53,10 @@ export function apiRouter() {
 
   router.post('/api/v1/users/delete_account', (req, res) => {
     deleteAccount(req, res);
+  });
+
+  router.get('/api/v1/ip', (req, res) => {
+    apiIp(req, res);
   });
 
   router.get(`/${imagesPath.join('/')}`, (req, res) => {

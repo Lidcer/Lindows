@@ -42,4 +42,19 @@ export interface IAccount {
   avatar?: string;
 }
 
+export interface IP {
+  ip: string;
+  hostname?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  loc?: string;
+  org?: string;
+  postal?: string;
+  timezone?: string;
+  readme?: string;
+  bogon?: boolean;
+}
+
 export declare type IAccountResponse = IResponse<IAccount>;
+export declare type IIPResponse = IResponse<IP>;

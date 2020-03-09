@@ -1,0 +1,56 @@
+.boot-screen {
+    position: absolute;
+    padding: 5pt;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: black;
+    color: white;
+    font-size: 12pt;
+
+
+    .logo {
+        background-color: red;
+        top: 0;
+        right: 0;
+        width: 20%;
+    }
+
+    .top {
+        display: flex;
+        width: 100%;
+        height: 20%;
+
+        .info {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        span {
+            display: inline-block;
+
+        }
+
+        img {
+            right: 0;
+            height: 100%;
+        }
+    }
+
+    .middle {
+        width: 100%;
+        height: auto;
+        flex: auto;
+    }
+
+    .bottom {
+        display: flex;
+        flex-direction: column-reverse;
+        width: 100%;
+        height: 10%;
+    }
+
+
+}

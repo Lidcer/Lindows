@@ -23,11 +23,11 @@ export class IServices extends EventEmitter {
   }
   private async startup() {
     await this.initFingerPrinter();
-    this.emit('onServiceReady', 'fingerprinter');
+    this.emit('onServiceReady', 'Fingerprinter');
     await this.initLocalStorage();
-    this.emit('onServiceReady', 'localStorage');
+    this.emit('onServiceReady', 'LocalStorage');
     await this.initAccount();
-    this.emit('onServiceReady', 'account');
+    this.emit('onServiceReady', 'Account');
     await this.initProcessor();
     this.emit('onServiceReady', 'Processor');
     this.ready = true;

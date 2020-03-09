@@ -22,6 +22,17 @@ export const manifest: IManifest = {
   icon: './assets/images/appsIcons/Terminal.svg',
 };
 
+function terminalName() {
+  if (services.account.account) return services.account.account.username;
+  return services.processor.userName;
+}
+
+function deviceInfo() {
+  const browser = services.fingerprinter.userAgent.getBrowser();
+  if (browser) return `${browser.name}${browser.version}`;
+  return 'unknown';
+}
+
 export class Terminal extends BaseWindow<ITerminal> {
   private currentTabSuggestion: string[] = [];
   constructor(props: IBaseWindowProps) {
@@ -32,8 +43,8 @@ export class Terminal extends BaseWindow<ITerminal> {
       {
         afterCursor: '',
         beforeCursor: '',
-        deviceInfo: services.processor.browser ? services.processor.browser : 'Unknown',
-        userName: services.processor.userName,
+        deviceInfo: terminalName(),
+        userName: deviceInfo(),
         active: undefined,
         history: [],
       },
@@ -72,7 +83,7 @@ export class Terminal extends BaseWindow<ITerminal> {
     return (
       <>
         <span className='terminal-name'>
-          {this.variables.userName}@{this.variables.deviceInfo}
+          {this.variables.deviceInfo}@{this.variables.userName}
         </span>
         <span>:</span>
         <span className='terminal-input'>{this.variables.beforeCursor}</span>
