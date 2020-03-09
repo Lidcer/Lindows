@@ -1,5 +1,5 @@
 import React from 'react';
-import './BootScreen.scss';
+import './bootScreen.scss';
 import { services } from '../../services/services';
 import { SECOND } from '../../../shared/constants';
 

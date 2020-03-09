@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import ipInfo from 'ipInfo';
+import ipInfo from 'ipinfo';
 import { IIPResponse } from '../../shared/ApiRequestsResponds';
 
 export function apiIp(req: Request, res: Response) {
