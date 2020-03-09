@@ -1,8 +1,11 @@
+$biosMainColour: #0f15b3;
+$biosBackgroundColour: #bababa;
+
 .bios {
     position: absolute;
     height: 100%;
     width: 100%;
-    background-color: #bababa;
+    background-color: $biosBackgroundColour;
     display: flex;
     flex-direction: column;
 
@@ -21,12 +24,12 @@
         }
     }
 
-    .popup {
+    .bios-popup {
         position: absolute;
         flex: auto;
         height: auto;
         color: #ffffff;
-        background: #0f15b3;
+        background: $biosMainColour;
 
         width: 300px;
         height: 200px;
@@ -37,34 +40,34 @@
         box-shadow: 20px 20px #000000;
     }
 
-    .popup-title {
+    .bios-popup-title {
         position: absolute;
         width: 100%;
         text-align: center;
 
         span {
             padding: 5pt;
-            background: #0f15b3;
+            background: $biosMainColour;
         }
     }
 
 
-    .popup-inner {
+    .bios-popup-inner {
         margin: 5pt;
         padding: 8pt;
         height: calc(100% - 10pt);
         width: calc(100% - 10pt);
-        border: 1px solid white;
+        border: 1px solid $biosBackgroundColour;
 
         display: flex;
         flex-direction: column;
 
-        .popup-inner-content {
+        .bios-popup-inner-content {
             flex: auto;
             height: auto;
         }
 
-        .popup-buttons {
+        .bios-popup-buttons {
             display: flex;
 
             button {
@@ -76,30 +79,74 @@
 
             }
 
-            .active {
+            .bios-active {
                 background-color: black;
                 background: black;
             }
         }
     }
 
-    .top {
+    .bios-top {
         text-align: center;
-        color: white;
-        background-color: #0f15b3;
+        color: $biosBackgroundColour;
+        background-color: $biosMainColour;
 
         font-size: 20pt;
+
+        .bios-title {
+            color: white;
+            font-size: 18pt;
+            position: absolute;
+            width: 100%;
+            height: 25pt;
+        }
     }
 
-    .middle {
+
+    .bios-nav-bar {
+        width: 100%;
+        height: 25pt;
+        display: flex;
+        background-color: $biosMainColour;
+        color: $biosBackgroundColour;
+        font-weight: bold;
+
+        .bios-tab-active {
+            color: $biosMainColour;
+            background-color: $biosBackgroundColour;
+        }
+
+        span {
+            height: 100%;
+            padding: 2pt;
+            font-size: 15pt;
+        }
+    }
+
+    .bios-gradient {
+        display: flex;
+        width: 100%;
+
+        span {
+            height: 25pt;
+            flex: auto;
+
+        }
+
+        span:empty {
+            display: flex;
+        }
+    }
+
+    .bios-middle {
         display: flex;
         flex-direction: row;
         margin: 5pt;
         //padding: 5pt;
-        border: 2pt solid #0f15b3;
+        border: 2pt solid $biosMainColour;
         flex: auto;
         height: auto;
-        color: #0f15b3;
+        color: $biosMainColour;
 
         .bios-settings {
             padding: 5pt;
@@ -118,27 +165,35 @@
                     background-color: transparent;
                     border: none;
                 }
-
             }
-
-
-
-
         }
 
         .bios-info {
-            border-left: 2px solid #0f15b3;
+            border-left: 2px solid $biosMainColour;
             padding: 5pt;
-            color: #0f15b3;
+            color: $biosMainColour;
             max-width: 200pt;
+            display: flex;
+            flex-direction: column;
+
+            .bios-top-info {
+                flex: auto;
+                height: 100%;
+            }
+
+            .bios-bottom-info {
+                border-top: 1pt solid;
+            }
+
+
         }
 
     }
 
-    .bottom {
+    .bios-bottom {
         text-align: center;
         color: white;
-        background-color: #0f15b3;
+        background-color: $biosMainColour;
         font-size: 15pt;
     }
 }
