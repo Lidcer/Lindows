@@ -1,16 +1,16 @@
 import React, { PureComponent } from 'react';
 
-interface Props { }
-interface State { }
+// interface Props {}
+// interface State {}
 
-export class Webpage extends PureComponent<Props, State> {
-    constructor(props) {
-        super(props);
+export class Webpage extends PureComponent<{}, {} /* Props, State */> {
+  constructor(props) {
+    super(props);
 
-        this.state = {};
-    }
+    this.state = {};
+  }
 
-    render() {
-        return <div>Work in pogress</div>;
-    }
+  render() {
+    return <div>Work in pogress</div>;
+  }
 }

@@ -14,9 +14,7 @@ export class LypeWebpage extends React.Component<IAccountProps, {}> {
   }
 
   componentDidMount() {
-
-
-
+    console.log('mounted');
   }
 
   render() {
@@ -44,10 +42,10 @@ export class LypeWebpage extends React.Component<IAccountProps, {}> {
     //TODO: replace with proper list
     const fakeFriends: string[] = [];
     for (let i = 0; i < 99; i++) {
-      fakeFriends.push(i);
+      fakeFriends.push(i.toString());
     }
     return fakeFriends.map((e, i) => (
-      <li key={i} onClick={this.friendClick}>
+      <li key={i} onClick={() => this.friendClick}>
         {e}
       </li>
     ));

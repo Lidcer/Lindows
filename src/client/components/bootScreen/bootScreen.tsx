@@ -86,14 +86,14 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
 
   onTouch(start: boolean) {
     if (this.onTouchTimeoutFunction) {
-      clearTimeout(this.onTouchTimeoutFunction)
+      clearTimeout(this.onTouchTimeoutFunction);
     }
     if (start) {
       this.onTouchTimeoutFunction = setTimeout(() => {
         this.setState({ goToBios: true });
       }, SECOND * 2);
     }
-  };
+  }
 
   keypress = (ev: KeyboardEvent) => {
     if (ev.key.toLowerCase() === 'delete') {

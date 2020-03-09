@@ -1,5 +1,3 @@
-import { onTerminalCommand } from '../commands';
-import { IWindow } from '../../BaseWindow/BaseWindow';
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
 import { services } from '../../../services/services';
@@ -53,9 +51,11 @@ export class Leofetch extends BaseCommand {
     COPY_LIDCER_LOGO[1] += '-'.repeat(name.length);
     COPY_LIDCER_LOGO[2] += `Frontend: ${services.processor.frontend}`;
     COPY_LIDCER_LOGO[3] += `Browser: ${services.processor.deviceInfo.getBrowser().name} v:${
-      services.processor.deviceInfo.getBrowser().version}`;
-    COPY_LIDCER_LOGO[4] += `OS: ${services.processor.deviceInfo.getOS().name} ${
-      services.processor.deviceInfo.getOS().version}`;
+      services.fingerprinter.userAgent.getBrowser().version
+    }`;
+    COPY_LIDCER_LOGO[4] += `OS: ${services.fingerprinter.userAgent.getOS().name} ${
+      services.fingerprinter.userAgent.getOS().version
+    }`;
     COPY_LIDCER_LOGO[5] += `Uptime: ${moment(services.processor.uptime)}`;
 
     this.terminalCommand.content = COPY_LIDCER_LOGO.join('\n');

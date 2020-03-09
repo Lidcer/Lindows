@@ -11,7 +11,7 @@ export function apiIp(req: Request, res: Response) {
   }
   if (ip[0] === '1') {
     response.success = {
-      ip: 'localhost'
+      ip: 'localhost',
     };
     return res.status(200).json(response);
   }

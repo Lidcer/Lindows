@@ -4,13 +4,13 @@ import { Bios } from './bios/Bios';
 import { BootScreen } from './bootScreen/bootScreen';
 import { Webpage } from './webpage';
 
-interface IProps { }
+//interface IProps { }
 
 interface IState {
   display: 'bootscreen' | 'bios' | 'bootanimation' | 'lidnows' | 'webpage';
 }
 
-export class Main extends PureComponent<IProps, IState> {
+export class Main extends PureComponent<{} /*IProps*/, IState> {
   private shouldStayInBios = false;
 
   constructor(props) {
@@ -24,7 +24,8 @@ export class Main extends PureComponent<IProps, IState> {
   render() {
     if (this.state.display === 'lidnows') return <Desktop></Desktop>;
     else if (this.state.display === 'webpage') return <Webpage></Webpage>;
-    else if (this.state.display === 'bios') return <Bios next={this.next} shouldStayInBios={this.shouldStayInBios}></Bios>;
+    else if (this.state.display === 'bios')
+      return <Bios next={this.next} shouldStayInBios={this.shouldStayInBios}></Bios>;
     else if (this.state.display === 'bootscreen') return <BootScreen next={this.next}> </BootScreen>;
   }
 
