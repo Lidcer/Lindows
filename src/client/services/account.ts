@@ -104,7 +104,7 @@ export class IAccount extends EventEmitter {
         username: usernameOrEmail,
       };
 
-      Axios.post('/api/v1/users/login', accountLoginRequest)
+      Axios.post<IAccountResponse>('/api/v1/users/login', accountLoginRequest)
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
@@ -140,7 +140,7 @@ export class IAccount extends EventEmitter {
         username,
       };
 
-      Axios.post('/api/v1/users/register', accountRegisterRequest)
+      Axios.post<IAccountResponse>('/api/v1/users/register', accountRegisterRequest)
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
@@ -184,15 +184,17 @@ export class IAccount extends EventEmitter {
           console.log(processEvent); //FIXME: do something about
           callback(processEvent);
         };
-        await Axios.post('/api/v1/users/changeAvatar', formData, axiosRequestConfig).then(response => {
-          const body: IAccountResponse = response.data;
-          if (body.success && body.success.username && body.success.id) {
-            this.avatar = body.success.avatar;
-            resolve(this.account);
-          } else {
-            reject(new Error('Invalid data received from server'));
-          }
-        });
+        await Axios.post<IAccountResponse>('/api/v1/users/changeAvatar', formData, axiosRequestConfig).then(
+          response => {
+            const body = response.data;
+            if (body.success && body.success.username && body.success.id) {
+              this.avatar = body.success.avatar;
+              resolve(this.account);
+            } else {
+              reject(new Error('Invalid data received from server'));
+            }
+          },
+        );
       } catch (error) {
         console.error(error);
         reject(new Error('Internal server error'));
@@ -213,7 +215,7 @@ export class IAccount extends EventEmitter {
         oldPassword,
       };
 
-      Axios.post('/api/v1/users/changePassword', iAccountChangeAccount)
+      Axios.post<IAccountResponse>('/api/v1/users/changePassword', iAccountChangeAccount)
         .then(response => {
           const body: IAccountResponse = response.data;
           if (body.success && body.success.username && body.success.id) {
@@ -240,9 +242,9 @@ export class IAccount extends EventEmitter {
         password,
       };
 
-      Axios.post('/api/v1/users/changeEmail', iAccountChangeEmailAccount)
+      Axios.post<IAccountResponse>('/api/v1/users/changeEmail', iAccountChangeEmailAccount)
         .then(response => {
-          const body: IAccountResponse = response.data;
+          const body = response.data;
           if (body.success && body.success.username && body.success.id) {
             resolve(this.account);
           } else {

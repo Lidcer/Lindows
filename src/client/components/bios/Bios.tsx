@@ -4,6 +4,8 @@ import { services } from '../../services/services';
 import { UAParser } from 'ua-parser-js';
 import { Keypress } from '../../essential/constants/Keypress';
 import { stat } from 'fs';
+import { IIPResponse, IP } from '../../../shared/ApiRequestsResponds';
+import Axios from 'axios';
 
 interface IBIOSProps {
   next: (type: WebpageType) => void;
@@ -21,6 +23,8 @@ interface IBIOSState {
   rightSideInfo: string;
   tab: Tab;
   gradient: GradientColours[];
+
+  networkInfo?: IP;
 
   popup?: {
     title: string;
@@ -42,7 +46,7 @@ interface IBIOSStorage {
 
 function initGradient() {
   const COLOUR = [25, 34, 253];
-  const RANGE = 75;
+  const RANGE = services.fingerprinter.mobile.mobile() ? 25 : 100;
   const HALF = Math.floor(RANGE * 0.5);
   const R_MULTIPLAYER = COLOUR[0] / HALF;
   const G_MULTIPLAYER = COLOUR[1] / HALF;
@@ -75,6 +79,7 @@ const MAIN_TAB_INFO = 'This section is showing info about your system';
 
 export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   private readonly BROWSER_STORAGE_KEY = '__BIOS_STORAGE__';
+  private networkStatus: 'unknown' | 'fetched' | 'noConnection' | 'fetching' = 'unknown';
   private interval: NodeJS.Timeout;
 
   constructor(props: IBIOSProps) {
@@ -144,7 +149,43 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           </div>
         </div>
       );
+    else if (this.state.tab === 'network') {
+      if (this.networkStatus === 'unknown') {
+        this.networkStatus = 'fetching';
+        Axios.get<IIPResponse>('/api/v1/ip')
+          .then(result => {
+            const props = { ...this.state };
+            props.networkInfo = result.data.success;
+            this.networkStatus = 'fetched';
+            this.setState(props);
+          })
+          .catch(err => {
+            console.error(err);
+            this.networkStatus = 'noConnection';
+            this.setState({});
+          });
+      }
 
+      if (!this.state.networkInfo) {
+        return <div>Fetching</div>;
+      } else {
+        const netInfo = this.state.networkInfo;
+        return (
+          <div className='bios-settings'>
+            <div className='bios-system-info'>
+              <span>IP: {netInfo.ip}</span>
+              {netInfo.city ? <span>City: {netInfo.city}</span> : null}
+              {netInfo.loc ? <span>Location: {netInfo.loc}</span> : null}
+              {netInfo.org ? <span>Org: {netInfo.org}</span> : null}
+              {netInfo.postal ? <span>Postal: {netInfo.postal}</span> : null}
+              {netInfo.timezone ? <span>Timezone: {netInfo.timezone}</span> : null}
+              {netInfo.region ? <span>Region: {netInfo.region}</span> : null}
+              {netInfo.hostname ? <span>Hostname: {netInfo.hostname}</span> : null}
+            </div>
+          </div>
+        );
+      }
+    }
     return null;
   }
 
