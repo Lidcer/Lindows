@@ -139,14 +139,21 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
       return (
         <div className='bios-settings'>
           {this.systemInfo}
-          <div className='bios-settings-line'>
-            <span>Reset storage:</span>
-            <button onClick={this.resetStorage}>[ACTION]</button>
-          </div>
-          <div className='bios-settings-line'>
-            <span>boot option:</span>
-            <button onClick={this.bootOptionPopup}>[{this.bootOption}]</button>
-          </div>
+
+          <table>
+            <tr>
+              <td>Reset storage:</td>
+              <td>
+                <button onClick={this.resetStorage}>[ACTION]</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Boot options</td>
+              <td>
+                <button onClick={this.bootOptionPopup}>[{this.bootOption}]</button>
+              </td>
+            </tr>
+          </table>
         </div>
       );
     else if (this.state.tab === 'network') {
@@ -185,6 +192,33 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           </div>
         );
       }
+    } else if (this.state.tab === 'exit') {
+      return (
+        <div className='bios-settings'>
+          <table>
+            <tr>
+              <td>
+                <button className={true ? 'bios-button' : 'bios-button active'}>{'[Save changes & reboot]'}</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Discard changes & reboot]'}</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Discard changes]'}</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Load defaults]'}</button>
+              </td>
+            </tr>
+          </table>
+        </div>
+      );
     }
     return null;
   }

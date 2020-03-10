@@ -9,6 +9,17 @@ $biosBackgroundColour: #bababa;
     display: flex;
     flex-direction: column;
 
+    .bios-button {
+        background-color: transparent;
+        border: none;
+
+        .active {
+            color: white;
+            background: black;
+        }
+
+    }
+
     .bios-system-info {
         color: #555555;
         display: flex;
