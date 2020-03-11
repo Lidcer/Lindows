@@ -1,66 +1,95 @@
-import { MailService } from '@sendgrid/mail';
-import { SENDGRIND_API_KEY } from './config';
+import { MailService as Ms } from '@sendgrid/mail';
 import request from 'request';
+import { MINUTE } from '../shared/constants';
 
-const mailServer = new MailService();
-let disabled = false;
+export class MailService {
+  private mailCooldowns = new Map<string, NodeJS.Timeout>();
+  private mailServer = new Ms();
+  private disabled = false;
+  private MAIL_COOL_DOWN = MINUTE * 10;
 
-export function setupMail() {
-  if (SENDGRIND_API_KEY) mailServer.setApiKey(SENDGRIND_API_KEY);
-  else {
-    console.warn('sendgrid api has not been found mails are not going to be sent.');
-    disabled = true;
+  constructor(SENDGRIND_API_KEY: string) {
+    if (SENDGRIND_API_KEY) this.mailServer.setApiKey(SENDGRIND_API_KEY);
+    else {
+      console.warn('sendgrid api has not been found mails are not going to be sent.');
+      this.disabled = true;
+    }
   }
-}
 
-export function sendNewVerificationMail(email: string, verificationUrl: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (disabled) return resolve();
+  sendVerification(email: string, verificationUrl: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.isMailOnCoolDown(email)) return reject(new Error('Mail cool down plase wait a bit and try again'));
+      if (this.disabled) return resolve();
 
-    const text = `Please verify your new email on: ${verificationUrl}`;
-    const html = `Please verify your new email on: <a>${verificationUrl}</a>`;
+      const text = `Please verify your new email on: ${verificationUrl}`;
+      const html = `Please verify your new email on: <a>${verificationUrl}</a>`;
 
-    sendMail(email, 'Verification code', text, html)
-      .then(() => resolve())
-      .catch(err => reject(err));
-  });
-}
+      this.sendMail(email, 'Verification code', text, html)
+        .then(() => {
+          this.addCoolDownToMail(email);
+          resolve();
+        })
+        .catch(err => reject(err));
+    });
+  }
 
-export function sendVerificationMail(email: string, verificationUrl: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (disabled) return resolve();
+  sendNewVerification(email: string, verificationUrl: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.isMailOnCoolDown(email)) return reject(new Error('Mail cool down plase wait a bit and try again'));
+      if (this.disabled) return resolve();
 
-    const text = `Please verify your account on: ${verificationUrl}`;
-    const html = `Please verify your account on: <a>${verificationUrl}</a>`;
+      const text = `Please verify your new email on: ${verificationUrl}`;
+      const html = `Please verify your new email on: <a>${verificationUrl}</a>`;
 
-    sendMail(email, 'Verification code', text, html)
-      .then(() => resolve())
-      .catch(err => reject(err));
-  });
-}
+      this.sendMail(email, 'Verification code', text, html)
+        .then(() => {
+          this.addCoolDownToMail(email);
+          resolve();
+        })
+        .catch(err => reject(err));
+    });
+  }
 
-export function sendMail(
-  recipient: string,
-  subject: string,
-  text: string,
-  html?: string,
-): Promise<[request.Response, {}]> {
-  return new Promise((resolve, reject) => {
-    mailServer.send(
-      {
-        from: 'noreply@lidcer.com',
-        to: recipient,
-        text,
-        subject,
-        html,
-      },
-      false,
-      (err, response) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(response);
-      },
-    );
-  });
+  private sendMail(recipient: string, subject: string, text: string, html?: string): Promise<[request.Response, {}]> {
+    return new Promise((resolve, reject) => {
+      this.mailServer.send(
+        {
+          from: 'noreply@lidcer.com',
+          to: recipient,
+          text,
+          subject,
+          html,
+        },
+        false,
+        (err, response) => {
+          if (err) {
+            return reject(err);
+          }
+          resolve(response);
+        },
+      );
+    });
+  }
+
+  isMailOnCoolDown(email: string): boolean {
+    return !!this.mailCooldowns.get(email);
+  }
+
+  addCoolDownToMail(email: string) {
+    this.removeMailFromCoolDown(email);
+    const timeoutFun = setTimeout(() => {
+      this.removeMailFromCoolDown(email);
+    }, this.MAIL_COOL_DOWN);
+    this.mailCooldowns.set(email, timeoutFun);
+  }
+
+  removeMailFromCoolDown(email: string): boolean {
+    const timeoutFunction = this.mailCooldowns.get(email);
+    if (timeoutFunction) {
+      clearTimeout(timeoutFunction);
+      this.mailCooldowns.delete(email);
+      return true;
+    }
+    return false;
+  }
 }

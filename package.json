@@ -81,6 +81,7 @@
     "bcrypt": "^4.0.0",
     "body-parser": "^1.19.0",
     "compress-str": "^1.0.2",
+    "ddos": "^0.2.1",
     "dotenv": "^8.2.0",
     "ejs": "^3.0.1",
     "express": "^4.17.1",

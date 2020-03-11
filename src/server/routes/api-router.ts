@@ -16,7 +16,6 @@ import { imagesPath } from '../database/Users';
 import { apiIp } from './apiIP';
 
 export const verificationApi = '/api/v1/users/verify/';
-
 export function apiRouter() {
   const router = Router();
   router.use(bodyParser.urlencoded({ extended: false }));

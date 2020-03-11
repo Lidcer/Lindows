@@ -24,11 +24,11 @@ import {
   IAccount,
 } from '../../shared/ApiRequestsResponds';
 import { verifyPassword } from '../database/passwordHasher';
-import { sendMail, sendVerificationMail, sendNewVerificationMail } from '../mail';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
 import { verificationApi } from './api-router';
 import fileUpload = require('express-fileupload');
 import { logError } from './Error';
+import { mailService } from '../main';
 
 interface IJWTAccount {
   id: string;
@@ -70,14 +70,13 @@ export async function registerUser(req: Request, res: Response) {
     );
     const code = generateVerificationCode();
     await addVerificationCodeToDatabase(user._id, code, 'verify-account');
-    sendVerificationMail(accountRequest.email, 'Verification code').catch(err => {
+    mailService.sendVerification(accountRequest.email, 'Verification code').catch(err => {
       logError(err, 'Unable to send email');
     });
     const jwtTokenData: IJWTAccount = {
       id: user._id,
       exp: WEEK * 2,
     };
-    console.log('fuck04');
     const data: IAccount = {
       id: user._id,
       username: user.username,
@@ -87,8 +86,7 @@ export async function registerUser(req: Request, res: Response) {
 
     const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
     response.success = data;
-  
-    console.log('sending...')
+
     res.header(TOKEN_HEADER, jwtToken).json(response);
   } catch (error) {
     logError(error, 'Registering user');
@@ -189,11 +187,11 @@ export async function checkUser(req: Request, res: Response) {
 export async function verifyUser(req: Request, res: Response) {
   const verificationCode = req.params['verificationCodeId'];
   try {
-    await verifyCode(verificationCode);
+    const user = await verifyCode(verificationCode);
+    res.status(200).send('verified ok :ok hand:');
   } catch (error) {
     return res.status(400);
   }
-  res.status(200).send('verified ok :ok hand:');
 }
 
 export async function changePassword(req: Request, res: Response) {
@@ -266,7 +264,7 @@ export async function changeEmail(req: Request, res: Response) {
     await addVerificationCodeToDatabase(user._id, code, 'email-change', iAccountChangeEmailRequest.email);
 
     const verificationUrl = `${req.host}${verificationApi}${code}`;
-    await sendNewVerificationMail(iAccountChangeEmailRequest.email, verificationUrl);
+    await mailService.sendNewVerification(iAccountChangeEmailRequest.email, verificationUrl);
 
     response.success = {
       id: user.id,

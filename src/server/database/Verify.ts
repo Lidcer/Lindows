@@ -1,6 +1,6 @@
 import { Schema, Document } from 'mongoose';
 import { mongoose } from './database';
-import { getUserById } from './Users';
+import { getUserById, IMongooseUserSchema } from './Users';
 
 declare type RequestType = 'email-change' | 'verify-account' | 'password-change';
 export interface IMongooseVerificationSchema extends Document {
@@ -84,7 +84,7 @@ export function addVerificationCodeToDatabase(
   });
 }
 
-export function verifyCode(verificationCode: string): Promise<void> {
+export function verifyCode(verificationCode: string): Promise<IMongooseUserSchema> {
   return new Promise(async (resolve, rejects) => {
     try {
       const schema = await findVerificationByVerificationKey(verificationCode);
@@ -113,7 +113,7 @@ export function verifyCode(verificationCode: string): Promise<void> {
       user.verified = true;
       await user.save();
       await schema.save();
-      resolve();
+      resolve(user);
     } catch (error) {
       rejects(error);
     }
