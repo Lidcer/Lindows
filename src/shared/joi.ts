@@ -34,4 +34,8 @@ const changeEmailJoi = Joi.object({
   newEmail: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
 });
 
-export { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi };
+const emailJoi = Joi.object({
+  email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
+});
+
+export { emailJoi, registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi };

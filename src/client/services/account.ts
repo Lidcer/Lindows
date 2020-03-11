@@ -8,6 +8,7 @@ import {
   IAccountChangePasswordRequest,
   IAccountChangeEmailRequest,
   IAccountResetPasswordRequest,
+  IResponse,
 } from '../../shared/ApiRequestsResponds';
 
 export interface IAccountInfo {
@@ -29,7 +30,6 @@ export class IAccount extends EventEmitter {
   private username: string;
   private email: string;
   private avatar: string = null;
-  private verified: boolean;
 
   constructor() {
     super();
@@ -129,8 +129,8 @@ export class IAccount extends EventEmitter {
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
-          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
-            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.verified);
+          if (token && body.success && body.success.username && body.success.id) {
+            const ac = this.loginIn(token, body.success.username, body.success.id);
             this.setToken(token);
             resolve(ac);
           } else {
@@ -138,16 +138,12 @@ export class IAccount extends EventEmitter {
           }
         })
         .catch((error: any) => {
-          if (error && error.response && error.response.data && error.response.data.error) {
-            reject(new Error(error.response.data.error));
-          } else {
-            reject(new Error('Internal server error'));
-          }
+          reject(this.disassembleError(error));
         });
     });
   }
 
-  public register(username: string, email: string, password: string, repeatPassword: string): Promise<IAccountInfo> {
+  public register(username: string, email: string, password: string, repeatPassword: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!username) return reject('Username is required');
       if (!email) return reject('email is required');
@@ -162,18 +158,13 @@ export class IAccount extends EventEmitter {
         username,
       };
 
-      Axios.post<IAccountResponse>('/api/v1/users/register', accountRegisterRequest)
+      Axios.post('/api/v1/users/register', accountRegisterRequest)
         .then(response => {
-          const token = response.headers[TOKEN_HEADER];
-          const body: IAccountResponse = response.data;
-          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
-            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.verified);
-            resolve(ac);
-          } else {
-            reject(new Error('Fetched data is not correct'));
-          }
+          const body: IResponse<string> = response.data;
+          resolve(body.success);
         })
         .catch(error => {
+          console.error(error);
           if (error && error.response && error.response.data && error.response.data.error) {
             reject(new Error(error.response.data.error));
           } else {
@@ -218,8 +209,7 @@ export class IAccount extends EventEmitter {
           },
         );
       } catch (error) {
-        console.error(error);
-        reject(new Error('Internal server error'));
+        reject(this.disassembleError(error));
       }
     });
   }
@@ -247,8 +237,7 @@ export class IAccount extends EventEmitter {
           }
         })
         .catch(error => {
-          console.error(error);
-          reject(new Error('Internal server error'));
+          reject(this.disassembleError(error));
         });
     });
   }
@@ -274,17 +263,34 @@ export class IAccount extends EventEmitter {
           }
         })
         .catch(error => {
-          console.error(error);
-          reject(new Error('Internal server error'));
+          reject(this.disassembleError(error));
         });
     });
   }
 
-  private loginIn(token: string, username: string, id: string, verified: boolean) {
+  verifyAccount(code: string): Promise<IAccountInfo> {
+    return new Promise((resolve, reject) => {
+      Axios.post<IAccountResponse>(`/api/v1/users/verify/${code}`)
+        .then(response => {
+          const token = response.headers[TOKEN_HEADER];
+          const body = response.data;
+          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
+            const ac = this.loginIn(token, body.success.username, body.success.id);
+            resolve(ac);
+          } else {
+            reject(new Error('Invalid data received from server'));
+          }
+        })
+        .catch(error => {
+          reject(this.disassembleError(error));
+        });
+    });
+  }
+
+  private loginIn(token: string, username: string, id: string) {
     this.setToken(token);
     this.username = username;
     this.accountId = id;
-    this.verified = verified;
     this.emit('login', this.account);
     return this.account;
   }
@@ -295,6 +301,14 @@ export class IAccount extends EventEmitter {
     this.email = undefined;
     this.avatar = undefined;
     this.emit('logout');
+  }
+
+  private disassembleError(error: any) {
+    if (error && error.response && error.response.data && error.response.data.error) {
+      return new Error(error.response.data.error);
+    } else {
+      return new Error('Internal server error');
+    }
   }
 
   public get account(): IAccountInfo {

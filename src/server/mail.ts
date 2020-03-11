@@ -50,6 +50,20 @@ export class MailService {
     });
   }
 
+  sendNewPasswordReset(email: string, verificationUrl: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (this.isMailOnCoolDown(email)) return reject(new Error('Mail cool down plase wait a bit and try again'));
+      if (this.disabled) return resolve();
+
+      const text = `Your password reset link is on: ${verificationUrl}`;
+      const html = `Your password reset link is on: <a>${verificationUrl}</a>`;
+
+      this.sendMail(email, 'Verification code', text, html)
+        .then(() => resolve())
+        .catch(err => reject(err));
+    });
+  }
+
   private sendMail(recipient: string, subject: string, text: string, html?: string): Promise<[request.Response, {}]> {
     return new Promise((resolve, reject) => {
       this.mailServer.send(

@@ -15,7 +15,6 @@ import {
 import { imagesPath } from '../database/Users';
 import { apiIp } from './apiIP';
 
-export const verificationApi = '/api/v1/users/verify/';
 export function apiRouter() {
   const router = Router();
   router.use(bodyParser.urlencoded({ extended: false }));
@@ -39,7 +38,7 @@ export function apiRouter() {
     uploadImage(req, res);
   });
 
-  router.get(`${verificationApi}:verificationCodeId`, (req, res) => {
+  router.post(`/api/v1/users/verify/:verificationCodeId`, (req, res) => {
     verifyUser(req, res);
   });
 
