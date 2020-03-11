@@ -73,21 +73,22 @@ export async function registerUser(req: Request, res: Response) {
     sendVerificationMail(accountRequest.email, 'Verification code').catch(err => {
       logError(err, 'Unable to send email');
     });
-
     const jwtTokenData: IJWTAccount = {
       id: user._id,
       exp: WEEK * 2,
     };
-
+    console.log('fuck04');
     const data: IAccount = {
       id: user._id,
       username: user.username,
+      verified: user.verified,
       avatar: getUserImage(user),
     };
 
     const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
     response.success = data;
-
+  
+    console.log('sending...')
     res.header(TOKEN_HEADER, jwtToken).json(response);
   } catch (error) {
     logError(error, 'Registering user');
@@ -113,7 +114,6 @@ export async function loginUser(req: Request, res: Response) {
     response.error = 'User does not exist';
     return res.status(400).json(response);
   }
-
   //TODO: Add spam protection
   try {
     const verified = await verifyPassword(accountLoginRequest.password, user.password);
@@ -126,15 +126,14 @@ export async function loginUser(req: Request, res: Response) {
     logError(error, 'Verifying Password');
     return res.status(500).json(response);
   }
-
   const jwtTokenData: IJWTAccount = {
     id: user._id,
     exp: WEEK * 2,
   };
-
   const data: IAccount = {
     username: user.username,
     id: user._id,
+    verified: user.verified,
     avatar: getUserImage(user),
   };
 
@@ -177,6 +176,7 @@ export async function checkUser(req: Request, res: Response) {
   const data: IAccount = {
     id: user.id,
     username: user.username,
+    verified: user.verified,
     avatar: getUserImage(user),
   };
   response.success = data;
@@ -225,6 +225,7 @@ export async function changePassword(req: Request, res: Response) {
     response.success = {
       id: user.id,
       username: user.username,
+      verified: user.verified,
       avatar: getUserImage(user),
     };
 
@@ -234,6 +235,10 @@ export async function changePassword(req: Request, res: Response) {
     response.error = 'Internal server error';
     return res.status(500).json(response);
   }
+}
+
+export function resetPassword(req: Request, res: Response) {
+  res.status(200).json({ success: 'Mail has been sent' });
 }
 
 //TODO: do proper method
@@ -266,6 +271,7 @@ export async function changeEmail(req: Request, res: Response) {
     response.success = {
       id: user.id,
       username: user.username,
+      verified: user.verified,
       avatar: getUserImage(user),
     };
 

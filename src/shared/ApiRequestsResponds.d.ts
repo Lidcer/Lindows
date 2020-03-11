@@ -29,6 +29,9 @@ export interface IAccountChangeEmailRequest {
   email: string;
 }
 
+export interface IAccountResetPasswordRequest {
+  email: string;
+}
 export interface IResponse<T> {
   error?: string;
   details?: any;
@@ -40,6 +43,7 @@ export interface IAccount {
   id: string;
   username: string;
   avatar?: string;
+  verified: boolean;
 }
 
 export interface IP {

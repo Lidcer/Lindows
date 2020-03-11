@@ -10,6 +10,7 @@ import {
   changePassword,
   checkUser,
   uploadImage,
+  resetPassword,
 } from './apiUsers';
 import { imagesPath } from '../database/Users';
 import { apiIp } from './apiIP';
@@ -31,11 +32,11 @@ export function apiRouter() {
     loginUser(req, res);
   });
 
-  router.get('/api/v1/users/checkAccount', (req, res) => {
+  router.get('/api/v1/users/check-account', (req, res) => {
     checkUser(req, res);
   });
 
-  router.post('/api/v1/users/changeAvatar', (req, res) => {
+  router.post('/api/v1/users/change-avatar', (req, res) => {
     uploadImage(req, res);
   });
 
@@ -43,15 +44,19 @@ export function apiRouter() {
     verifyUser(req, res);
   });
 
-  router.post('/api/v1/users/reset_password', (req, res) => {
+  router.post('/api/v1/users/change-password', (req, res) => {
     changePassword(req, res);
   });
 
-  router.post('/api/v1/users/change_email', (req, res) => {
+  router.post('/api/v1/users/reset-password', (req, res) => {
+    resetPassword(req, res);
+  });
+
+  router.post('/api/v1/users/change-email', (req, res) => {
     changeEmail(req, res);
   });
 
-  router.post('/api/v1/users/delete_account', (req, res) => {
+  router.post('/api/v1/users/delete-account', (req, res) => {
     deleteAccount(req, res);
   });
 

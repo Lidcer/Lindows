@@ -7,6 +7,7 @@ import {
   IAccountRegisterRequest,
   IAccountChangePasswordRequest,
   IAccountChangeEmailRequest,
+  IAccountResetPasswordRequest,
 } from '../../shared/ApiRequestsResponds';
 
 export interface IAccountInfo {
@@ -28,6 +29,7 @@ export class IAccount extends EventEmitter {
   private username: string;
   private email: string;
   private avatar: string = null;
+  private verified: boolean;
 
   constructor() {
     super();
@@ -56,7 +58,7 @@ export class IAccount extends EventEmitter {
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
 
-      Axios.get('/api/v1/users/checkAccount', axiosRequestConfig)
+      Axios.get<IAccount>('/api/v1/users/check-account', axiosRequestConfig)
         .then(response => {
           if (response && response.data && typeof response.data === 'object') {
             this.avatar = response.data.avatar || null;
@@ -76,6 +78,25 @@ export class IAccount extends EventEmitter {
     this._token = token;
     localStorage.setItem('auth', token);
     return this;
+  }
+
+  resetPassword(email: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!email) return reject('Missing email');
+      if (!email.includes('@')) return reject('Not valid mail');
+
+      const accountResetPasswordRequest: IAccountResetPasswordRequest = {
+        email,
+      };
+
+      Axios.post('/api/v1/users/reset-password', accountResetPasswordRequest)
+        .then(response => {
+          resolve();
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   }
 
   loginWithToken(token?: string): Promise<IAccountInfo> {
@@ -108,8 +129,9 @@ export class IAccount extends EventEmitter {
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
-          if (token && body.success && body.success.username && body.success.id) {
-            const ac = this.loginIn(token, body.success.username, body.success.id);
+          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
+            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.verified);
+            this.setToken(token);
             resolve(ac);
           } else {
             reject(new Error('Fetched data is not correct'));
@@ -144,8 +166,8 @@ export class IAccount extends EventEmitter {
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
-          if (token && body.success && body.success.username && body.success.id) {
-            const ac = this.loginIn(token, body.success.username, body.success.id);
+          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
+            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.verified);
             resolve(ac);
           } else {
             reject(new Error('Fetched data is not correct'));
@@ -184,7 +206,7 @@ export class IAccount extends EventEmitter {
           console.log(processEvent); //FIXME: do something about
           callback(processEvent);
         };
-        await Axios.post<IAccountResponse>('/api/v1/users/changeAvatar', formData, axiosRequestConfig).then(
+        await Axios.post<IAccountResponse>('/api/v1/users/change-avatar', formData, axiosRequestConfig).then(
           response => {
             const body = response.data;
             if (body.success && body.success.username && body.success.id) {
@@ -215,7 +237,7 @@ export class IAccount extends EventEmitter {
         oldPassword,
       };
 
-      Axios.post<IAccountResponse>('/api/v1/users/changePassword', iAccountChangeAccount)
+      Axios.post<IAccountResponse>('/api/v1/users/change-password', iAccountChangeAccount)
         .then(response => {
           const body: IAccountResponse = response.data;
           if (body.success && body.success.username && body.success.id) {
@@ -258,10 +280,11 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  private loginIn(token: string, username: string, id: string) {
+  private loginIn(token: string, username: string, id: string, verified: boolean) {
     this.setToken(token);
     this.username = username;
     this.accountId = id;
+    this.verified = verified;
     this.emit('login', this.account);
     return this.account;
   }

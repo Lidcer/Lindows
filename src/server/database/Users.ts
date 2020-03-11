@@ -142,8 +142,8 @@ export function registerUserInDatabase(
   });
 }
 
-export function getUserByAccountOrEmail(username: string, email?: string): Promise<IMongooseUserSchema> {
-  return new Promise(async (resolve, reject) => {
+export function getUserByAccountOrEmail(username: string, email?: string): Promise<IMongooseUserSchema | null> {
+  return new Promise(async resolve => {
     if (!email) email = username;
 
     const userUserName = await findUserByName(username);
@@ -156,7 +156,7 @@ export function getUserByAccountOrEmail(username: string, email?: string): Promi
       resolve(userEmail);
       return;
     }
-    reject();
+    return resolve(null);
   });
 }
 

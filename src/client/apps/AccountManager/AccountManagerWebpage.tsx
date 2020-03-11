@@ -6,10 +6,16 @@ import { IAccountInfo } from '../../services/account';
 interface IAccountProps {
   window?: boolean;
 }
-declare type ShowOptions = 'register' | 'login' | 'accountSettings' | 'none';
+
+enum Tab {
+  Loading,
+  Login,
+  Register,
+  Settings,
+  ForgotPassword,
+}
 
 interface IAccountState {
-  show: ShowOptions;
   register: {
     username: string;
     password: string;
@@ -20,8 +26,10 @@ interface IAccountState {
     usernameOrEmail: string;
     password: string;
   };
-
-  accountChange: {
+  resetPassword: {
+    email: string;
+  };
+  settings: {
     email: string;
     newEmail: string;
     password: string;
@@ -29,6 +37,8 @@ interface IAccountState {
     repeatPassword: string;
     file?: File;
   };
+  tab: Tab;
+  inProgress: boolean;
   logined: boolean;
   currentUserName: string;
   avatar: string;
@@ -40,10 +50,10 @@ interface IAccountState {
 const DEFAULT_AVATAR = './assets/images/appsIcons/AccountManager.svg';
 
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
+  private destroyed = false;
   constructor(props: IAccountProps) {
     super(props);
     this.state = {
-      show: 'none',
       register: {
         email: '',
         password: '',
@@ -54,13 +64,18 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         password: '',
         usernameOrEmail: '',
       },
-      accountChange: {
+      settings: {
         email: '',
         newEmail: '',
         newPassword: '',
         repeatPassword: '',
         password: '',
       },
+      resetPassword: {
+        email: '',
+      },
+      tab: Tab.Loading,
+      inProgress: false,
       logined: false,
       currentUserName: '',
       email: '',
@@ -71,395 +86,310 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   render() {
-    return <>{this.renderContent}</>;
-  }
-
-  get renderContent() {
     if (this.props.window)
       return (
-        <>
-          {this.navigationBar}
-          <div className='m-2'>{this.renderTab}</div>
-          {this.state.error ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.error}</div> : null}
-        </>
-      );
-    else
-      return (
-        <div className='services.account-manager'>
-          <div className='services.account-manager-window'>
-            {this.navigationBar}
-            {this.state.error ? <div className='p-3 mb-2 bg-danger text-white'>{this.state.error}</div> : null}
-            <div
-              className={
-                this.props.window
-                  ? 'h-100 services.account-manager-form-content'
-                  : 'p-5 h-100 services.account-manager-form-content'
-              }
-            >
-              {this.renderTab}
-            </div>
-          </div>
+        <div className='account-manager'>
+          {this.renderWarn}
+          {this.renderContent}
         </div>
       );
-  }
-
-  get navigationBar() {
     return (
-      <div className='p-2 btn-lrs'>
-        <ul className='nav nav-tabs'>
-          {this.state.logined ? (
-            <>
-              <li className='nav-item'>
-                <button
-                  className={`nav-link${this.state.show === 'login' ? ' active' : ''}`}
-                  onClick={() => this.switchTab('login')}
-                >
-                  login
-                </button>
-              </li>
-            </>
-          ) : null}
-          {this.state.logined ? (
-            <>
-              <li className='nav-item'>
-                <button
-                  className={`nav-link${this.state.show === 'register' ? ' active' : ''}`}
-                  onClick={() => this.switchTab('register')}
-                >
-                  register
-                </button>
-              </li>
-            </>
-          ) : null}
-          {!this.state.logined ? (
-            <li className='nav-item'>
-              <button
-                className={`nav-link${this.state.show === 'accountSettings' ? ' active' : ''}`}
-                onClick={() => this.switchTab('accountSettings')}
-              >
-                settings
-              </button>
-            </li>
-          ) : null}
-        </ul>
+      <div className='account-manager-page account-manager'>
+        {this.renderWarn}
+        {this.renderContent}
       </div>
     );
   }
 
-  get renderTab() {
-    if (this.state.show === 'login') return this.loginRender;
-    else if (this.state.show === 'register') return this.registerRender;
-    else if (this.state.show === 'accountSettings') return this.settingsRender;
-    else null;
+  get renderWarn() {
+    if (this.state.error || this.state.info) {
+      if (this.state.error) return <span className='text-warning'>{this.state.error}</span>;
+      if (this.state.info) return <span className='text-success'>{this.state.info}</span>;
+    }
+    return null;
   }
 
-  get registerRender() {
-    return (
-      <>
-        <form className='services.account-manager-form'>
-          <h5>Username</h5>
-          <input
-            type='text'
-            className='form-control'
-            value={this.state.register.username}
-            onChange={e => {
-              this.registerChange(e, 'username');
-            }}
-            placeholder='Username'
-          ></input>
-          <h5>Email</h5>
-          <input
-            type='text'
-            className='form-control'
-            value={this.state.register.email}
-            onChange={e => {
-              this.registerChange(e, 'email');
-            }}
-            placeholder='Email'
-          ></input>
-          <h5>Password</h5>
-          <input
-            type='password'
-            className='form-control'
-            value={this.state.register.password}
-            onChange={e => {
-              this.registerChange(e, 'password');
-            }}
-            placeholder='password'
-          ></input>
-          <h5>Repeat Password</h5>
-          <input
-            type='password'
-            className='form-control'
-            value={this.state.register.repeatPassword}
-            onChange={e => {
-              this.registerChange(e, 'repeatPassword');
-            }}
-            placeholder='Repeat password'
-          ></input>
-          <button className='btn btn-lrs m-2' onClick={this.register}>
-            Register
-          </button>
-        </form>
-      </>
-    );
-  }
+  get renderContent() {
+    if (this.state.inProgress) return this.loading;
 
-  get loginRender() {
-    return (
-      <>
-        <form className='services.account-manager-form'>
-          <h5>Username or mail</h5>
-          <input
-            type='text'
-            className='form-control'
-            value={this.state.login.usernameOrEmail}
-            onChange={e => {
-              this.loginChange(e, 'usernameOrEmail');
-            }}
-            placeholder='Username or Mail'
-          ></input>
-          <h5>Password</h5>
-          <input
-            type='password'
-            className='form-control'
-            value={this.state.login.password}
-            onChange={e => {
-              this.loginChange(e, 'password');
-            }}
-            placeholder='password'
-          ></input>
-          <button className='btn btn-lrs m-2' onClick={this.login}>
-            Login
-          </button>
-        </form>
-      </>
-    );
-  }
-
-  get settingsRender() {
-    return (
-      <>
-        <form className='services.account-manager-form' onSubmit={this.accountSettings}>
-          <div className='d-flex'>
-            <img
-              className='m-1'
-              height='200px'
-              width='200px'
-              src={this.state.avatar}
-              alt={this.state.currentUserName}
-              onClick={this.uploadImage}
-            ></img>
-
-            <div>
-              <h4>{this.state.currentUserName}</h4>
-              <h5>Password</h5>
-              <input
-                type='Change Password'
-                className='form-control'
-                value={this.state.login.password}
-                onChange={e => {
-                  this.loginChange(e, 'password');
-                }}
-                placeholder='password'
-              ></input>
-              <input type='file' name='imgUploader' multiple onChange={this.filesSelected}></input>
-              {this.state.accountChange.file ? this.renderUpdateImageButton() : null}
-            </div>
-          </div>
-
-          <br />
-
-          <div className='services.account-manager-section'>
-            <h5>new Password</h5>
-            <input
-              type='password'
-              className='form-control'
-              value={this.state.accountChange.newPassword}
-              onChange={e => {
-                this.settingsChange(e, 'newPassword');
-              }}
-              placeholder='password'
-            ></input>
-            <h5>Repeat new Password</h5>
-            <input
-              type='password'
-              className='form-control'
-              value={this.state.accountChange.repeatPassword}
-              onChange={e => {
-                this.settingsChange(e, 'repeatPassword');
-              }}
-              placeholder='password'
-            ></input>
-            <button className='btn btn-lrs m-2' onClick={this.changePassword}>
-              Change Password
-            </button>
-          </div>
-          <br />
-          <div className='services.account-manager-section'>
-            <h5>Change mail</h5>
-            <input
-              type='text'
-              className='form-control'
-              value={this.state.accountChange.newEmail}
-              onChange={e => {
-                this.settingsChange(e, 'newMail');
-              }}
-              placeholder='Change Email'
-            ></input>
-            <button className='btn btn-lrs m-2' onClick={this.changeMail}>
-              Change mail
-            </button>
-          </div>
-
-          <div></div>
-          <button className='btn btn-lrs m-2' onClick={this.logout}>
-            Logout
-          </button>
-        </form>
-      </>
-    );
-  }
-
-  componentDidMount() {
-    this.checkAccount();
-  }
-
-  private checkAccount() {
-    //services.account.services.account
-  }
-
-  switchTab = (tab: ShowOptions) => {
-    this.setState({ show: tab });
-  };
-
-  get show() {
-    switch (this.state.show) {
-      case 'register':
-        return this.registerRender;
+    switch (this.state.tab) {
+      case Tab.Register:
+        return this.registerTab;
+      case Tab.ForgotPassword:
+        return this.forgetPassword;
+      case Tab.Settings:
+        return this.settingsTab;
+      case Tab.Login:
+        return this.loginTab;
       default:
-        return null;
+        return this.loading;
     }
   }
 
-  registerChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
+  get loading() {
+    return <div>Loading...</div>;
+  }
+
+  get loginTab() {
+    return (
+      <form onSubmit={this.login}>
+        <h1>Login</h1>
+
+        <input
+          onChange={ev => this.onChange(ev, 'login', 'usernameOrEmail')}
+          type='text'
+          name='login-username-email'
+          id='login-username-email'
+          placeholder='Username of Email'
+        />
+        <input
+          onChange={ev => this.onChange(ev, 'login', 'password')}
+          type='password'
+          name='login-password'
+          id='login-password'
+          placeholder='password'
+        />
+
+        <a onClick={this.gotoForgetPassword}>Forgot Password</a>
+        <div>
+          <button onClick={this.login}>Login</button>
+          <button onClick={this.goToRegister}>Sign up</button>
+        </div>
+      </form>
+    );
+  }
+
+  get registerTab() {
+    return (
+      <form onSubmit={this.register}>
+        <h1>Register</h1>
+
+        <input
+          value={this.state.register.username}
+          onChange={ev => this.onChange(ev, 'register', 'username')}
+          type='text'
+          name='register-username'
+          id='register-username'
+          placeholder='Username'
+        />
+        <input
+          value={this.state.register.password}
+          onChange={ev => this.onChange(ev, 'register', 'password')}
+          type='password'
+          name='register-password'
+          id='register-password'
+          placeholder='password'
+        />
+        <input
+          value={this.state.register.repeatPassword}
+          onChange={ev => this.onChange(ev, 'register', 'repeatPassword')}
+          type='password'
+          name='register-repeat-password'
+          id='register-repeat-password'
+          placeholder='Repeat password'
+        />
+        <input
+          value={this.state.register.email}
+          onChange={ev => this.onChange(ev, 'register', 'email')}
+          type='register-email'
+          name='register-email'
+          id='register-email'
+          placeholder='Email'
+        />
+
+        <div>
+          <button onClick={this.register}>Register</button>
+          <button onClick={this.gotoLogin}>Sign in</button>
+        </div>
+      </form>
+    );
+  }
+
+  onChange = (
+    ev: React.ChangeEvent<HTMLInputElement>,
+    type: 'login' | 'register' | 'resetPassword' | 'settings',
+    key: string,
+  ) => {
+    const value = ev.target.value;
     const state = { ...this.state };
-    state.register[type] = event.target.value;
+
+    switch (type) {
+      case 'login':
+        state.login[key] = value;
+        break;
+      case 'register':
+        state.register[key] = value;
+        break;
+      case 'resetPassword':
+        state.resetPassword[key] = value;
+        break;
+      case 'settings':
+        state.settings[key] = value;
+        break;
+      default:
+        break;
+    }
     this.setState(state);
   };
 
-  register = (event: React.MouseEvent) => {
-    event.preventDefault();
-    services.account
-      .register(
+  get settingsTab() {
+    return <div></div>;
+  }
+
+  get forgetPassword() {
+    return (
+      <form onSubmit={this.resetPassword}>
+        <h1>Forgot Password</h1>
+
+        <input
+          onChange={ev => this.onChange(ev, 'resetPassword', 'email')}
+          type='text'
+          name='forgot-password-email'
+          id='forgot-password-email'
+          placeholder='forgot password email'
+        />
+
+        <button onClick={this.resetPassword}> Reset password </button>
+        <button onClick={this.gotoLogin}> Back to Login </button>
+      </form>
+    );
+  }
+
+  login = async (ev?: React.FormEvent) => {
+    if (ev) ev.preventDefault();
+    const state = { ...this.state };
+    this.setState({ inProgress: true });
+    try {
+      await services.account.login(this.state.login.usernameOrEmail, this.state.login.password);
+      return this.updateTabAccordingToUser();
+    } catch (error) {
+      console.error(error);
+      state.error = error.toString();
+    }
+    if (this.destroyed) return;
+    this.setState(state);
+  };
+
+  register = async (ev?: React.FormEvent) => {
+    if (ev) ev.preventDefault();
+    this.setState({ inProgress: true });
+    const state = { ...this.state };
+
+    console.log(state);
+    try {
+      await services.account.register(
         this.state.register.username,
         this.state.register.email,
         this.state.register.password,
         this.state.register.repeatPassword,
-      )
-      .then(this.setAccount)
-      .catch(this.showError)
-      .finally(this.clearPasswordFields);
-  };
+      );
+      return this.updateTabAccordingToUser();
+    } catch (error) {
+      console.error(error);
+      state.error = error.toString();
+    }
 
-  loginChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
-    const state = { ...this.state };
-    state.login[type] = event.target.value;
+    if (this.destroyed) return;
     this.setState(state);
   };
 
-  login = (event: React.MouseEvent) => {
-    event.preventDefault();
+  resetPassword = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+    this.setState({ inProgress: true });
     services.account
-      .login(this.state.login.usernameOrEmail, this.state.login.password)
-      .then(this.setAccount)
-      .catch(this.showError)
-      .finally(this.clearPasswordFields);
+      .resetPassword(this.state.resetPassword.email)
+      .then(() => {
+        if (this.destroyed) return;
+        //TODO: requets form server
+        this.setState({ info: 'Email has been sent' });
+      })
+      .catch(e => {
+        if (this.destroyed) return;
+        this.setState({ error: e.toString() });
+      })
+      .finally(() => {
+        if (this.destroyed) return;
+        this.setState({ inProgress: false });
+      });
   };
 
-  renderUpdateImageButton() {
-    return (
-      <button className='btn btn-lrs m-2' onClick={this.uploadImage}>
-        Alter profile
-      </button>
-    );
+  goToRegister = (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    this.switchTab(Tab.Register);
+  };
+
+  gotoLogin = (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    this.switchTab(Tab.Login);
+  };
+
+  gotoForgetPassword = (ev: React.MouseEvent) => {
+    ev.preventDefault();
+    this.switchTab(Tab.ForgotPassword);
+  };
+
+  switchTab(tab: Tab) {
+    this.clearParameters();
+    this.setState({ tab: Tab.Loading });
+    /*
+     * It has to be in setTimeout function in order to react fully update form
+     * otherwise it only updates already displayed ones and report problem in console
+     */
+    setTimeout(() => {
+      this.setState({ tab });
+    });
   }
 
-  filesSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files[0];
+  componentDidMount() {
+    if (services.isReady) return this.updateTabAccordingToUser();
+
+    services.on('allReady', this.updateTabAccordingToUser);
+  }
+  componentWillUnmount() {
+    this.destroyed = true;
+    services.removeListener('allReady', this.updateTabAccordingToUser);
+  }
+
+  clearParameters() {
     const state = { ...this.state };
-    state.accountChange.file = file;
-    this.setState(state);
-    console.log(event);
-  };
-
-  accountSettings = (event: React.FormEvent) => {
-    console.log(event);
-  };
-
-  uploadImage = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    services.account
-      .changeAvatar(this.state.accountChange.password, this.state.accountChange.file, e => {
-        console.log(e);
-      })
-      .then(this.setAccount)
-      .catch(this.showError)
-      .finally(this.clearPasswordFields);
-  };
-
-  settingsChange = (event: React.ChangeEvent<HTMLInputElement>, type: string) => {
-    const state = { ...this.state };
-    state.accountChange[type] = event.target.value;
-    this.setState(state);
-  };
-
-  changePassword = () => {
-    services.account
-      .changePassword(
-        this.state.accountChange.password,
-        this.state.accountChange.newEmail,
-        this.state.accountChange.repeatPassword,
-      )
-      .then(this.setAccount)
-      .catch(this.showError)
-      .finally(this.clearPasswordFields);
-  };
-
-  changeMail = () => {
-    services.account
-      .changeEmail(this.state.accountChange.password, this.state.accountChange.email)
-      .then(this.setAccount)
-      .catch(this.showError)
-      .finally(this.clearPasswordFields);
-  };
-  setAccount = (account: IAccountInfo) => {
-    this.setState({
-      logined: true,
-      avatar: account.avatar,
-      currentUserName: account.username,
-    });
-  };
-
-  showError = (error: any) => {
-    if (error.message) this.setState({ error: error.message });
-    else error.toString();
-  };
-
-  clearPasswordFields = () => {
-    const state = { ...this.state };
-    state.accountChange.password = '';
-    state.register.password = '';
-    state.register.repeatPassword = '';
-  };
-
-  logout = () => {
-    services.account.logout();
-    this.setState({
-      logined: false,
-      avatar: DEFAULT_AVATAR,
-      currentUserName: '',
+    state.resetPassword = {
       email: '',
-    });
+    };
+    state.settings = {
+      email: '',
+      newEmail: '',
+      newPassword: '',
+      password: '',
+      repeatPassword: '',
+      file: undefined,
+    };
+    state.login = {
+      password: '',
+      usernameOrEmail: '',
+    };
+    state.register = {
+      email: '',
+      password: '',
+      repeatPassword: '',
+      username: '',
+    };
+    this.setState(state);
+  }
+
+  updateTabAccordingToUser = () => {
+    const ac = services.account.account;
+    if (ac) {
+      this.setState({
+        tab: Tab.Settings,
+        currentUserName: ac.username,
+        avatar: ac.avatar,
+      });
+    } else {
+      this.setState({ tab: Tab.Login });
+    }
   };
+
+  //private checkAccount() {
+  //services.account.services.account
+  //}
 }

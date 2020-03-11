@@ -10,10 +10,10 @@ export interface IMongooseVerificationSchema extends Document {
   storage: string;
 }
 
-const VerificationSchema = new Schema(
+const VerificationSchema = new Schema<IMongooseVerificationSchema>(
   {
     id: { type: String, required: true, unique: true },
-    verificationCode: String,
+    verificationCode: { type: String, required: true },
     requestType: String,
     storage: String,
   },
@@ -61,8 +61,10 @@ export function addVerificationCodeToDatabase(
   storage?: string,
 ): Promise<string> {
   return new Promise(async (resolve, rejects) => {
+    console.log('generated code', verificationCode);
     try {
       let schema = await getVerificationById(id);
+      console.log('chema', schema);
       if (!schema) {
         schema = new MongoVerification({
           id,
@@ -128,3 +130,16 @@ export function generateVerificationCode() {
   }
   return result;
 }
+
+// setTimeout(async () => {
+//   console.log('1');
+//   const schema = new MongoVerification({
+//     id: 'test',
+//     verificationCode: 'test',
+//     requestType: 'test',
+//     storage: null,
+//   });
+//   console.log('2',schema);
+//   await schema.save();
+//   console.log('3');
+// }, 3000);

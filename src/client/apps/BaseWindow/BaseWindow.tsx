@@ -181,6 +181,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
     window.addEventListener('mouseup', this.mouseUp, false);
     window.addEventListener('touchend', this.touchEnd, false);
+
     services.processor.startProcess(this);
     this.changeActiveState(true);
     services.processor.makeActive(this);
