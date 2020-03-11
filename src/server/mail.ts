@@ -26,9 +26,25 @@ export function sendNewVerificationMail(email: string, verificationUrl: string):
   });
 }
 
-export function sendVerificationMail(email: string, verificationUrl: string): Promise<void> {
+export function sendNewPasswordResetMail(email: string, verificationUrl: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (disabled) return resolve();
+
+    const text = `Your password reset link is on: ${verificationUrl}`;
+    const html = `Your password reset link is on: <a>${verificationUrl}</a>`;
+
+    sendMail(email, 'Verification code', text, html)
+      .then(() => resolve())
+      .catch(err => reject(err));
+  });
+}
+
+export function sendVerificationMail(email: string, verificationUrl: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (disabled) {
+      console.log(email);
+      return resolve();
+    }
 
     const text = `Please verify your account on: ${verificationUrl}`;
     const html = `Please verify your account on: <a>${verificationUrl}</a>`;

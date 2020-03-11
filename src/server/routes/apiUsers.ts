@@ -14,7 +14,7 @@ import {
   getUserImage,
 } from '../database/Users';
 import { PRIVATE_KEY } from '../config';
-import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi } from '../../shared/joi';
+import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi, emailJoi } from '../../shared/joi';
 import {
   IAccountRegisterRequest,
   IAccountLoginRequest,
@@ -22,14 +22,14 @@ import {
   IAccountChangeEmailRequest,
   IAccountResponse,
   IAccount,
+  IResponse,
+  IAccountResetPasswordRequest,
 } from '../../shared/ApiRequestsResponds';
 import { verifyPassword } from '../database/passwordHasher';
-import { sendMail, sendVerificationMail, sendNewVerificationMail } from '../mail';
+import { sendVerificationMail, sendNewVerificationMail, sendNewPasswordResetMail } from '../mail';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
-import { verificationApi } from './api-router';
 import fileUpload = require('express-fileupload');
 import { logError } from './Error';
-
 interface IJWTAccount {
   id: string;
   exp: number;
@@ -37,12 +37,12 @@ interface IJWTAccount {
 
 //register
 export async function registerUser(req: Request, res: Response) {
-  const response: IAccountResponse = {};
+  const response: IResponse<string> = {};
   const accountRequest: IAccountRegisterRequest = req.body;
 
   const joiResult = registerUserJoi.validate(accountRequest);
   if (joiResult.error) {
-    response.error = 'Invalid data';
+    response.error = joiResult.error.message;
     response.details = joiResult.error;
     return res.status(400).json(response);
   }
@@ -52,7 +52,8 @@ export async function registerUser(req: Request, res: Response) {
     const userEmail = await findUserByEmail(accountRequest.email);
 
     if (userEmail || userUserName) {
-      response.error = 'User already exist';
+      if (userEmail) response.error = 'Email is already used by someone';
+      else response.error = 'Username is already taken';
       return res.status(400).json(response);
     }
   } catch (error) {
@@ -73,23 +74,10 @@ export async function registerUser(req: Request, res: Response) {
     sendVerificationMail(accountRequest.email, 'Verification code').catch(err => {
       logError(err, 'Unable to send email');
     });
-    const jwtTokenData: IJWTAccount = {
-      id: user._id,
-      exp: WEEK * 2,
-    };
-    console.log('fuck04');
-    const data: IAccount = {
-      id: user._id,
-      username: user.username,
-      verified: user.verified,
-      avatar: getUserImage(user),
-    };
 
-    const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
-    response.success = data;
-  
-    console.log('sending...')
-    res.header(TOKEN_HEADER, jwtToken).json(response);
+    response.success = 'Email has been sent';
+    res.status(200).json(response);
+    return;
   } catch (error) {
     logError(error, 'Registering user');
     response.error = 'Internal server error';
@@ -102,10 +90,10 @@ export async function loginUser(req: Request, res: Response) {
   const response: IAccountResponse = {};
   const accountLoginRequest: IAccountLoginRequest = req.body;
 
-  const obj = loginUserJoi.validate(accountLoginRequest);
-  if (obj.error) {
-    response.error = 'Invalid data';
-    response.details = obj.error;
+  const joiResult = loginUserJoi.validate(accountLoginRequest);
+  if (joiResult.error) {
+    response.error = joiResult.error.message;
+    response.details = joiResult.error;
     return res.status(400).json(response);
   }
 
@@ -114,6 +102,7 @@ export async function loginUser(req: Request, res: Response) {
     response.error = 'User does not exist';
     return res.status(400).json(response);
   }
+
   //TODO: Add spam protection
   try {
     const verified = await verifyPassword(accountLoginRequest.password, user.password);
@@ -125,6 +114,11 @@ export async function loginUser(req: Request, res: Response) {
     response.error = 'Internal server error';
     logError(error, 'Verifying Password');
     return res.status(500).json(response);
+  }
+
+  if (!user.verified) {
+    response.error = 'user has not verified email';
+    return res.status(400).json(response);
   }
   const jwtTokenData: IJWTAccount = {
     id: user._id,
@@ -142,7 +136,7 @@ export async function loginUser(req: Request, res: Response) {
   response.success = data;
 
   res.header(TOKEN_HEADER, jwtToken);
-  res.json(response);
+  res.status(200).json(response);
 }
 
 //Check user
@@ -187,13 +181,23 @@ export async function checkUser(req: Request, res: Response) {
 }
 
 export async function verifyUser(req: Request, res: Response) {
+  const response: IAccountResponse = {};
   const verificationCode = req.params['verificationCodeId'];
+  console.log(verificationCode);
   try {
-    await verifyCode(verificationCode);
+    const user = await verifyCode(verificationCode);
+    const data: IAccount = {
+      id: user.id,
+      username: user.username,
+      verified: user.verified,
+      avatar: getUserImage(user),
+    };
+    response.success = data;
+    return res.status(200).json(response);
   } catch (error) {
-    return res.status(400);
+    response.error = 'Invalid code';
+    return res.status(400).json(response);
   }
-  res.status(200).send('verified ok :ok hand:');
 }
 
 export async function changePassword(req: Request, res: Response) {
@@ -237,8 +241,34 @@ export async function changePassword(req: Request, res: Response) {
   }
 }
 
-export function resetPassword(req: Request, res: Response) {
-  res.status(200).json({ success: 'Mail has been sent' });
+export async function resetPassword(req: Request, res: Response) {
+  const response: IResponse<string> = {};
+  const request: IAccountResetPasswordRequest = req.body;
+  const joiResult = emailJoi.validate(request);
+  if (joiResult.error) {
+    response.error = joiResult.error.message;
+    response.details = joiResult.error;
+    return res.status(400).json(response);
+  }
+
+  try {
+    const user = await findUserByEmail(request.email);
+    if (!user) {
+      response.error = 'User under this email does not exist';
+      return res.status(400).json(response);
+    }
+    const code = generateVerificationCode();
+    await addVerificationCodeToDatabase(user._id, code, 'password-change');
+    const verificationUrl = `${req.host}/account/?pc=${code}`;
+    await sendNewPasswordResetMail(user.email, verificationUrl);
+    res.status(200).json({ success: 'Please confirm password change on email' });
+  } catch (error) {
+    logError(error, 'Unable to send verification code');
+    response.error = 'Internal server error';
+    res.status(200).json(response);
+  }
+
+  res.status(200).json({ success: 'If email' });
 }
 
 //TODO: do proper method
@@ -265,7 +295,7 @@ export async function changeEmail(req: Request, res: Response) {
     const code = generateVerificationCode();
     await addVerificationCodeToDatabase(user._id, code, 'email-change', iAccountChangeEmailRequest.email);
 
-    const verificationUrl = `${req.host}${verificationApi}${code}`;
+    const verificationUrl = `${req.host}/account/?r=${code}`;
     await sendNewVerificationMail(iAccountChangeEmailRequest.email, verificationUrl);
 
     response.success = {

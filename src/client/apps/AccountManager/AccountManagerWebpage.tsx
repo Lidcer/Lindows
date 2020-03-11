@@ -13,6 +13,7 @@ enum Tab {
   Register,
   Settings,
   ForgotPassword,
+  Verification,
 }
 
 interface IAccountState {
@@ -37,6 +38,7 @@ interface IAccountState {
     repeatPassword: string;
     file?: File;
   };
+  verifyResult: string;
   tab: Tab;
   inProgress: boolean;
   logined: boolean;
@@ -74,6 +76,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       resetPassword: {
         email: '',
       },
+      verifyResult: '',
       tab: Tab.Loading,
       inProgress: false,
       logined: false,
@@ -111,7 +114,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   get renderContent() {
     if (this.state.inProgress) return this.loading;
-
+    console.log(this.state.tab);
     switch (this.state.tab) {
       case Tab.Register:
         return this.registerTab;
@@ -121,6 +124,8 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         return this.settingsTab;
       case Tab.Login:
         return this.loginTab;
+      case Tab.Verification:
+        return this.verification;
       default:
         return this.loading;
     }
@@ -205,6 +210,16 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     );
   }
 
+  get verification() {
+    return (
+      <>
+        <h1>Verifying</h1>
+
+        <span>{this.state.verifyResult}</span>
+      </>
+    );
+  }
+
   onChange = (
     ev: React.ChangeEvent<HTMLInputElement>,
     type: 'login' | 'register' | 'resetPassword' | 'settings',
@@ -233,7 +248,11 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   };
 
   get settingsTab() {
-    return <div></div>;
+    return (
+      <form onSubmit={this.changeProfile}>
+        <h1>User profile</h1>
+      </form>
+    );
   }
 
   get forgetPassword() {
@@ -263,8 +282,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       await services.account.login(this.state.login.usernameOrEmail, this.state.login.password);
       return this.updateTabAccordingToUser();
     } catch (error) {
-      console.error(error);
-      state.error = error.toString();
+      state.error = error.message;
     }
     if (this.destroyed) return;
     this.setState(state);
@@ -275,7 +293,6 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     this.setState({ inProgress: true });
     const state = { ...this.state };
 
-    console.log(state);
     try {
       await services.account.register(
         this.state.register.username,
@@ -285,8 +302,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       );
       return this.updateTabAccordingToUser();
     } catch (error) {
-      console.error(error);
-      state.error = error.toString();
+      state.error = error.message;
     }
 
     if (this.destroyed) return;
@@ -313,6 +329,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       });
   };
 
+  changeProfile = async (ev: React.FormEvent) => {
+    ev.preventDefault();
+  };
+
   goToRegister = (ev: React.MouseEvent) => {
     ev.preventDefault();
     this.switchTab(Tab.Register);
@@ -328,21 +348,36 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     this.switchTab(Tab.ForgotPassword);
   };
 
-  switchTab(tab: Tab) {
-    this.clearParameters();
-    this.setState({ tab: Tab.Loading });
-    /*
-     * It has to be in setTimeout function in order to react fully update form
-     * otherwise it only updates already displayed ones and report problem in console
-     */
-    setTimeout(() => {
-      this.setState({ tab });
+  switchTab(tab: Tab): Promise<void> {
+    return new Promise(resolve => {
+      this.clearParameters();
+      this.setState({ tab: Tab.Loading });
+      /*
+       * It has to be in setTimeout function in order to react fully update form
+       * otherwise it only updates already displayed ones and report problem in console
+       */
+      setTimeout(() => {
+        this.setState({ tab });
+        resolve();
+      });
     });
   }
 
-  componentDidMount() {
-    if (services.isReady) return this.updateTabAccordingToUser();
+  verifyCode(code: string) {
+    services.account
+      .verifyAccount(code)
+      .then(account => {
+        this.setState({ verifyResult: `Welcome ${account.username}. You account has been verified.` });
+        setTimeout(() => {
+          if (this.destroyed) return;
+          this.switchTab(Tab.Settings);
+        }, 5000);
+      })
+      .catch((error: Error) => this.setState({ verifyResult: error.message }));
+  }
 
+  async componentDidMount() {
+    if (services.isReady) return this.updateTabAccordingToUser();
     services.on('allReady', this.updateTabAccordingToUser);
   }
   componentWillUnmount() {
@@ -376,16 +411,27 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     this.setState(state);
   }
 
-  updateTabAccordingToUser = () => {
+  updateTabAccordingToUser = async () => {
+    if (!this.props.window) {
+      const url = new URL(document.location.href);
+      const verificationCode = url.searchParams.get('v');
+      if (verificationCode) {
+        await this.switchTab(Tab.Verification);
+        this.verifyCode(verificationCode);
+        return;
+      }
+    }
     const ac = services.account.account;
+
     if (ac) {
+      await this.switchTab(Tab.Settings);
+      console.log('55');
       this.setState({
-        tab: Tab.Settings,
         currentUserName: ac.username,
         avatar: ac.avatar,
       });
     } else {
-      this.setState({ tab: Tab.Login });
+      await this.switchTab(Tab.Login);
     }
   };
 
