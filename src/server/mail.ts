@@ -27,6 +27,7 @@ export class MailService {
       this.sendMail(email, 'Verification code', text, html)
         .then(() => {
           this.addCoolDownToMail(email);
+          console.log(`Mail has been sent ${email}`);
           resolve();
         })
         .catch(err => reject(err));

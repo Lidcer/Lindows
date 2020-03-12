@@ -274,7 +274,8 @@ export class IAccount extends EventEmitter {
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body = response.data;
-          if (token && body.success && body.success.username && body.success.id && body.success.verified) {
+          console.log(body, token);
+          if (token && body.success && body.success.username && body.success.id) {
             const ac = this.loginIn(token, body.success.username, body.success.id);
             resolve(ac);
           } else {

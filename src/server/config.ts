@@ -19,7 +19,7 @@ const SERVER_PORT = process.env.PORT || 5050;
 const WEBPACK_PORT = 8085; // For dev environment only
 const PRIVATE_KEY = process.env.PRIVATE_KEY || 'PRIVATE_KEY';
 const DATABASE_CONNECTION_STRING = 'mongodb://localhost:27017/lindows';
-const SENDGRIND_API_KEY = process.env.SENDGRID;
+const SENDGRIND_API_KEY = process.env.SENDGRID || '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';
 
 if (PRIVATE_KEY === 'PRIVATE_KEY') {
   console.warn('You are using unsecured private key');

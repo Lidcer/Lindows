@@ -183,7 +183,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
           type='password'
           name='register-password'
           id='register-password'
-          placeholder='password'
+          placeholder='Password'
         />
         <input
           value={this.state.register.repeatPassword}
@@ -294,19 +294,26 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const state = { ...this.state };
 
     try {
-      await services.account.register(
+      const response = await services.account.register(
         this.state.register.username,
         this.state.register.email,
         this.state.register.password,
         this.state.register.repeatPassword,
       );
-      return this.updateTabAccordingToUser();
+      this.setState({
+        error: '',
+        info: response,
+      });
+      this.updateTabAccordingToUser();
+      return;
     } catch (error) {
       state.error = error.message;
+      if (this.destroyed) return;
+      this.setState(state);
+      return;
+    } finally {
+      this.setState({ inProgress: false });
     }
-
-    if (this.destroyed) return;
-    this.setState(state);
   };
 
   resetPassword = async (ev: React.FormEvent) => {
@@ -422,7 +429,6 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       }
     }
     const ac = services.account.account;
-
     if (ac) {
       await this.switchTab(Tab.Settings);
       console.log('55');

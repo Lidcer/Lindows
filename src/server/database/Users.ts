@@ -27,6 +27,7 @@ export function setupImages(): Promise<void> {
 declare type UserAccountFlags = 'noImageUpload';
 export interface IMongooseUserSchema extends Document {
   username: string;
+  displayedName: string;
   password: string;
   compromised: boolean;
   banned: boolean;
@@ -45,6 +46,7 @@ export interface IMongooseUserSchema extends Document {
 const UserSchema = new Schema(
   {
     username: { type: String, required: true, unique: true },
+    displayedName: { type: String, required: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     createdAt: { type: Number, required: true },
@@ -85,7 +87,7 @@ export function getUserById(id: string): Promise<IMongooseUserSchema> {
 
 export function findUserByName(username: string): Promise<IMongooseUserSchema> {
   return new Promise((resolve, reject) => {
-    MongoUser.findOne({ username })
+    MongoUser.findOne({ username: username.toLowerCase().replace(/\s/g, '') })
       .then(users => {
         resolve(users);
       })
@@ -118,7 +120,8 @@ export function registerUserInDatabase(
     try {
       hashedPassword = await hashPassword(password);
       const schema = new MongoUser({
-        username: username,
+        username: username.toLowerCase().replace(/\s/g, ''),
+        displayedName: username,
         password: hashedPassword,
         createdAt: Date.now(),
         lastOnlineAt: Date.now(),

@@ -98,7 +98,8 @@ export async function registerUser(req: Request, res: Response) {
     );
     const code = generateVerificationCode();
     await addVerificationCodeToDatabase(user._id, code, 'verify-account');
-    mailService.sendVerification(accountRequest.email, 'Verification code').catch(err => {
+    const verificationUrl = `${req.host}/account?v=${code}`;
+    mailService.sendVerification(accountRequest.email, verificationUrl).catch(err => {
       logError(err, 'Unable to send email');
     });
 
@@ -144,7 +145,7 @@ export async function loginUser(req: Request, res: Response) {
   }
 
   if (!user.verified) {
-    response.error = 'user has not verified email';
+    response.error = 'User has not verified email';
     return res.status(400).json(response);
   }
   const jwtTokenData: IJWTAccount = {
@@ -154,7 +155,6 @@ export async function loginUser(req: Request, res: Response) {
   const data: IAccount = {
     username: user.username,
     id: user._id,
-    verified: user.verified,
     avatar: getUserImage(user),
   };
 
@@ -197,7 +197,6 @@ export async function checkUser(req: Request, res: Response) {
   const data: IAccount = {
     id: user.id,
     username: user.username,
-    verified: user.verified,
     avatar: getUserImage(user),
   };
   response.success = data;
@@ -217,12 +216,19 @@ export async function verifyUser(req: Request, res: Response) {
     const data: IAccount = {
       id: user.id,
       username: user.username,
-      verified: user.verified,
       avatar: getUserImage(user),
     };
+    const jwtTokenData: IJWTAccount = {
+      id: user._id,
+      exp: WEEK * 2,
+    };
+    const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
+    res.header(TOKEN_HEADER, jwtToken);
+
     response.success = data;
     return res.status(200).json(response);
   } catch (error) {
+    logError(error, 'verification code');
     response.error = 'Invalid code';
     return res.status(400).json(response);
   }
@@ -257,7 +263,6 @@ export async function changePassword(req: Request, res: Response) {
     response.success = {
       id: user.id,
       username: user.username,
-      verified: user.verified,
       avatar: getUserImage(user),
     };
 
@@ -287,7 +292,7 @@ export async function resetPassword(req: Request, res: Response) {
     }
     const code = generateVerificationCode();
     await addVerificationCodeToDatabase(user._id, code, 'password-change');
-    const verificationUrl = `${req.host}/account/?pc=${code}`;
+    const verificationUrl = `${req.host}/account?pc=${code}`;
     await mailService.sendNewPasswordReset(user.email, verificationUrl);
     res.status(200).json({ success: 'Please confirm password change on email' });
   } catch (error) {
@@ -329,7 +334,6 @@ export async function changeEmail(req: Request, res: Response) {
     response.success = {
       id: user.id,
       username: user.username,
-      verified: user.verified,
       avatar: getUserImage(user),
     };
 

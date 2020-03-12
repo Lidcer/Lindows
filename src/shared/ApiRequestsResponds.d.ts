@@ -43,7 +43,6 @@ export interface IAccount {
   id: string;
   username: string;
   avatar?: string;
-  verified: boolean;
 }
 
 export interface IP {

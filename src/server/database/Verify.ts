@@ -61,10 +61,8 @@ export function addVerificationCodeToDatabase(
   storage?: string,
 ): Promise<string> {
   return new Promise(async (resolve, rejects) => {
-    console.log('generated code', verificationCode);
     try {
       let schema = await getVerificationById(id);
-      console.log('chema', schema);
       if (!schema) {
         schema = new MongoVerification({
           id,
@@ -97,7 +95,6 @@ export function verifyCode(verificationCode: string): Promise<IMongooseUserSchem
         rejects(new Error('User not found'));
         return;
       }
-
       switch (schema.requestType) {
         case 'password-change':
           user.password = schema.storage;
@@ -108,11 +105,9 @@ export function verifyCode(verificationCode: string): Promise<IMongooseUserSchem
         default:
           break;
       }
-      schema.verificationCode = null;
-      schema.requestType = null;
       user.verified = true;
+      await schema.remove();
       await user.save();
-      await schema.save();
       resolve(user);
     } catch (error) {
       rejects(error);
@@ -130,16 +125,3 @@ export function generateVerificationCode() {
   }
   return result;
 }
-
-// setTimeout(async () => {
-//   console.log('1');
-//   const schema = new MongoVerification({
-//     id: 'test',
-//     verificationCode: 'test',
-//     requestType: 'test',
-//     storage: null,
-//   });
-//   console.log('2',schema);
-//   await schema.save();
-//   console.log('3');
-// }, 3000);
