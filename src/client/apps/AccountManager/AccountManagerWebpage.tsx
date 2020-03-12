@@ -17,6 +17,7 @@ enum Tab {
 }
 
 interface IAccountState {
+  account?: IAccountInfo;
   register: {
     username: string;
     password: string;
@@ -31,7 +32,7 @@ interface IAccountState {
     email: string;
   };
   settings: {
-    email: string;
+    displayedName: string;
     newEmail: string;
     password: string;
     newPassword: string;
@@ -67,7 +68,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         usernameOrEmail: '',
       },
       settings: {
-        email: '',
+        displayedName: '',
         newEmail: '',
         newPassword: '',
         repeatPassword: '',
@@ -114,7 +115,6 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   get renderContent() {
     if (this.state.inProgress) return this.loading;
-    console.log(this.state.tab);
     switch (this.state.tab) {
       case Tab.Register:
         return this.registerTab;
@@ -152,7 +152,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
           type='password'
           name='login-password'
           id='login-password'
-          placeholder='password'
+          placeholder='Password'
         />
 
         <a onClick={this.gotoForgetPassword}>Forgot Password</a>
@@ -248,12 +248,120 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   };
 
   get settingsTab() {
+    const ac = services.account.account;
+    if (!ac) return null;
     return (
       <form onSubmit={this.changeProfile}>
         <h1>User profile</h1>
+        <div className='account-manager-card account-manager-settings-header'>
+          <div className='account-manager-avatar'>
+            <img src={ac.avatar} alt={ac.username} onClick={this.openFile} />
+
+            <input
+              id='account-manager-avatar-file-input'
+              type='file'
+              accept='image/jpeg, image/png'
+              onChange={this.filesSelected}
+              hidden
+            ></input>
+          </div>
+          <div className='account-manager-info'>
+            <span>Account ID:</span>
+            <input type='text' value={ac.accountId} disabled />
+            <span>Username:</span>
+            <input type='text' value={ac.username} disabled />
+            <span>Displayed name:</span>
+            <input
+              type='text'
+              value={this.state.settings.displayedName}
+              onChange={ev => this.onChange(ev, 'settings', 'displayedName')}
+            />
+          </div>
+        </div>
+        <div className='account-manager-card'>
+          <span>Change password:</span>
+          <input
+            type='password'
+            name='settings-new-password'
+            id='settings-new-password'
+            placeholder='Password'
+            value={this.state.settings.newPassword}
+            onChange={ev => this.onChange(ev, 'settings', 'newPassword')}
+          />
+          <input
+            type='password'
+            name='settings-repeat-new-password'
+            id='settings-repeat-new-password'
+            placeholder='Repeat Password'
+            value={this.state.settings.repeatPassword}
+            onChange={ev => this.onChange(ev, 'settings', 'repeatPassword')}
+          />
+        </div>
+
+        <div className='account-manager-card'>
+          <span>Change email:</span>
+          <input
+            type='text'
+            placeholder='Email'
+            value={this.state.settings.newEmail}
+            onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
+          />
+        </div>
+
+        <div className='account-manager-card'>
+          <span>Current Password</span>
+          <input
+            type='password'
+            name='settings-password'
+            id='settings-password'
+            placeholder='Password'
+            value={this.state.settings.password}
+            onChange={ev => this.onChange(ev, 'settings', 'password')}
+          />
+          {this.changes}
+          <button className='btn btn-secondary'>Alter Profile</button>
+          <button className='btn btn-secondary' onClick={this.logout}>
+            Log out
+          </button>
+        </div>
       </form>
     );
   }
+
+  logout = () => {
+    services.account.logout();
+
+    this.setState({});
+  };
+
+  get changes() {
+    const changes: string[] = [];
+    const st = this.state.settings;
+    const ac = services.account.account;
+    if (st.displayedName !== ac.displayedName)
+      changes.push(`Displayed name: ${ac.displayedName} => ${st.displayedName}`);
+    if (st.newPassword) changes.push('Password: ******* => ********');
+    if (st.newEmail) changes.push(`Email: [HIDDEN] => ${st.newEmail}`);
+    if (st.file) changes.push(`Avatar: ${st.file.name}`);
+    if (!changes.length) return null;
+    return (
+      <div className='account-manager-card'>
+        <span>This will alter</span>
+        <ul>
+          {changes.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  filesSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files[0];
+    const state = { ...this.state };
+    state.settings.file = file;
+    this.setState(state);
+  };
 
   get forgetPassword() {
     return (
@@ -274,18 +382,27 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     );
   }
 
+  openFile = () => {
+    const input = document.getElementById('account-manager-avatar-file-input') as HTMLInputElement;
+    if (input) input.click();
+    console.log('should open file');
+  };
+
   login = async (ev?: React.FormEvent) => {
     if (ev) ev.preventDefault();
     const state = { ...this.state };
     this.setState({ inProgress: true });
     try {
       await services.account.login(this.state.login.usernameOrEmail, this.state.login.password);
+      if (this.destroyed) return;
+      this.setState({ inProgress: false });
       return this.updateTabAccordingToUser();
     } catch (error) {
+      if (this.destroyed) return;
+      console.log(error);
       state.error = error.message;
+      this.setState(state);
     }
-    if (this.destroyed) return;
-    this.setState(state);
   };
 
   register = async (ev?: React.FormEvent) => {
@@ -323,7 +440,6 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       .resetPassword(this.state.resetPassword.email)
       .then(() => {
         if (this.destroyed) return;
-        //TODO: requets form server
         this.setState({ info: 'Email has been sent' });
       })
       .catch(e => {
@@ -398,7 +514,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       email: '',
     };
     state.settings = {
-      email: '',
+      displayedName: services.account.account ? services.account.account.displayedName : '',
       newEmail: '',
       newPassword: '',
       password: '',
@@ -431,7 +547,6 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const ac = services.account.account;
     if (ac) {
       await this.switchTab(Tab.Settings);
-      console.log('55');
       this.setState({
         currentUserName: ac.username,
         avatar: ac.avatar,

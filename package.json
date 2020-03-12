@@ -66,6 +66,7 @@
     }
   },
   "dependencies": {
+    "@2toad/profanity": "^1.1.0",
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@fortawesome/fontawesome-free-solid": "^5.0.13",
     "@fortawesome/fontawesome-svg-core": "^1.2.27",

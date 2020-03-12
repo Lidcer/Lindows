@@ -14,21 +14,26 @@ import {
 export interface IAccountInfo {
   accountId: string;
   username: string;
+  displayedName: string;
   email: string;
   avatar: string | null;
 }
 
 export declare interface IAccount {
   on(event: 'ready', listener: (accountInfo: IAccountInfo | null) => void): this;
+  on(event: 'imageReady', listener: (accountInfo: IAccountInfo | null) => void): this;
   on(event: 'login', listener: (accountInfo: IAccountInfo) => void): this;
   on(event: 'logout', listener: () => void): this;
 }
 
 export class IAccount extends EventEmitter {
+  private DEFAULT_IMAGE = './assets/images/DefaultAvatar.svg';
   private _token = '';
   private accountId: string;
   private username: string;
+  private displayedName: string;
   private email: string;
+  private imageMap = new Map<string, string>();
   private avatar: string = null;
 
   constructor() {
@@ -58,14 +63,29 @@ export class IAccount extends EventEmitter {
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
 
-      Axios.get<IAccount>('/api/v1/users/check-account', axiosRequestConfig)
-        .then(response => {
-          if (response && response.data && typeof response.data === 'object') {
-            this.avatar = response.data.avatar || null;
-            this.username = response.data.username;
-            this.email = response.data.email;
-            this.accountId = response.data.accountId;
+      Axios.get<IAccountResponse>('/api/v1/users/check-account', axiosRequestConfig)
+        .then(async response => {
+          if (
+            response &&
+            response.data &&
+            response.data.success.username &&
+            response.data.success.displayedName &&
+            response.data.success.id
+          ) {
+            this.avatar = response.data.success.avatar;
+            this.username = response.data.success.username;
+            this.displayedName = response.data.success.displayedName;
+            this.accountId = response.data.success.id;
           }
+
+          console.log(response.data);
+          if (this.avatar) {
+            const image = this.fetchUserImage(this.avatar).catch(err => {
+              console.error(err);
+            });
+            console.log(image);
+          }
+
           resolve(this.account);
         })
         .catch(err => {
@@ -116,8 +136,8 @@ export class IAccount extends EventEmitter {
 
   login(usernameOrEmail: string, password: string): Promise<IAccountInfo> {
     return new Promise((resolve, reject) => {
-      if (!usernameOrEmail) return reject('Username or mail has not been provided');
-      if (!password) return reject('Password has not been provided');
+      if (!usernameOrEmail) return reject(new Error('Username or email has not been provided'));
+      if (!password) return reject(new Error('Password has not been provided'));
 
       const accountLoginRequest: IAccountLoginRequest = {
         email: usernameOrEmail,
@@ -129,8 +149,8 @@ export class IAccount extends EventEmitter {
         .then(response => {
           const token = response.headers[TOKEN_HEADER];
           const body: IAccountResponse = response.data;
-          if (token && body.success && body.success.username && body.success.id) {
-            const ac = this.loginIn(token, body.success.username, body.success.id);
+          if (token && body.success && body.success.username && body.success.id && body.success.displayedName) {
+            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.displayedName);
             this.setToken(token);
             resolve(ac);
           } else {
@@ -145,11 +165,11 @@ export class IAccount extends EventEmitter {
 
   public register(username: string, email: string, password: string, repeatPassword: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      if (!username) return reject('Username is required');
-      if (!email) return reject('email is required');
-      if (!password) return reject('Password has not been provided');
-      if (!repeatPassword) return reject('Missing repeated password');
-      if (password !== repeatPassword) return reject('Passwords does not match');
+      if (!username) return reject(new Error('Username is required'));
+      if (!email) return reject(new Error('email is required'));
+      if (!password) return reject(new Error('Password has not been provided'));
+      if (!repeatPassword) return reject(new Error('Missing repeated password'));
+      if (password !== repeatPassword) return reject(new Error('Passwords does not match'));
 
       const accountRegisterRequest: IAccountRegisterRequest = {
         email,
@@ -215,11 +235,11 @@ export class IAccount extends EventEmitter {
   }
   changePassword(oldPassword: string, newPassword: string, repeatNewPassword: string): Promise<IAccountInfo> {
     return new Promise((resolve, reject) => {
-      if (!this._token) return reject('User not loggined in');
-      if (!oldPassword) return reject('old Password has not been provided');
-      if (!newPassword) return reject('Password has not been provided');
-      if (!repeatNewPassword) return reject('Repeat password has not been provided');
-      if (newPassword !== repeatNewPassword) return reject('Passwords do not match');
+      if (!this._token) return reject(new Error('User not loggined in'));
+      if (!oldPassword) return reject(new Error('old Password has not been provided'));
+      if (!newPassword) return reject(new Error('Password has not been provided'));
+      if (!repeatNewPassword) return reject(new Error('Repeat password has not been provided'));
+      if (newPassword !== repeatNewPassword) return reject(new Error('Passwords do not match'));
 
       const iAccountChangeAccount: IAccountChangePasswordRequest = {
         repeatNewPassword,
@@ -275,8 +295,8 @@ export class IAccount extends EventEmitter {
           const token = response.headers[TOKEN_HEADER];
           const body = response.data;
           console.log(body, token);
-          if (token && body.success && body.success.username && body.success.id) {
-            const ac = this.loginIn(token, body.success.username, body.success.id);
+          if (token && body.success && body.success.username && body.success.id && body.success.displayedName) {
+            const ac = this.loginIn(token, body.success.username, body.success.id, body.success.displayedName);
             resolve(ac);
           } else {
             reject(new Error('Invalid data received from server'));
@@ -288,10 +308,30 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  private loginIn(token: string, username: string, id: string) {
+  private fetchUserImage(imageUrl: string): Promise<string | null> {
+    return new Promise((resolve, reject) => {
+      console.log(imageUrl);
+      const image = this.imageMap.get(imageUrl);
+      if (image) return resolve(image);
+
+      Axios.get(imageUrl, {
+        responseType: 'arraybuffer',
+      })
+        .then(response => {
+          const imageBase64 = Buffer.from(response.data, 'binary').toString('base64');
+          resolve(imageBase64);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  }
+
+  private loginIn(token: string, username: string, id: string, displayedName: string) {
     this.setToken(token);
     this.username = username;
     this.accountId = id;
+    this.displayedName = displayedName;
     this.emit('login', this.account);
     return this.account;
   }
@@ -301,6 +341,7 @@ export class IAccount extends EventEmitter {
     this.accountId = undefined;
     this.email = undefined;
     this.avatar = undefined;
+    localStorage.removeItem('auth');
     this.emit('logout');
   }
 
@@ -316,9 +357,10 @@ export class IAccount extends EventEmitter {
     if (!this.username) return null;
     return {
       accountId: this.accountId,
+      displayedName: this.displayedName,
       username: this.username,
       email: this.email,
-      avatar: this.avatar,
+      avatar: this.avatar || this.DEFAULT_IMAGE,
     };
   }
 }

@@ -15,7 +15,7 @@ export class AccountManager extends BaseWindow {
       title: 'Account Manager',
       image: manifest.icon,
       redirectToWebpageButton: 'account',
-      minHeight: 575,
+      minHeight: 600,
       minWidth: 400,
     });
   }

@@ -42,6 +42,7 @@ export interface IResponse<T> {
 export interface IAccount {
   id: string;
   username: string;
+  displayedName: string;
   avatar?: string;
 }
 

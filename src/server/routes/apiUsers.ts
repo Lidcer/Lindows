@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { TOKEN_HEADER, WEEK, HOUR } from '../../shared/constants';
+import { profanity } from '@2toad/profanity';
 
 import {
   registerUserInDatabase,
@@ -38,32 +39,20 @@ interface IJWTAccount {
   exp: number;
 }
 
-const registerdIps = new Map<string, number>();
+const registeredIps = new Map<string, number>();
 
-function removeCountFromRegistredIp(ip: string) {
+function removeCountFromRegisteredIp(ip: string) {
   setTimeout(() => {
-    let ipCount = registerdIps.get(ip);
+    let ipCount = registeredIps.get(ip);
     if (ipCount) {
-      if (ipCount === 0) registerdIps.delete(ip);
-    } else registerdIps.set(ip, --ipCount);
+      if (ipCount === 0) registeredIps.delete(ip);
+    } else registeredIps.set(ip, --ipCount);
   }, HOUR);
 }
 
 //register
 export async function registerUser(req: Request, res: Response) {
   const response: IResponse<string> = {};
-  let ip = registerdIps.get(req.ip);
-  if (ip) {
-    registerdIps.set(req.ip, 0);
-    removeCountFromRegistredIp(req.ip);
-  } else {
-    registerdIps.set(req.ip, ++ip);
-    removeCountFromRegistredIp(req.ip);
-    if (ip > 3) {
-      response.error = 'To many requests';
-      return res.status(429).json(response);
-    }
-  }
 
   const accountRequest: IAccountRegisterRequest = req.body;
 
@@ -71,6 +60,11 @@ export async function registerUser(req: Request, res: Response) {
   if (joiResult.error) {
     response.error = joiResult.error.message;
     response.details = joiResult.error;
+    return res.status(400).json(response);
+  }
+
+  if (profanity.exists(accountRequest.username)) {
+    response.error = 'Bad username';
     return res.status(400).json(response);
   }
 
@@ -87,6 +81,19 @@ export async function registerUser(req: Request, res: Response) {
     logError(error, 'Fetching user from database');
     response.error = 'Internal server error';
     return res.status(500).json(response);
+  }
+
+  let ip = registeredIps.get(req.ip);
+  if (ip) {
+    registeredIps.set(req.ip, 0);
+    removeCountFromRegisteredIp(req.ip);
+  } else {
+    registeredIps.set(req.ip, ++ip);
+    removeCountFromRegisteredIp(req.ip);
+    if (ip > 3) {
+      response.error = 'To many requests';
+      return res.status(429).json(response);
+    }
   }
 
   try {
@@ -154,6 +161,7 @@ export async function loginUser(req: Request, res: Response) {
   };
   const data: IAccount = {
     username: user.username,
+    displayedName: user.displayedName,
     id: user._id,
     avatar: getUserImage(user),
   };
@@ -196,6 +204,7 @@ export async function checkUser(req: Request, res: Response) {
 
   const data: IAccount = {
     id: user.id,
+    displayedName: user.displayedName,
     username: user.username,
     avatar: getUserImage(user),
   };
@@ -215,6 +224,7 @@ export async function verifyUser(req: Request, res: Response) {
 
     const data: IAccount = {
       id: user.id,
+      displayedName: user.displayedName,
       username: user.username,
       avatar: getUserImage(user),
     };
@@ -261,8 +271,9 @@ export async function changePassword(req: Request, res: Response) {
   try {
     await changePasswordOnAccount(user, iAccountChangePasswordRequest.newPassword);
     response.success = {
-      id: user.id,
       username: user.username,
+      displayedName: user.displayedName,
+      id: user.id,
       avatar: getUserImage(user),
     };
 
@@ -333,6 +344,7 @@ export async function changeEmail(req: Request, res: Response) {
 
     response.success = {
       id: user.id,
+      displayedName: user.displayedName,
       username: user.username,
       avatar: getUserImage(user),
     };
