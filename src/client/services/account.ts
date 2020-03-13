@@ -63,7 +63,6 @@ export class IAccount extends EventEmitter {
         headers: {},
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-
       Axios.get<IAccountResponse>('/api/v1/users/check-account', axiosRequestConfig)
         .then(async response => {
           if (
@@ -169,20 +168,19 @@ export class IAccount extends EventEmitter {
       if (!displayedName) return reject(new Error('new name has not been provided'));
       if (!password) return reject(new Error('Password has not been provided'));
 
-
       const accountRegisterRequest: IAccountDisplayedNameRequest = {
         displayedName,
         password,
       };
 
       Axios.post('/api/v1/users/change-displayed-name', accountRegisterRequest)
-      .then(response => {
-        const body: IResponse<IAccountInfo> = response.data;
-        resolve(body.success);
-      })
-      .catch(error => {
-        reject(this.disassembleError(error));
-      });
+        .then(response => {
+          const body: IResponse<IAccountInfo> = response.data;
+          resolve(body.success);
+        })
+        .catch(error => {
+          reject(this.disassembleError(error));
+        });
     });
   }
 

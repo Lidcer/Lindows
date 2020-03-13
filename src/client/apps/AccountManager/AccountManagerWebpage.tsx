@@ -380,7 +380,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
           ap[1] = `upload process... ${n}`;
           this.setState(state);
         });
-        ap[1] = `Image alterd`;
+        ap[1] = `Image altered`;
         if (this.destroyed) return;
         this.setState(state);
       }

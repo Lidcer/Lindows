@@ -33,6 +33,10 @@ export interface IAccountResetPasswordRequest {
   email: string;
 }
 
+export interface IAccountAlterRequest {
+  password: string;
+}
+
 export interface IAccountDisplayedNameRequest {
   password: string;
   displayedName: string;

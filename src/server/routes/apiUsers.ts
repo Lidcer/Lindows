@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { TOKEN_HEADER, WEEK, HOUR } from '../../shared/constants';
 import { profanity } from '@2toad/profanity';
@@ -22,6 +22,7 @@ import {
   changeEmailJoi,
   emailJoi,
   displayedNameJoi,
+  verificationJoi,
 } from '../../shared/joi';
 import {
   IAccountRegisterRequest,
@@ -33,9 +34,10 @@ import {
   IResponse,
   IAccountResetPasswordRequest,
   IAccountDisplayedNameRequest,
+  IAccountAlterRequest,
 } from '../../shared/ApiRequestsResponds';
 import { verifyPassword } from '../database/passwordHasher';
-
+import { SpamProtector } from '../routes/SpamProtector';
 import { generateVerificationCode, addVerificationCodeToDatabase, verifyCode } from '../database/Verify';
 import fileUpload = require('express-fileupload');
 import { logError } from './Error';
@@ -47,16 +49,7 @@ interface IJWTAccount {
   exp: number;
 }
 
-const registeredIps = new Map<string, number>();
-
-function removeCountFromRegisteredIp(ip: string) {
-  setTimeout(() => {
-    let ipCount = registeredIps.get(ip);
-    if (ipCount) {
-      if (ipCount === 0) registeredIps.delete(ip);
-    } else registeredIps.set(ip, --ipCount);
-  }, HOUR);
-}
+const spamProtector = new SpamProtector();
 
 //register
 export async function registerUser(req: Request, res: Response) {
@@ -91,17 +84,9 @@ export async function registerUser(req: Request, res: Response) {
     return res.status(500).json(response);
   }
 
-  let ip = registeredIps.get(req.ip);
-  if (ip) {
-    registeredIps.set(req.ip, 0);
-    removeCountFromRegisteredIp(req.ip);
-  } else {
-    registeredIps.set(req.ip, ++ip);
-    removeCountFromRegisteredIp(req.ip);
-    if (ip > 3) {
-      response.error = 'To many requests';
-      return res.status(429).json(response);
-    }
+  if (!spamProtector.addIP(req.ip)) {
+    response.error = 'To many requests';
+    return res.status(429).json(response);
   }
 
   try {
@@ -119,6 +104,7 @@ export async function registerUser(req: Request, res: Response) {
     });
 
     response.success = 'Email has been sent';
+    response.message = 'Email has been sent';
     res.status(200).json(response);
     return;
   } catch (error) {
@@ -141,10 +127,7 @@ export async function loginUser(req: Request, res: Response) {
   }
 
   const user = await getUserByAccountOrEmail(accountLoginRequest.username, accountLoginRequest.email);
-  if (!user) {
-    response.error = 'User does not exist';
-    return res.status(400).json(response);
-  }
+  if (isUserForbidden(res, user)) return;
 
   //TODO: Add spam protection
   try {
@@ -177,7 +160,7 @@ export async function loginUser(req: Request, res: Response) {
   const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
 
   response.success = data;
-
+  response.message = 'User loggined';
   res.header(TOKEN_HEADER, jwtToken);
   res.status(200).json(response);
 }
@@ -197,18 +180,7 @@ export async function checkUser(req: Request, res: Response) {
     return res.status(500).json(response);
   }
 
-  if (!user) {
-    response.error = 'Account has been removed from database';
-    return res.status(400).json(response);
-  }
-  if (user.banned) {
-    response.error = 'Account has been banned';
-    return res.status(400).json(response);
-  }
-  if (user.compromised) {
-    response.error = 'Account has been compromised';
-    return res.status(400).json(response);
-  }
+  if (isUserForbidden(res, user)) return;
 
   const data: IAccount = {
     id: user.id,
@@ -217,16 +189,16 @@ export async function checkUser(req: Request, res: Response) {
     avatar: getUserImage(user),
   };
   response.success = data;
-
   res.status(200).json(response);
   user.lastOnlineAt = Date.now();
-  await user.save().catch(err => logError(err, 'Unable to save last online at'));
+  user.save().catch(err => logError(err, 'Unable to save last online at'));
+  return;
 }
 
 export async function verifyUser(req: Request, res: Response) {
   const response: IAccountResponse = {};
   const verificationCode = req.params['verificationCodeId'];
-  console.log(verificationCode);
+
   try {
     const user = await verifyCode(verificationCode);
 
@@ -244,7 +216,10 @@ export async function verifyUser(req: Request, res: Response) {
     res.header(TOKEN_HEADER, jwtToken);
 
     response.success = data;
-    return res.status(200).json(response);
+    res.status(200).json(response);
+    user.lastOnlineAt = Date.now();
+    await user.save().catch(err => logError(err, 'Unable to save last online at'));
+    return;
   } catch (error) {
     logError(error, 'verification code');
     response.error = 'Invalid code';
@@ -266,10 +241,7 @@ export async function changeDisplayedName(req: Request, res: Response) {
   }
 
   const user = await getUserById(decoded.id);
-  if (!user) {
-    response.error = 'User has been delete from database';
-    return res.status(400).json(response);
-  }
+  if (isUserForbidden(res, user)) return;
 
   const correctPassword = await verifyPassword(request.password, user.password);
   if (!correctPassword) {
@@ -293,11 +265,16 @@ export async function changeDisplayedName(req: Request, res: Response) {
       avatar: getUserImage(user),
     };
     response.success = data;
-    return res.status(200).json(response);
+    res.status(200).json(response);
+    user.lastOnlineAt = Date.now();
+    user.lastOnlineAt = Date.now();
+    user.save().catch(err => logError(err, 'Unable to save last online at'));
+    return;
+    return;
   } catch (error) {
-    logError(error,'display name change');
+    logError(error, 'display name change');
     response.error = 'Internal server Error';
-    return res.status(200).json(response);
+    return res.status(500).json(response);
   }
 }
 
@@ -315,10 +292,8 @@ export async function changePassword(req: Request, res: Response) {
   }
 
   const user = await getUserById(decoded.id);
-  if (!user) {
-    response.error = 'User has been delete from database';
-    return res.status(400).json(response);
-  }
+  if (isUserForbidden(res, user)) return;
+
   const correctPassword = await verifyPassword(iAccountChangePasswordRequest.oldPassword, user.password);
   if (!correctPassword) {
     response.error = 'Incorrect password';
@@ -335,7 +310,10 @@ export async function changePassword(req: Request, res: Response) {
     };
 
     response.message = 'Password has been changed successfully';
-    return res.status(200).json(response);
+    res.status(200).json(response);
+    user.lastOnlineAt = Date.now();
+    user.save().catch(err => logError(err, 'Unable to save last online at'));
+    return;
   } catch (error) {
     response.error = 'Internal server error';
     return res.status(500).json(response);
@@ -354,19 +332,18 @@ export async function resetPassword(req: Request, res: Response) {
 
   try {
     const user = await findUserByEmail(request.email);
-    if (!user) {
-      response.error = 'User under this email does not exist';
-      return res.status(400).json(response);
-    }
+    if (isUserForbidden(res, user)) return;
+
     const code = generateVerificationCode();
     await addVerificationCodeToDatabase(user._id, code, 'password-change');
     const verificationUrl = `${req.host}/account?pc=${code}`;
     await mailService.sendNewPasswordReset(user.email, verificationUrl);
-    res.status(200).json({ success: 'Please confirm password change on email' });
+    response.success = 'Please confirm password change on email';
+    res.status(200).json(response);
   } catch (error) {
     logError(error, 'Unable to send verification code');
     response.error = 'Internal server error';
-    res.status(200).json(response);
+    res.status(500).json(response);
   }
 
   res.status(200).json({ success: 'If email' });
@@ -387,10 +364,7 @@ export async function changeEmail(req: Request, res: Response) {
   }
 
   const user = await getUserById(decoded.id);
-  if (!user) {
-    response.error = 'User has been removed from database';
-    return res.status(400).json(response);
-  }
+  if (isUserForbidden(res, user)) return;
 
   try {
     const code = generateVerificationCode();
@@ -414,23 +388,41 @@ export async function changeEmail(req: Request, res: Response) {
 }
 
 export async function uploadImage(req: Request, res: Response) {
-  if (req.files === null) return res.status(400).json({ error: 'No files' });
+  const response: IAccountResponse = {};
+  const request: IAccountAlterRequest = req.body;
+
+  if (req.files === null) {
+    response.error = 'No files';
+    res.status(400).json(response);
+    return;
+  }
   const decoded = getTokenData(req, res);
   if (!decoded) return;
+
+  const joiResult = verificationJoi.validate(request);
+  if (joiResult.error) {
+    response.error = joiResult.error.message;
+    return res.status(400).json(response);
+  }
 
   const files = req.files.file;
   let file: fileUpload.UploadedFile;
   if (Array.isArray(files)) file = file[0];
   else file = files;
 
-  if (!/.(jpg|png|gif|bmp)$/g.test(file.name)) return res.status(400).json({ error: 'Unknown File format' });
+  if (!/.(jpg|png|gif|bmp)$/g.test(file.name)) {
+    response.error = 'Unknown File format';
+    res.status(400).json(response);
+    return;
+  }
 
   try {
     const user = await getUserById(decoded.id);
+    if (isUserForbidden(res, user)) return;
     await changeAvatar(user, file.data);
     res.status(200).json({ avatar: getUserImage(user) });
   } catch (error) {
-    return res.status(400).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
 
@@ -440,6 +432,7 @@ export function deleteAccount(req: Request, res: Response) {
 
 function getTokenData(req: Request, res: Response): IJWTAccount | null {
   const response: IAccountResponse = {};
+  console.log(req.headers);
   if (!req.headers[TOKEN_HEADER]) {
     response.error = 'Missing token';
     res.status(400).json(response);
@@ -473,4 +466,29 @@ function getTokenData(req: Request, res: Response): IJWTAccount | null {
   response.error = 'Could not authenticate user';
   res.status(400).json(response);
   return null;
+}
+
+function isUserForbidden(res: Response, user: IMongooseUserSchema): boolean {
+  const response: IAccountResponse = {};
+  if (!user) {
+    response.error = 'Account has been removed from database';
+    res.status(400).json(response);
+    return true;
+  }
+  if (!user.verified) {
+    response.error = 'User has not verified email';
+    res.status(400).json(response);
+    return true;
+  }
+  if (user.banned) {
+    response.error = 'Account has been banned';
+    res.status(400).json(response);
+    return true;
+  }
+  if (user.compromised) {
+    response.error = 'Account has been compromised';
+    res.status(400).json(response);
+    return true;
+  }
+  return false;
 }
