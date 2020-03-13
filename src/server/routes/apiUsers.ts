@@ -15,7 +15,14 @@ import {
   getUserImage,
 } from '../database/Users';
 import { PRIVATE_KEY } from '../config';
-import { registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi, emailJoi } from '../../shared/joi';
+import {
+  registerUserJoi,
+  loginUserJoi,
+  changePasswordJoi,
+  changeEmailJoi,
+  emailJoi,
+  displayedNameJoi,
+} from '../../shared/joi';
 import {
   IAccountRegisterRequest,
   IAccountLoginRequest,
@@ -25,6 +32,7 @@ import {
   IAccount,
   IResponse,
   IAccountResetPasswordRequest,
+  IAccountDisplayedNameRequest,
 } from '../../shared/ApiRequestsResponds';
 import { verifyPassword } from '../database/passwordHasher';
 
@@ -241,6 +249,55 @@ export async function verifyUser(req: Request, res: Response) {
     logError(error, 'verification code');
     response.error = 'Invalid code';
     return res.status(400).json(response);
+  }
+}
+
+export async function changeDisplayedName(req: Request, res: Response) {
+  const response: IAccountResponse = {};
+  const request: IAccountDisplayedNameRequest = req.body;
+  const decoded: IJWTAccount = getTokenData(req, res);
+  if (!decoded) return;
+
+  const joiResult = displayedNameJoi.validate(request);
+  if (joiResult.error) {
+    response.error = joiResult.error.message;
+    response.details = joiResult.error;
+    return res.status(400).json(response);
+  }
+
+  const user = await getUserById(decoded.id);
+  if (!user) {
+    response.error = 'User has been delete from database';
+    return res.status(400).json(response);
+  }
+
+  const correctPassword = await verifyPassword(request.password, user.password);
+  if (!correctPassword) {
+    response.error = 'Incorrect password';
+    return res.status(400).json(response);
+  }
+
+  if (profanity.exists(request.displayedName)) {
+    response.error = 'Bad username';
+    return res.status(400).json(response);
+  }
+
+  user.displayedName = request.displayedName;
+
+  try {
+    await user.save();
+    const data: IAccount = {
+      displayedName: user.displayedName,
+      id: user._id,
+      username: user.username,
+      avatar: getUserImage(user),
+    };
+    response.success = data;
+    return res.status(200).json(response);
+  } catch (error) {
+    logError(error,'display name change');
+    response.error = 'Internal server Error';
+    return res.status(200).json(response);
   }
 }
 

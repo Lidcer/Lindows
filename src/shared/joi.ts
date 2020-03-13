@@ -40,4 +40,9 @@ const emailJoi = Joi.object({
   email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
 });
 
-export { emailJoi, registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi };
+const displayedNameJoi = Joi.object({
+  displayedName: Joi.string().required(),
+  password: Joi.string().required(),
+});
+
+export { displayedNameJoi, emailJoi, registerUserJoi, loginUserJoi, changePasswordJoi, changeEmailJoi };

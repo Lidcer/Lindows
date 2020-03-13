@@ -9,6 +9,7 @@ import {
   IAccountChangeEmailRequest,
   IAccountResetPasswordRequest,
   IResponse,
+  IAccountDisplayedNameRequest,
 } from '../../shared/ApiRequestsResponds';
 
 export interface IAccountInfo {
@@ -163,7 +164,29 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  public register(username: string, email: string, password: string, repeatPassword: string): Promise<string> {
+  public changeDisplayName(displayedName: string, password: string): Promise<IAccountInfo> {
+    return new Promise((resolve, reject) => {
+      if (!displayedName) return reject(new Error('new name has not been provided'));
+      if (!password) return reject(new Error('Password has not been provided'));
+
+
+      const accountRegisterRequest: IAccountDisplayedNameRequest = {
+        displayedName,
+        password,
+      };
+
+      Axios.post('/api/v1/users/change-displayed-name', accountRegisterRequest)
+      .then(response => {
+        const body: IResponse<IAccountInfo> = response.data;
+        resolve(body.success);
+      })
+      .catch(error => {
+        reject(this.disassembleError(error));
+      });
+    });
+  }
+
+  public register(username: string, email: string, password: string, repeatPassword: string): Promise<IAccountInfo> {
     return new Promise((resolve, reject) => {
       if (!username) return reject(new Error('Username is required'));
       if (!email) return reject(new Error('email is required'));
@@ -180,16 +203,16 @@ export class IAccount extends EventEmitter {
 
       Axios.post('/api/v1/users/register', accountRegisterRequest)
         .then(response => {
-          const body: IResponse<string> = response.data;
-          resolve(body.success);
+          const body = response.data;
+          if (body.success && body.success.username && body.success.id) {
+            this.avatar = body.success.avatar;
+            resolve(this.account);
+          } else {
+            reject(new Error('Invalid data received from server'));
+          }
         })
         .catch(error => {
-          console.error(error);
-          if (error && error.response && error.response.data && error.response.data.error) {
-            reject(new Error(error.response.data.error));
-          } else {
-            reject(new Error('Internal server error'));
-          }
+          reject(this.disassembleError(error));
         });
     });
   }

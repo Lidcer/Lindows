@@ -11,6 +11,7 @@ import {
   checkUser,
   uploadImage,
   resetPassword,
+  changeDisplayedName,
 } from './apiUsers';
 import { imagesPath } from '../database/Users';
 import { apiIp } from './apiIP';
@@ -48,6 +49,10 @@ export function apiRouter() {
 
   router.post('/api/v1/users/reset-password', (req, res) => {
     resetPassword(req, res);
+  });
+
+  router.post('/api/v1/users/change-displayed-name', (req, res) => {
+    changeDisplayedName(req, res);
   });
 
   router.post('/api/v1/users/change-email', (req, res) => {

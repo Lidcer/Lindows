@@ -37,6 +37,7 @@ interface IAccountState {
     password: string;
     newPassword: string;
     repeatPassword: string;
+    alteringProfile: string[];
     file?: File;
   };
   verifyResult: string;
@@ -73,6 +74,8 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         newPassword: '',
         repeatPassword: '',
         password: '',
+        alteringProfile: [],
+        file: undefined,
       },
       resetPassword: {
         email: '',
@@ -253,80 +256,162 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     return (
       <form onSubmit={this.changeProfile}>
         <h1>User profile</h1>
-        <div className='account-manager-card account-manager-settings-header'>
-          <div className='account-manager-avatar'>
-            <img src={ac.avatar} alt={ac.username} onClick={this.openFile} />
+        <div className='account-manager-scrollabled'>
+          <div className='account-manager-card account-manager-settings-header'>
+            <div className='account-manager-avatar'>
+              <img src={ac.avatar} alt={ac.username} onClick={this.openFile} />
 
-            <input
-              id='account-manager-avatar-file-input'
-              type='file'
-              accept='image/jpeg, image/png'
-              onChange={this.filesSelected}
-              hidden
-            ></input>
+              <input
+                id='account-manager-avatar-file-input'
+                type='file'
+                accept='image/jpeg, image/png'
+                onChange={this.filesSelected}
+                hidden
+              ></input>
+            </div>
+            <div className='account-manager-info'>
+              <span>Account ID:</span>
+              <input type='text' value={ac.accountId} disabled />
+              <span>Username:</span>
+              <input type='text' value={ac.username} disabled />
+
+              <div hidden={this.qt}>
+                <span>Displayed name:</span>
+                <input
+                  type='text'
+                  value={this.state.settings.displayedName}
+                  onChange={ev => this.onChange(ev, 'settings', 'displayedName')}
+                />
+              </div>
+            </div>
           </div>
-          <div className='account-manager-info'>
-            <span>Account ID:</span>
-            <input type='text' value={ac.accountId} disabled />
-            <span>Username:</span>
-            <input type='text' value={ac.username} disabled />
-            <span>Displayed name:</span>
-            <input
-              type='text'
-              value={this.state.settings.displayedName}
-              onChange={ev => this.onChange(ev, 'settings', 'displayedName')}
-            />
+          <div hidden={this.qt}>
+            <div className='account-manager-card'>
+              <span>Change password:</span>
+              <input
+                type='password'
+                name='settings-new-password'
+                id='settings-new-password'
+                placeholder='Password'
+                value={this.state.settings.newPassword}
+                onChange={ev => this.onChange(ev, 'settings', 'newPassword')}
+              />
+              <input
+                type='password'
+                name='settings-repeat-new-password'
+                id='settings-repeat-new-password'
+                placeholder='Repeat Password'
+                value={this.state.settings.repeatPassword}
+                onChange={ev => this.onChange(ev, 'settings', 'repeatPassword')}
+              />
+            </div>
+
+            <div className='account-manager-card'>
+              <span>Change email:</span>
+              <input
+                type='text'
+                placeholder='Email'
+                value={this.state.settings.newEmail}
+                onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
+              />
+            </div>
           </div>
-        </div>
-        <div className='account-manager-card'>
-          <span>Change password:</span>
-          <input
-            type='password'
-            name='settings-new-password'
-            id='settings-new-password'
-            placeholder='Password'
-            value={this.state.settings.newPassword}
-            onChange={ev => this.onChange(ev, 'settings', 'newPassword')}
-          />
-          <input
-            type='password'
-            name='settings-repeat-new-password'
-            id='settings-repeat-new-password'
-            placeholder='Repeat Password'
-            value={this.state.settings.repeatPassword}
-            onChange={ev => this.onChange(ev, 'settings', 'repeatPassword')}
-          />
-        </div>
-
-        <div className='account-manager-card'>
-          <span>Change email:</span>
-          <input
-            type='text'
-            placeholder='Email'
-            value={this.state.settings.newEmail}
-            onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
-          />
-        </div>
-
-        <div className='account-manager-card'>
-          <span>Current Password</span>
-          <input
-            type='password'
-            name='settings-password'
-            id='settings-password'
-            placeholder='Password'
-            value={this.state.settings.password}
-            onChange={ev => this.onChange(ev, 'settings', 'password')}
-          />
-          {this.changes}
-          <button className='btn btn-secondary'>Alter Profile</button>
-          <button className='btn btn-secondary' onClick={this.logout}>
-            Log out
-          </button>
+          <div hidden={this.qt}>
+            <div className='account-manager-card'>
+              <span>Current Password</span>
+              <input
+                type='password'
+                name='settings-password'
+                id='settings-password'
+                placeholder='Password'
+                value={this.state.settings.password}
+                onChange={ev => this.onChange(ev, 'settings', 'password')}
+              />
+              {this.changes}
+              <div hidden={this.qt}>
+                <button
+                  className='btn btn-secondary'
+                  disabled={!this.changes || this.state.settings.password.length < 3}
+                  onClick={this.alterProfile}
+                >
+                  Alter Profile
+                </button>
+                <button className='btn btn-secondary' onClick={this.logout}>
+                  Log out
+                </button>
+              </div>
+            </div>
+          </div>
+          {this.alteringChanges}
         </div>
       </form>
     );
   }
+
+  get alteringChanges() {
+    if (!this.state.settings.alteringProfile.length) return null;
+    return (
+      <div className='account-manager-card'>
+        <span>Altering</span>
+        <ul>
+          {this.state.settings.alteringProfile.map((e, i) => (
+            <li key={i}>{e}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  get qt() {
+    return !!this.state.settings.alteringProfile.length;
+  }
+
+  alterProfile = async () => {
+    const state = { ...this.state };
+    const ap = state.settings.alteringProfile;
+    const ac = services.account;
+
+    try {
+      if (state.settings.file) {
+        ap.push('Uploading file....');
+        await ac.changeAvatar(state.settings.password, state.settings.file, n => {
+          console.log(n);
+          if (this.destroyed) return;
+          ap[1] = `upload process... ${n}`;
+          this.setState(state);
+        });
+        ap[1] = `Image alterd`;
+        if (this.destroyed) return;
+        this.setState(state);
+      }
+      if (ac.account.displayedName !== state.settings.displayedName) {
+        ap.push('Altering Displayed Name....');
+        await ac.changeDisplayName(state.settings.displayedName, state.settings.password);
+        ap.push('Displayed name changed');
+        if (this.destroyed) return;
+        this.setState(state);
+      }
+      if (state.settings.newEmail) {
+        ap.push('Altering Email....');
+        await ac.changeEmail(state.settings.password, state.settings.newEmail);
+        ap.push('Email has been changed');
+        if (this.destroyed) return;
+        this.setState(state);
+      }
+
+      if (state.settings.newPassword) {
+        ap.push('Altering Email....');
+        await ac.changePassword(state.settings.password, state.settings.newPassword, state.settings.repeatPassword);
+        ap.push('Password has been changed');
+        if (this.destroyed) return;
+        this.setState(state);
+      }
+    } catch (error) {
+      state.error = error.message;
+      if (this.destroyed) return;
+      this.setState(state);
+    }
+  };
 
   logout = () => {
     services.account.logout();
@@ -519,6 +604,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       newPassword: '',
       password: '',
       repeatPassword: '',
+      alteringProfile: [],
       file: undefined,
     };
     state.login = {
