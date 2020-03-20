@@ -50,7 +50,7 @@ import { logError } from './Error';
 import { randomBytes } from 'crypto';
 import { mailService } from '../main';
 import { ObjectSchema } from '@hapi/joi';
-import { isTokenBlackListed, addTokenToBlackList } from '../database/BlackListTokens';
+import { isTokenBlackListed, addTokenToBlackList } from '../database/UserdTokens';
 import { IMailAccountInfo } from './mail';
 interface IJWTAccount {
   id: string;
