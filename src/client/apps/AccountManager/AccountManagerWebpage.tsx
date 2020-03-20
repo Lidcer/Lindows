@@ -528,6 +528,13 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     try {
       const msg = await services.account.login(this.state.login.usernameOrEmail, this.state.login.password);
       if (this.destroyed) return;
+      const appName = this.redirectToApp;
+      if (appName) {
+        setTimeout(() => {
+          location.href = `${location.origin}/${appName}`;
+        }, 500);
+      }
+
       this.setInfoMsg(msg);
       return this.updateTabAccordingToUser();
     } catch (error) {
@@ -683,17 +690,23 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     // .catch((error: Error) => this.setState({ verifyResult: error.message }));
   }
 
-  async componentDidMount() {
-    if (services.isReady) return this.updateTabAccordingToUser();
-    services.on('allReady', this.updateTabAccordingToUser);
+  componentDidMount() {
+    if (services.isReady) return this.startup();
+    services.on('allReady', this.startup);
   }
 
   componentWillUnmount() {
     this.destroyed = true;
-    services.removeListener('allReady', this.updateTabAccordingToUser);
+    services.removeListener('allReady', this.startup);
     services.account.removeListener('login', this.updateTabAccordingToUser);
     services.account.removeListener('logout', this.updateTabAccordingToUser);
   }
+
+  startup = () => {
+    services.account.on('login', this.updateTabAccordingToUser);
+    services.account.on('logout', this.updateTabAccordingToUser);
+    this.updateTabAccordingToUser();
+  };
 
   clearParameters() {
     const state = { ...this.state };
@@ -723,14 +736,18 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   updateTabAccordingToUser = async () => {
-    services.account.on('login', this.updateTabAccordingToUser);
-    services.account.on('logout', this.updateTabAccordingToUser);
     if (!this.props.window) {
       const verificationCode = this.temporarilyToken;
       if (verificationCode) {
         await this.switchTab(Tab.Verification);
         this.verifyCode(verificationCode);
         return;
+      }
+      if (services.account.account) {
+        const appName = this.redirectToApp;
+        if (appName) {
+          location.href = `${location.origin}/${appName}`;
+        }
       }
     }
     const ac = services.account.account;
@@ -819,5 +836,17 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get temporarilyToken() {
     const url = new URL(document.location.href);
     return url.searchParams.get('v');
+  }
+
+  get redirectToApp() {
+    const url = new URL(document.location.href);
+    const app = url.searchParams.get('a');
+    switch (app) {
+      case 'lype':
+        return app;
+      default:
+        return null;
+        break;
+    }
   }
 }

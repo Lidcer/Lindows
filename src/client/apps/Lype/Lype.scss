@@ -3,71 +3,54 @@
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: row;
   color: yellow;
 
-  .friends {
+  .lype-login-required {
+    position: absolute;
+    text-align: center;
+    align-items: center;
+    border-top: 1pt solid yellow;
+    border-radius: 10pt;
     padding: 5pt;
-    height: 100%;
-    width: 250pt;
-    color: yellow;
-    background-color: rgb(32, 32, 32);
-    overflow: scroll;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    box-shadow: 0 0 10pt black;
 
+    width: 175pt;
+    height: 175pt;
+    overflow: auto;
+
+    h1 {
+      font-size: 15pt;
+    }
   }
 
-  .chat {
+  .lype-friends {
+    min-width: 10%;
+    max-width: 50%;
+  }
+
+  .lype-chat {
     display: flex;
-    justify-content: end;
     flex-direction: column;
-    right: 0;
-    top: 0;
-    height: 100%;
-    width: 100%;
+    flex: auto;
+    width: auto;
+  }
 
-    .header {
-      background-color: rgb(21, 21, 21);
-      height: 100pt;
-      overflow: hidden;
-      flex: none;
-    }
+  .lype-chat-header {
+    height: 200pt;
+  }
 
-    .footer {
-      display: flex;
-      justify-content: space-around;
-      flex-direction: column;
-      background-color: rgb(16, 16, 16);
-      height: auto;
+  .lype-chat-content {
+    height: 60px;
+    flex: auto;
+    overflow: auto;
+  }
 
-      .messages {
-        background-color: rgb(24, 24, 24);
-        flex: auto;
-        height: auto;
-        overflow: auto;
-      }
-
-      .input {
-        height: 40pt;
-        width: 100%;
-        bottom: 0;
-        flex: none;
-        background-color: rgb(4, 4, 4);
-
-
-        input {
-          background-color: rgb(64, 64, 64);
-          width: calc(100% - 20px);
-          margin: 10px;
-          padding: 10pt;
-          height: 30px;
-          color: white;
-          border: none;
-          border-radius: 5px;
-        }
-      }
-
-    }
-
-
+  .lype-chat-input {
+    height: 200pt;
   }
 
 
