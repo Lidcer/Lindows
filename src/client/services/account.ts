@@ -139,7 +139,7 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  async changeAvatar(password: string, file: File, callback: (progress: number) => void): Promise<IAccountInfo> {
+  async changeAvatar(password: string, file: File, callback: (progress: number) => void): Promise<string> {
     return new Promise(async (resolve, reject) => {
       if (!this._token) return reject('User not loggined in');
       if (!password) return reject('Password has not been provided');
@@ -166,8 +166,7 @@ export class IAccount extends EventEmitter {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
           else this.fetchImage();
-          resolve(this.account);
-          resolve(this.account);
+          resolve(response.data.message);
         })
         .catch(error => {
           reject(this.disassembleError(error));
@@ -269,8 +268,11 @@ export class IAccount extends EventEmitter {
         newPassword,
         oldPassword,
       };
-
-      Axios.post<IAccountResponse>('/api/v1/users/change-password', iAccountChangeAccount)
+      const axiosRequestConfig: AxiosRequestConfig = {
+        headers: {},
+      };
+      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
+      Axios.post<IAccountResponse>('/api/v1/users/change-password', iAccountChangeAccount, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
@@ -283,7 +285,7 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  public changeDisplayName(displayedName: string, password: string): Promise<IAccountInfo> {
+  public changeDisplayName(displayedName: string, password: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!displayedName) return reject(new Error('new name has not been provided'));
       if (!password) return reject(new Error('Password has not been provided'));
@@ -292,13 +294,16 @@ export class IAccount extends EventEmitter {
         displayedName,
         password,
       };
-
-      Axios.post<IAccountResponse>('/api/v1/users/change-displayed-name', accountRegisterRequest)
+      const axiosRequestConfig: AxiosRequestConfig = {
+        headers: {},
+      };
+      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
+      Axios.post<IAccountResponse>('/api/v1/users/change-displayed-name', accountRegisterRequest, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
           else this.fetchImage();
-          resolve(this.account);
+          resolve(response.data.message);
         })
         .catch(error => {
           reject(this.disassembleError(error));
@@ -306,7 +311,7 @@ export class IAccount extends EventEmitter {
     });
   }
 
-  changeEmail(password: string, newEmail: string): Promise<IAccountInfo> {
+  changeEmail(password: string, newEmail: string): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this._token) return reject('User not loggined in');
       if (!password) return reject('Password has not been provided');
@@ -316,13 +321,16 @@ export class IAccount extends EventEmitter {
         password,
         newEmail,
       };
-
-      Axios.post<IAccountResponse>('/api/v1/users/changeEmail', iAccountChangeEmailAccount)
+      const axiosRequestConfig: AxiosRequestConfig = {
+        headers: {},
+      };
+      axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
+      Axios.post<IAccountResponse>('/api/v1/users/change-email', iAccountChangeEmailAccount, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
           else this.fetchImage();
-          resolve(this.account);
+          resolve(response.data.message);
         })
         .catch(error => {
           reject(this.disassembleError(error));
@@ -443,7 +451,7 @@ export class IAccount extends EventEmitter {
     if (error && error.response && error.response.data && error.response.data.error) {
       return new Error(error.response.data.error);
     } else {
-      return new Error('Internal server error');
+      return new Error('Problem server');
     }
   }
 

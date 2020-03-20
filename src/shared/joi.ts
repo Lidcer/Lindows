@@ -42,8 +42,8 @@ export const joi$loginUser = Joi.object<IAccountLoginRequest>({
 export const joi$changePassword = Joi.object<IAccountChangePasswordRequest>({
   oldPassword: Joi.string(),
   newPassword: PASSWORD,
-  repeatNewPassword: Joi.ref('password'),
-}).with('newPassword', 'repeatPassword');
+  repeatNewPassword: Joi.ref('newPassword'),
+}).with('newPassword', 'repeatNewPassword');
 
 export const joi$changeEmail = Joi.object<IAccountChangeEmailRequest>({
   password: Joi.string(),

@@ -1,6 +1,6 @@
-import { Request, Response, response } from 'express';
+import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { TOKEN_HEADER, WEEK, HOUR, DAY } from '../../shared/constants';
+import { TOKEN_HEADER, WEEK, HOUR } from '../../shared/constants';
 import { profanity } from '@2toad/profanity';
 
 import {
@@ -14,6 +14,7 @@ import {
   changeAvatar,
   getUserImage,
   changeEmailOnAccount,
+  doesUserWithDisplayedNamesExist,
 } from '../database/Users';
 import { PRIVATE_KEY } from '../config';
 import {
@@ -183,15 +184,20 @@ export async function changeDisplayedName(req: Request, res: Response) {
   if (rIsUserForbidden(res, user)) return;
 
   const correctPassword = await verifyPassword(request.password, user.password);
-  if (!correctPassword) return respondWithError(res, 500, 'Incorrect password');
-  if (profanity.exists(request.displayedName)) return respondWithError(res, 500, 'Bad username');
-
+  if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
+  if (user.displayedName.toLowerCase() === request.displayedName.toLowerCase())
+    return respondWithError(res, 400, 'You already have this displayed name');
+  if (profanity.exists(request.displayedName)) return respondWithError(res, 400, 'Bad username');
+  const exist = await doesUserWithDisplayedNamesExist(request.displayedName);
+  if (exist) return respondWithError(res, 400, 'Someone already use this name');
   user.displayedName = request.displayedName;
 
   try {
     await user.save();
-    const response: IAccountResponse = {};
-    response.success = getClientAccount(user);
+    const response: IAccountResponse = {
+      success: getClientAccount(user),
+      message: 'Displayed name changed',
+    };
     res.status(200).json(response);
     user.lastOnlineAt = Date.now();
     user.save().catch(err => logError(err, 'Unable to save last online at'));
@@ -221,8 +227,6 @@ export async function changePassword(req: Request, res: Response) {
 
     response.message = 'Password has been changed successfully';
     res.status(200).json(response);
-    user.lastOnlineAt = Date.now();
-    user.save().catch(err => logError(err, 'Unable to save last online at'));
     return;
   } catch (error) {
     return respondWithError(res, 500, 'Internal server Error');
@@ -264,6 +268,7 @@ export async function changeEmail(req: Request, res: Response) {
 
     const response: IAccountResponse = {
       success: getClientAccount(user),
+      message: 'Mail has been sent',
     };
 
     return res.status(200).json(response);
@@ -334,7 +339,11 @@ export async function uploadImage(req: Request, res: Response) {
     if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
 
     await changeAvatar(user, file.data);
-    res.status(200).json({ avatar: getUserImage(user) });
+    const response: IAccountResponse = {};
+    response.success = getClientAccount(user);
+    response.message = 'Avatar changed';
+
+    res.status(200).json(response);
   } catch (error) {
     return respondWithError(res, 500, 'Internal server error');
   }
@@ -411,10 +420,11 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
         response.message = `Welcome ${user.displayedName} your account has been verified`;
         break;
       case VerificationType.ChangeEmail:
-        response.success = 'Account verified';
-        response.message = 'Email has been changed';
         if (!decoded.data) return respondWithError(res, 400, 'Invalid Token');
-        await changeEmailOnAccount(user, decoded.data);
+        response.success = 'Account verified';
+        response.message = `Alright ${user.displayedName} your email has been changed`;
+        console.log(decoded.data);
+        await changeEmailOnAccount(user, decoded.data, false);
         break;
 
       default:
@@ -423,9 +433,6 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
     await addTokenToBlackList(token as string, decoded.exp);
     user.verified = true;
     user.lastOnlineAt = Date.now();
-    if (decoded.type === VerificationType.ChangeEmail) {
-      response.message = `Alright ${user.displayedName} your email has been changed`;
-    }
     await user.save();
     res.status(200).json(response);
   } catch (error) {

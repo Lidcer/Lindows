@@ -279,7 +279,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       this.switchTab(Tab.Login);
       return null;
     }
-    const avatar = this.props.window ? ac.avatar : `$./.${ac.avatar}`;
+    const avatar = this.props.window ? ac.avatar : `./.${ac.avatar}`;
 
     return (
       <form onSubmit={this.changeProfile}>
@@ -341,7 +341,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
               <span>Change email:</span>
               <input
                 type='text'
-                placeholder='Email'
+                placeholder='New email'
                 autoComplete='off'
                 value={this.state.settings.newEmail}
                 onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
@@ -355,7 +355,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 type='password'
                 name='settings-password'
                 id='settings-password'
-                placeholder='Password'
+                placeholder='Current Password'
                 autoComplete='off'
                 value={this.state.settings.password}
                 onChange={ev => this.onChange(ev, 'settings', 'password')}
@@ -400,49 +400,74 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   alterProfile = async () => {
+    this.resetWarnings();
     const state = { ...this.state };
+    const pass = state.settings.password;
+    state.settings.password = '';
     const ap = state.settings.alteringProfile;
     const ac = services.account;
-
     try {
       if (state.settings.file) {
         ap.push('Uploading file....');
-        await ac.changeAvatar(state.settings.password, state.settings.file, n => {
-          console.log(n);
+        const result = await ac.changeAvatar(pass, state.settings.file, n => {
           if (this.destroyed) return;
-          ap[1] = `upload process... ${n}`;
+          ap[1] = `Upload process... ${n}%`;
+          state.settings.file = undefined;
           this.setState(state);
         });
-        ap[1] = `Image altered`;
+        ap[1] = result;
         if (this.destroyed) return;
         this.setState(state);
       }
       if (ac.account.displayedName !== state.settings.displayedName) {
-        ap.push('Altering Displayed Name....');
-        await ac.changeDisplayName(state.settings.displayedName, state.settings.password);
-        ap.push('Displayed name changed');
+        ap.push('altering displayed Name....');
+        const result = await ac.changeDisplayName(state.settings.displayedName, pass);
+        ap.push(result);
         if (this.destroyed) return;
+        this.state.settings.displayedName = ac.account.displayedName;
         this.setState(state);
       }
       if (state.settings.newEmail) {
         ap.push('Altering Email....');
-        await ac.changeEmail(state.settings.password, state.settings.newEmail);
-        ap.push('Email has been changed');
+        const result = await ac.changeEmail(pass, state.settings.newEmail);
+        ap.push(result);
+        state.settings.newEmail = '';
         if (this.destroyed) return;
         this.setState(state);
       }
 
       if (state.settings.newPassword) {
-        ap.push('Altering Email....');
-        await ac.changePassword(state.settings.password, state.settings.newPassword, state.settings.repeatPassword);
+        ap.push('Altering Password....');
+        await ac.changePassword(pass, state.settings.newPassword, state.settings.repeatPassword);
+        state.settings.newPassword = '';
+        state.settings.repeatPassword = '';
         ap.push('Password has been changed');
         if (this.destroyed) return;
         this.setState(state);
       }
+
+      ap.push('Done...');
+      ap.push('Redirecting back in 30sec');
+      this.setInfoMsg('All altering jobs have finished');
+      setTimeout(() => {
+        if (this.destroyed) return;
+        state.settings.alteringProfile = [];
+        this.setState(state);
+        this.clearParameters();
+        this.resetWarnings();
+      }, SECOND * 30);
     } catch (error) {
       state.error = error.message;
       if (this.destroyed) return;
+      ap.push('Altering Failed!');
+      ap.push('Redirecting back in 30sec');
       this.setState(state);
+      setTimeout(() => {
+        if (this.destroyed) return;
+        state.settings.alteringProfile = [];
+        this.setState(state);
+        this.clearParameters();
+      }, SECOND * 30);
     }
   };
 
@@ -482,16 +507,17 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   openFile = async () => {
     const fileDialog = new OpenFileDialog();
+    const state = { ...this.state };
     fileDialog.acceptTypes = 'image/jpeg, image/png';
     fileDialog
       .ShowDialog()
       .then(files => {
-        const state = { ...this.state };
         state.settings.file = files[0];
         this.setState({});
       })
       .catch(_ => {
-        /* ignored */
+        state.settings.file = undefined;
+        this.setState({});
       });
   };
 

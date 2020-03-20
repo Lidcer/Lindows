@@ -4,6 +4,7 @@ import { hashPassword } from './passwordHasher';
 import { join } from 'path';
 import { exists, mkdir, writeFile, unlink, readFile } from 'fs';
 import * as Jimp from 'jimp';
+import { resolve } from 'dns';
 
 export const imagesPath = ['data', 'avatars'];
 export const dataImages = join(process.cwd(), 'data', 'avatars');
@@ -78,6 +79,21 @@ export function getUserById(id: string): Promise<IMongooseUserSchema> {
     MongoUser.findById(id)
       .then(user => {
         resolve(user);
+      })
+      .catch(err => {
+        reject(err);
+      });
+  });
+}
+
+export function doesUserWithDisplayedNamesExist(name: string): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    MongoUser.find()
+      .then(users => {
+        for (const user of users) {
+          if (user.displayedName.toLowerCase() === name.toLowerCase()) return resolve(true);
+        }
+        resolve(false);
       })
       .catch(err => {
         reject(err);
@@ -172,6 +188,7 @@ export function changePasswordOnAccount(
     try {
       const hashedPassword = await hashPassword(newPassword);
       user.password = hashedPassword;
+      user.lastOnlineAt = Date.now();
       if (shouldSave) user.save();
       resolve();
     } catch (error) {
@@ -180,11 +197,12 @@ export function changePasswordOnAccount(
   });
 }
 
-export function changeEmailOnAccount(user: IMongooseUserSchema, email: string): Promise<void> {
+export function changeEmailOnAccount(user: IMongooseUserSchema, email: string, shouldSave = true): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
       user.email = email;
-      user.save();
+      user.lastOnlineAt = Date.now();
+      if (shouldSave) user.save();
       resolve();
     } catch (error) {
       reject(error);
@@ -250,5 +268,6 @@ function removeAvatarIfExist(user: IMongooseUserSchema): Promise<void> {
 export function getUserImage(user: IMongooseUserSchema): string | null {
   const avatar = user.avatar;
   if (!avatar) return null;
+
   return `./${imagesPath.join('/')}/${avatar}`;
 }
