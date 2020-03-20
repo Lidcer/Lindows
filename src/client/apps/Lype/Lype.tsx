@@ -18,6 +18,12 @@ export class Lype extends BaseWindow {
       minHeight: 400,
       minWidth: 400,
     });
+    this.on('ready', ev => {
+      this.onStartUp();
+    });
+    this.onKeyboard('keydown', e => {
+      console.log(e);
+    });
   }
 
   onStartUp() {

@@ -63,6 +63,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     }
     services.on('allReady', this.allReady);
     services.on('onServiceReady', this.onServiceReady);
+    services.on('onServiceFailed', this.onServiceFailed);
     document.addEventListener('keydown', this.keypress, false);
     document.addEventListener('touchstart', this.onTouchStart, false);
     document.addEventListener('touchend', this.onTouchEnd, false);
@@ -70,6 +71,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   componentWillUnmount() {
     services.removeListener('allReady', this.allReady);
     services.removeListener('onServiceReady', this.onServiceReady);
+    services.removeListener('onServiceFailed', this.onServiceFailed);
     document.removeEventListener('keydown', this.keypress, false);
     document.removeEventListener('touchstart', this.onTouchStart, false);
     document.removeEventListener('touchend', this.onTouchEnd, false);
@@ -110,6 +112,11 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   onServiceReady = (name: string) => {
     const state = { ...this.state };
     this.state.messageToDisplay.push(`Initialized ${name}`);
+    this.setState(state);
+  };
+  onServiceFailed = (name: string) => {
+    const state = { ...this.state };
+    this.state.messageToDisplay.push(`Failed to initialized ${name}`);
     this.setState(state);
   };
 }

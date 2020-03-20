@@ -1,3 +1,4 @@
+//TODO: move joi here
 export interface IUserDTO {
   userId: string;
   firstName: string;
@@ -13,9 +14,8 @@ export interface IAccountRegisterRequest {
 }
 
 export interface IAccountLoginRequest {
-  username: string;
+  usernameOrEmail: string;
   password: string;
-  email: string;
 }
 
 export interface IAccountChangePasswordRequest {
@@ -24,22 +24,42 @@ export interface IAccountChangePasswordRequest {
   repeatNewPassword: string;
 }
 
+export interface IAccountResetPasswordRequest {
+  password: string;
+  repeatPassword: string;
+}
+
 export interface IAccountChangeEmailRequest {
   password: string;
-  email: string;
+  newEmail: string;
 }
 
-export interface IAccountResetPasswordRequest {
-  email: string;
-}
-
-export interface IAccountAlterRequest {
+export interface IAccountDeleteAccountRequest {
   password: string;
+  repeatPassword: string;
+  reason: string;
+}
+
+export interface IAccountVerificationRequest {
+  password: string;
+}
+
+export interface IAccountEmailRequest {
+  email: string;
 }
 
 export interface IAccountDisplayedNameRequest {
   password: string;
   displayedName: string;
+}
+
+export interface IAccountVerificationPassword {
+  password: string;
+  repeatPassword: string;
+}
+
+export interface IAccountVerificationEmail {
+  email: string;
 }
 
 export interface IResponse<T> {
@@ -68,6 +88,12 @@ export interface IP {
   timezone?: string;
   readme?: string;
   bogon?: boolean;
+}
+
+export enum VerificationType {
+  Verificaiton = 1,
+  ChangeEmail,
+  PasswordReset,
 }
 
 export declare type IAccountResponse = IResponse<IAccount>;

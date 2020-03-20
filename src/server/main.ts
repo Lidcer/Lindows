@@ -7,7 +7,7 @@ import { staticsRouter } from './routes/statics-router';
 import * as config from './config';
 import { socketConnection } from './websocket/SocketHandler';
 import { setupDatabase } from './database/database';
-import { MailService } from './mail';
+import { MailService, readHTML } from './routes/mail';
 
 //sendgrid, mandrill, mailgun
 console.info(`*******************************************`);

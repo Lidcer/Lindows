@@ -163,12 +163,16 @@ export function getUserByAccountOrEmail(username: string, email?: string): Promi
   });
 }
 
-export function changePasswordOnAccount(user: IMongooseUserSchema, newPassword: string): Promise<void> {
+export function changePasswordOnAccount(
+  user: IMongooseUserSchema,
+  newPassword: string,
+  shouldSave = true,
+): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
       const hashedPassword = await hashPassword(newPassword);
       user.password = hashedPassword;
-      user.save();
+      if (shouldSave) user.save();
       resolve();
     } catch (error) {
       reject(error);

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+    .container {
+        width: 100%;
+        padding-right: 15px;
+        padding-left: 15px;
+        margin-right: auto;
+        margin-left: auto
+    }
+    
+    .mt-5,
+    .my-5 {
+        margin-top: 3rem !important
+    }
+    .lead {
+        font-size: 1.25rem;
+        font-weight: 300
+    }
+    
+    .btn {
+        display: inline-block;
+        font-weight: 400;
+        color: #212529;
+        text-align: center;
+        vertical-align: middle;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        background-color: transparent;
+        border: 1px solid transparent;
+        padding: .375rem .75rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border-radius: .25rem;
+        transition: color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out
+    }
+    .btn-primary {
+        color: #fff;
+        background-color: #007bff;
+        border-color: #007bff
+    }
+    .table {
+        border-collapse: collapse !important
+    }
+
+    .table td,
+    .table th {
+        background-color: #fff !important
+
+    }
+    a {
+        color: white;
+        text-decoration: none;
+        background-color: transparent
+    }
+    
+    a:hover {
+        color: #0056b3;
+        text-decoration: underline
+    }
+
+    a:not([href]) {
+        color: inherit;
+        text-decoration: none
+    }
+
+    a:not([href]):hover {
+        color: inherit;
+        text-decoration: none
+    }
+    
+    
+    h1, h2, h3, h4, h5, h6 {
+        margin-top: 0;
+        margin-bottom: .5rem
+    }
+
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        text-align: left;
+        background-color: #fff
+    }
+    dl, ol, ul {
+        margin-top: 0;
+        margin-bottom: 1rem
+    }
+
+    </style>
+
+    <title>Document</title>
+</head>
+<body>
+
+    <main role="main" class="container">
+        <h1 class="mt-5">Your account has been deleted</h1>
+        <p class="lead">${reason}</p>
+
+        <div>ID: ${id}</div>
+        <div>Username: ${username}</div>
+
+      </main>
+
+</body>
+</html>

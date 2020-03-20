@@ -1,4 +1,15 @@
 import Joi from '@hapi/joi';
+import {
+  IAccountRegisterRequest,
+  IAccountLoginRequest,
+  IAccountChangePasswordRequest,
+  IAccountChangeEmailRequest,
+  IAccountVerificationRequest,
+  IAccountDisplayedNameRequest,
+  IAccountResetPasswordRequest,
+  IAccountDeleteAccountRequest,
+  IAccountEmailRequest,
+} from './ApiRequestsResponds';
 
 // CONSTANTS
 const USERNAME = Joi.string()
@@ -16,51 +27,49 @@ const EMAIL = Joi.string()
   .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } })
   .required();
 
-const registerUserJoi = Joi.object({
+export const joi$registerUser = Joi.object<IAccountRegisterRequest>({
   username: USERNAME,
   password: PASSWORD,
   repeatPassword: Joi.ref('password'),
   email: EMAIL,
 }).with('password', 'repeatPassword');
 
-const loginUserJoi = Joi.object({
-  username: Joi.string(),
-  email: Joi.string(),
+export const joi$loginUser = Joi.object<IAccountLoginRequest>({
+  usernameOrEmail: Joi.string(),
   password: Joi.string(),
 });
 
-const changePasswordJoi = Joi.object({
+export const joi$changePassword = Joi.object<IAccountChangePasswordRequest>({
   oldPassword: Joi.string(),
   newPassword: PASSWORD,
   repeatNewPassword: Joi.ref('password'),
 }).with('newPassword', 'repeatPassword');
 
-const changeEmailJoi = Joi.object({
-  username: Joi.string(),
+export const joi$changeEmail = Joi.object<IAccountChangeEmailRequest>({
   password: Joi.string(),
-  email: EMAIL,
   newEmail: EMAIL,
 });
 
-const verificationJoi = Joi.object({
+export const joi$verification = Joi.object<IAccountVerificationRequest>({
   password: Joi.string(),
 });
 
-const emailJoi = Joi.object({
-  email: EMAIL,
+export const joi$email = Joi.object<IAccountEmailRequest>({
+  email: Joi.string(),
 });
 
-const displayedNameJoi = Joi.object({
+export const joi$displayedName = Joi.object<IAccountDisplayedNameRequest>({
   displayedName: USERNAME,
   password: PASSWORD,
 });
 
-export {
-  verificationJoi,
-  displayedNameJoi,
-  emailJoi,
-  registerUserJoi,
-  loginUserJoi,
-  changePasswordJoi,
-  changeEmailJoi,
-};
+export const joi$deleteAccount = Joi.object<IAccountDeleteAccountRequest>({
+  password: USERNAME,
+  repeatPassword: Joi.ref('password'),
+  reason: Joi.string(),
+}).with('newPassword', 'repeatPassword');
+
+export const joi$resetPassword = Joi.object<IAccountResetPasswordRequest>({
+  password: PASSWORD,
+  repeatPassword: Joi.ref('password'),
+}).with('password', 'repeatPassword');

@@ -13,6 +13,13 @@ import {
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { services } from '../../services/services';
 import { random, clamp } from 'lodash';
+import {
+  IBaseWindowEmitter,
+  WindowEvent,
+  IBaseWindowEmitterType,
+  IBaseWindowKeyboard,
+  KeyboardEmitterType,
+} from './WindowEvent';
 
 const DEFAULT_APP_IMAGE = './assets/images/unknown-app.svg';
 
@@ -48,7 +55,7 @@ export interface IWindow {
   alwaysOnTop?: boolean;
 }
 
-export interface IBaseWindowState {
+export interface IBaseWindowState<A> {
   options: IWindow;
   animate: 'none' | 'in' | 'out' | 'minimize' | 'unMinimize';
   x: number;
@@ -56,7 +63,7 @@ export interface IBaseWindowState {
   width: number;
   height: number;
   active: boolean;
-  variables?: any;
+  variables?: A;
 }
 
 export interface IManifest {
@@ -84,17 +91,13 @@ declare type ResizingType =
   | 'right-bottom';
 
 // eslint-disable-next-line
-export interface BaseWindow<A = {}> extends React.Component<IBaseWindowProps, IBaseWindowState> {
+export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
   renderInside(): JSX.Element;
-  onStartUp?(): void;
-  onClose?(): void;
-  onFocus?(): void;
-  onBlur?(): void;
-  _onReady?(): void;
+
   resize?(width: number, height: number): void;
 }
 
-export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IBaseWindowState> {
+export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
   private minHeight = 250;
   private minWidth = 250;
   private titleBarOffsetX: number;
@@ -112,13 +115,17 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
   private phone = null;
   private destroyed = false;
   private manifest: IManifest;
+  private emitter: IBaseWindowEmitter;
+  private keyboardEmitter: IBaseWindowKeyboard;
   private memorizedState = {
     x: 0,
     y: 0,
   };
 
-  constructor(props: IBaseWindowProps, manifest: IManifest, options?: IWindow, variables?: Readonly<A>) {
+  constructor(props: IBaseWindowProps, manifest: IManifest, options?: IWindow, variables?: Readonly<B>) {
     super(props);
+    this.emitter = new IBaseWindowEmitter(this);
+    this.keyboardEmitter = new IBaseWindowKeyboard();
     this.manifest = manifest;
     Object.seal(this.manifest);
     this.phone = services.fingerprinter.mobile.phone();
@@ -181,6 +188,9 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
     window.addEventListener('mouseup', this.mouseUp, false);
     window.addEventListener('touchend', this.touchEnd, false);
+    window.addEventListener('keydown', this.keyboard);
+    window.addEventListener('keypress', this.keyboard);
+    window.addEventListener('keyup', this.keyboard);
 
     services.processor.startProcess(this);
     this.changeActiveState(true);
@@ -195,8 +205,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
     this.monitorInterval = setInterval(this.monitor);
 
-    if (this.onStartUp) this.onStartUp();
-    if (this._onReady) this._onReady();
+    this.emitter.emit('ready');
   }
 
   componentWillUnmount() {
@@ -213,8 +222,9 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     window.removeEventListener('touchend', this.touchEnd, false);
 
     services.processor.killProcess(this);
+    this.emitter.removeAllListeners();
+    this.keyboardEmitter.removeAllListeners();
     clearInterval(this.monitorInterval);
-    if (this.onClose) this.onClose();
   }
 
   render() {
@@ -225,6 +235,14 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
         <div className='window-content'>{this.giveView()}</div>
       </div>
     );
+  }
+
+  on(event: IBaseWindowEmitterType | '*', listener: (event: WindowEvent) => void) {
+    return this.emitter.on(event, listener);
+  }
+
+  onKeyboard(event: 'keypress' | 'keyup' | 'keydown' | '*', listener: (event: WindowEvent) => void) {
+    return this.keyboardEmitter.on(event, listener);
   }
 
   private monitor = () => {
@@ -293,7 +311,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
   private renderExit() {
     if (this.state.options.closeButton === 'shown') {
       return (
-        <span className='title-bar-buttons title-bar-exit' onClick={this.exit}>
+        <span className='title-bar-buttons title-bar-exit' onClick={this.buttonExit}>
           <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
         </span>
       );
@@ -320,7 +338,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
   };
 
   private redirect = async () => {
-    this.minimize();
+    this.buttonMinimize();
     try {
       await services.processor.saveState();
       document.location.href = this.state.options.redirectToWebpageButton;
@@ -332,10 +350,11 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
 
   private renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
+    const buttonFunction = this.state.options.maximized ? this.buttonMaximize : this.buttonRestore;
 
     if (this.state.options.maximizeRestoreDownButton === 'shown') {
       return (
-        <span className='title-bar-buttons title-bar-button-hover' onClick={this.maximizeRestoreDown}>
+        <span className='title-bar-buttons title-bar-button-hover' onClick={buttonFunction}>
           <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
         </span>
       );
@@ -357,7 +376,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
           onMouseDown={() => {
             this.isWindowMoving = false;
           }}
-          onClick={this.minimize}
+          onClick={this.buttonMinimize}
         >
           <FontAwesomeIcon icon={faWindowMinimize}></FontAwesomeIcon>
         </span>
@@ -627,13 +646,19 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     if (this.state.active) this.wasActive = true;
     else this.wasActive = false;
 
-    if (active && doProcess) services.processor.makeActive(this);
     if (active !== this.state.active) {
+      if (active) {
+        this.emitter.emit('focus');
+        //const shouldPreventDefault = this.emitter.emit('focus');
+        //if (!shouldPreventDefault && doProcess) return;
+      } else if (!active) {
+        this.emitter.emit('blur');
+        //const shouldPreventDefault = this.emitter.emit('blur');
+        //if (!shouldPreventDefault && doProcess) return;
+      }
       this.setState({ active });
-
-      if (active && this.onFocus) this.onFocus();
-      else if (!active && this.onBlur) this.onBlur();
     }
+    if (active && doProcess) services.processor.makeActive(this);
   }
 
   private calculateSpeed(x: number, y: number) {
@@ -701,13 +726,44 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     };
   }
 
-  exit = () => {
+  private buttonMinimize = () => {
+    const shouldPrevent = this.emitter.emit('buttonMinimize');
+    if (!shouldPrevent) this.minimize();
+  };
+
+  minimize = () => {
+    const options = { ...this.state.options };
+    options.minimized = !options.minimized;
+
+    this.setState({
+      animate: options.minimized ? 'unMinimize' : 'minimize',
+      options,
+    });
+  };
+
+  private buttonExit = () => {
+    const shouldContinue = this.emitter.emit('buttonExit');
+    if (!shouldContinue) this.exit();
+  };
+
+  exit() {
+    this.emitter.emit('exit');
     this.setState({
       animate: 'out',
     });
     setTimeout(() => {
       services.processor.killProcess(this);
     }, 200);
+  }
+
+  private buttonRestore = () => {
+    const shouldPrevent = this.emitter.emit('buttonMaximize');
+    if (!shouldPrevent) this.maximizeRestoreDown();
+  };
+
+  private buttonMaximize = () => {
+    const shouldPrevent = this.emitter.emit('buttonMaximize');
+    if (!shouldPrevent) this.maximizeRestoreDown();
   };
 
   maximizeRestoreDown = () => {
@@ -735,15 +791,33 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     }, 500);
   };
 
-  minimize = () => {
-    const options = { ...this.state.options };
-    options.minimized = !options.minimized;
+  setState(
+    state:
+      | IBaseWindowState<B>
+      | ((
+          prevState: Readonly<IBaseWindowState<B>>,
+          props: Readonly<IBaseWindowProps>,
+        ) => IBaseWindowState<any> | Pick<IBaseWindowState<B>, any>)
+      | Pick<IBaseWindowProps, any>,
+    callback?: () => void,
+  ): void {
+    //console.log(state);
+    super.setState(state, callback);
+    this.emitter.emit('stateUpdate');
+  }
 
-    this.setState({
-      animate: options.minimized ? 'unMinimize' : 'minimize',
-      options,
-    });
-  };
+  _silentSetState(
+    state:
+      | IBaseWindowState<B>
+      | ((
+          prevState: Readonly<IBaseWindowState<B>>,
+          props: Readonly<IBaseWindowProps>,
+        ) => IBaseWindowState<any> | Pick<IBaseWindowState<B>, any>)
+      | Pick<IBaseWindowProps, any>,
+    callback?: () => void,
+  ): void {
+    super.setState(state, callback);
+  }
 
   changeOptions(options: IWindow) {
     this.setState({ options: this.verifyOptions(options) });
@@ -784,7 +858,7 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     return this.state.active;
   }
 
-  get variables(): A {
+  get variables(): B {
     return this.state.variables;
   }
 
@@ -807,11 +881,16 @@ export abstract class BaseWindow<A> extends React.Component<IBaseWindowProps, IB
     this.setState(state);
   }
 
-  setVariables(object: A) {
+  setVariables(object: B) {
     const state = { ...this.state };
     state.variables = object;
     this.setState(state);
   }
+
+  private keyboard = (ev: KeyboardEvent) => {
+    if (!this.state.active) return;
+    this.keyboardEmitter.emit(ev.type, ev);
+  };
 
   get isPhone() {
     return this.phone;

@@ -33,7 +33,7 @@ export const allApps: AllApps[] = [
 export function launchApp(appName: string) {
   const app = appConstructorGenerator(appName);
   if (app) {
-    services.processor.addApp(app);
+    services.processor.addApp(app, appName);
     return true;
   }
   return false;

@@ -6,12 +6,13 @@ import {
   loginUser,
   deleteAccount,
   changeEmail,
-  verifyUser,
+  temporarilyTokenAccountAltering,
   changePassword,
   checkUser,
   uploadImage,
-  resetPassword,
   changeDisplayedName,
+  checkOutTemporarilyToken,
+  resetPasswordLink,
 } from './apiUsers';
 import { imagesPath } from '../database/Users';
 import { apiIp } from './apiIP';
@@ -19,7 +20,6 @@ import { apiIp } from './apiIP';
 export function apiRouter() {
   const router = Router();
   router.use(bodyParser.urlencoded({ extended: false }));
-  // parse application/json
   router.use(bodyParser.json());
   router.use(fileUpload.default());
 
@@ -39,16 +39,20 @@ export function apiRouter() {
     uploadImage(req, res);
   });
 
-  router.post(`/api/v1/users/verify/:verificationCodeId`, (req, res) => {
-    verifyUser(req, res);
+  router.post(`/api/v1/users/alter`, (req, res) => {
+    temporarilyTokenAccountAltering(req, res);
+  });
+
+  router.get(`/api/v1/users/check-token`, (req, res) => {
+    checkOutTemporarilyToken(req, res);
+  });
+
+  router.post('/api/v1/users/reset-password', (req, res) => {
+    resetPasswordLink(req, res);
   });
 
   router.post('/api/v1/users/change-password', (req, res) => {
     changePassword(req, res);
-  });
-
-  router.post('/api/v1/users/reset-password', (req, res) => {
-    resetPassword(req, res);
   });
 
   router.post('/api/v1/users/change-displayed-name', (req, res) => {
@@ -59,7 +63,7 @@ export function apiRouter() {
     changeEmail(req, res);
   });
 
-  router.post('/api/v1/users/delete-account', (req, res) => {
+  router.delete('/api/v1/users/delete-account', (req, res) => {
     deleteAccount(req, res);
   });
 

@@ -169,9 +169,9 @@ export class TaskBar extends React.Component<{}, IState> {
 
   openAppClick(app: BaseWindow) {
     if (app.state.options.minimized) {
-      app.minimize();
+      app.maximizeRestoreDown();
       app.changeActiveState(true);
-    } else if (app._wasActive) app.minimize();
+    } else if (app._wasActive) app.maximizeRestoreDown();
     else app.changeActiveState(true);
   }
 
