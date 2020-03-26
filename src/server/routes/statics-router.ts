@@ -2,7 +2,7 @@ import path from 'path';
 import express from 'express';
 import { Router } from 'express';
 import { IS_DEV, WEBPACK_PORT } from '../config';
-import { imagesPath, dataImages } from '../database/Users';
+import { imagesPath, dataImages } from './users/users-database';
 export function staticsRouter() {
   const router = Router();
 

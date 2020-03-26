@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import ipInfo from 'ipinfo';
-import { IIPResponse } from '../../shared/ApiRequestsResponds';
+import { IIPResponse } from '../../shared/ApiUsersRequestsResponds';
 
 export function apiIp(req: Request, res: Response) {
   const response: IIPResponse = {};

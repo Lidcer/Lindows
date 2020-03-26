@@ -1,10 +1,9 @@
-import { Schema, model, Document } from 'mongoose';
-import { mongoose } from './database';
-import { hashPassword } from './passwordHasher';
+import { Schema, Document } from 'mongoose';
+import { mongoose } from '../../database/database';
+import { hashPassword } from '../../database/passwordHasher';
 import { join } from 'path';
-import { exists, mkdir, writeFile, unlink, readFile } from 'fs';
+import { exists, mkdir, unlink } from 'fs';
 import * as Jimp from 'jimp';
-import { resolve } from 'dns';
 
 export const imagesPath = ['data', 'avatars'];
 export const dataImages = join(process.cwd(), 'data', 'avatars');
@@ -269,5 +268,5 @@ export function getUserImage(user: IMongooseUserSchema): string | null {
   const avatar = user.avatar;
   if (!avatar) return null;
 
-  return `./${imagesPath.join('/')}/${avatar}`;
+  return `/${imagesPath.join('/')}/${avatar}`;
 }

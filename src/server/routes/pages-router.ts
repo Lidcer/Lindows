@@ -1,8 +1,15 @@
 import { Router } from 'express';
 import { getManifest } from './manifest-manager';
+import { IS_DEV } from '../config';
 
 export function pagesRouter() {
   const router = Router();
+  if (IS_DEV) {
+    router.get(`/test/**`, async (_, res) => {
+      const manifest = await getManifest();
+      res.render('test.ejs', { manifest });
+    });
+  }
 
   router.get(`/**`, async (_, res) => {
     const manifest = await getManifest();

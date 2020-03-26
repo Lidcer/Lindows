@@ -10,6 +10,7 @@ import { HotKeyHandler } from '../../essential/apphotkeys';
 import { BlueScreen } from '../BlueScreen/BlueScreen';
 import { services } from '../../services/services';
 import { Keypress } from '../../essential/constants/Keypress';
+import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
 
 interface IState {
   ready: boolean;
@@ -59,7 +60,7 @@ export class Desktop extends React.Component<{}, IState> {
     super(props);
     this.state = {
       blueScreen: '',
-      ready: services.isReady,
+      ready: services.ready,
       landscape: true,
       selectionBox: {
         shown: false,
@@ -98,16 +99,18 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   componentDidMount() {
+    startBackgroundServices(true);
     const serviceReady = () => {
       this.setState({
         ready: true,
       });
       services.processor.on('appDisplayingAdd', this.updateView);
       services.processor.on('appRemove', this.updateView);
-      services.removeListener('allReady', serviceReady);
+
+      backgroundServices().removeListener('ready', serviceReady);
     };
-    if (!services.isReady) {
-      services.on('allReady', serviceReady);
+    if (!backgroundServices().ready) {
+      backgroundServices().addListener('ready', serviceReady);
     } else serviceReady();
 
     this.terminal = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.T], true);

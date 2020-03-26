@@ -6,7 +6,7 @@ import { LypeWebpage } from './LypeWebpage';
 export const manifest: IManifest = {
   fullAppName: 'Lype',
   launchName: 'lype',
-  icon: './assets/images/appsIcons/Lype.svg',
+  icon: '/assets/images/appsIcons/Lype.svg',
 };
 
 export class Lype extends BaseWindow {
@@ -16,13 +16,10 @@ export class Lype extends BaseWindow {
       image: manifest.icon,
       redirectToWebpageButton: 'lype',
       minHeight: 400,
-      minWidth: 400,
+      minWidth: 500,
     });
     this.on('ready', ev => {
       this.onStartUp();
-    });
-    this.onKeyboard('keydown', e => {
-      console.log(e);
     });
   }
 
@@ -35,6 +32,6 @@ export class Lype extends BaseWindow {
   }
 
   renderInside() {
-    return <LypeWebpage window={true}></LypeWebpage>;
+    return <LypeWebpage window={true} destroy={this.exit}></LypeWebpage>;
   }
 }

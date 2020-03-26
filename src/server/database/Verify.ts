@@ -1,6 +1,6 @@
 import { Schema, Document } from 'mongoose';
 import { mongoose } from './database';
-import { getUserById, IMongooseUserSchema } from './Users';
+import { getUserById, IMongooseUserSchema } from '../routes/users/users-database';
 
 declare type RequestType = 'email-change' | 'verify-account' | 'password-change';
 export interface IMongooseVerificationSchema extends Document {

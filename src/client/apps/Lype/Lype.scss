@@ -1,36 +1,200 @@
+$lype-bottom-height: 50px;
+$lype-animation-space: 60px;
+$lype-animation-width: 32px;
+$lype-animation-height: 25px;
+$lype-animation-left: 83px;
+
 .lype {
+  background-color: #232323;
+  color: #2d8ceb;
   position: absolute;
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: row;
-  color: yellow;
 
   .lype-login-required {
     position: absolute;
     text-align: center;
     align-items: center;
-    border-top: 1pt solid yellow;
-    border-radius: 10pt;
+
     padding: 5pt;
-    top: 50%;
-    left: 50%;
-    transform: translateX(-50%) translateY(-50%);
+
+
     box-shadow: 0 0 10pt black;
 
-    width: 175pt;
-    height: 175pt;
+    width: 100%;
+    height: 100%;
     overflow: auto;
+
+    button {
+      color: #6d6f70;
+      background-color: #1d1d1d;
+      border-radius: 5pt;
+      padding: 5pt;
+      border: none;
+
+
+      &:hover {
+        background-color: #2a2a2a;
+      }
+    }
 
     h1 {
       font-size: 15pt;
+      color: #b9b9b9;
     }
   }
 
-  .lype-friends {
-    min-width: 10%;
-    max-width: 50%;
+  .lype-left-bar {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
   }
+
+  .lype-left-navbar {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    height: 50pt;
+    background-color: #363636;
+
+
+    .lype-left-navbar-buttons {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      background-color: #262626;
+      height: 20pt;
+    }
+
+    .lype-left-navbar-button {
+      height: 30pt;
+      width: 30pt;
+      padding: 2pt;
+      text-align: center;
+      align-items: center;
+
+      color: #878787;
+      background-color: #262626;
+
+      &:hover {
+        background-color: #2e2e2e;
+      }
+
+    }
+
+    .llnb-active {
+      color: #e1e1e1;
+      background-color: #323232;
+    }
+
+    input {
+      background-color: transparent;
+      border: transparent;
+      color: #e1e1e1;
+      border-bottom: solid black 1pt;
+      margin: 5pt;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+
+  }
+
+  .lype-left-friends {
+    margin: 5pt;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .lype-left-userInfo {
+    display: flex;
+    flex-direction: row;
+    flex: none;
+    height: $lype-bottom-height;
+    background-color: #1d1d1d;
+
+    .lype-left-userInfo-avatar {
+      flex: none;
+      align-items: center;
+      text-align: center;
+      margin: 5pt;
+
+      img {
+        border-radius: 5pt;
+        border: 1pt solid black;
+        height: 25pt;
+        width: 25pt;
+      }
+
+      .la-status {
+        display: flex;
+      }
+
+
+      .lype-account-status-badge {
+        position: absolute;
+        height: 10pt;
+        width: 10pt;
+        margin-left: 18pt;
+        margin-top: 18pt;
+        border: 1pt solid black;
+        border-radius: 100%;
+      }
+    }
+
+    .lype-left-userInfo-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 4pt;
+      width: auto;
+      flex: auto;
+      overflow: hidden;
+
+      .lype-lui-displayed-name {
+        text-overflow: ellipsis;
+        font-weight: bold;
+        color: white;
+
+      }
+
+      .lype-lui-custom-status {
+        text-overflow: ellipsis;
+        color: #6d6f70;
+      }
+
+    }
+
+    .lype-left-userInfo-settings {
+      width: auto;
+      display: flex;
+      flex: none;
+      align-items: center;
+      text-align: center;
+
+      .lype-lus-button {
+        height: 20pt;
+        width: 20pt;
+        padding: 1pt;
+        padding-top: 3pt;
+        align-items: center;
+        text-align: center;
+        border-radius: 5pt;
+
+        &:hover {
+          background-color: transparentize($color: #ffffff, $amount: 0);
+        }
+      }
+
+
+    }
+
+  }
+
 
   .lype-chat {
     display: flex;
@@ -40,18 +204,163 @@
   }
 
   .lype-chat-header {
-    height: 200pt;
+    height: 100px;
+    background-color: #272727;
+    flex: none;
+    border-bottom: #000000 1pt solid;
   }
 
   .lype-chat-content {
-    height: 60px;
+    border-top: #464646 1pt solid;
+    height: auto;
     flex: auto;
     overflow: auto;
+    padding: 10pt;
   }
 
   .lype-chat-input {
-    height: 200pt;
+    display: flex;
+    height: $lype-bottom-height;
+    padding: 5pt;
+    flex: none;
+    align-items: center;
+    border-top: 1pt solid #161616;
+
+    input {
+      width: 100%;
+      padding: 5pt;
+      background-color: #161616;
+      border-radius: 5pt;
+      border: none;
+      color: white;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
   }
 
+  .lype-loading {
+    width: 200px;
+    height: 200px;
+    font-size: 10px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    .lype-loading-box {
+      position: absolute;
+      background-color: #00a323;
+      border: 2px solid white;
+      height: 40px;
+      width: 40px;
+    }
+
+    .lype-loading-center {
+      position: absolute;
+      background-color: #00a323;
+      left: 70px;
+      top: 70px;
+      height: 60px;
+      width: 60px;
+    }
+
+    .lype-loading-center {
+      position: absolute;
+      background-color: #00a323;
+      left: 85px;
+      top: 85px;
+      height: 30px;
+      width: 30px;
+    }
+
+    .lype-loading-top {
+      position: absolute;
+      background-color: #00a323;
+      left: $lype-animation-left;
+      top: $lype-animation-space;
+      border-top: 2px solid white;
+      border-left: 2px solid lightgreen;
+      height: $lype-animation-height;
+      width: $lype-animation-width;
+    }
+
+    .lype-loading-bottom {
+      position: absolute;
+      background-color: #00a323;
+      border-bottom: 2px solid white;
+      border-right: 2px solid lightgreen;
+      right: $lype-animation-left;
+      bottom: $lype-animation-space;
+      height: $lype-animation-height;
+      width: $lype-animation-width;
+    }
+
+    .lype-loading-left {
+      position: absolute;
+      background-color: #00a323;
+      left: $lype-animation-space;
+      top: $lype-animation-left;
+      border-left: 2px solid white;
+      border-top: 2px solid lightgreen;
+      height: $lype-animation-width;
+      width: $lype-animation-height;
+    }
+
+    .lype-loading-right {
+      position: absolute;
+      background-color: #00a323;
+      border-right: 2px solid white;
+      border-bottom: 2px solid lightgreen;
+      right: $lype-animation-space;
+      bottom: $lype-animation-left;
+      height: $lype-animation-width;
+      width: $lype-animation-height;
+    }
+
+    .lype-loading-coroner-right-top {
+      position: absolute;
+      background-color: #00a323;
+      border-right: 2px solid white;
+      border-top: 2px solid white;
+      right: 60px;
+      top: 60px;
+      height: 25px;
+      width: 25px;
+    }
+
+    .lype-loading-coroner-left-bottom {
+      position: absolute;
+      background-color: #00a323;
+      border-bottom: 2px solid white;
+      border-left: 2px solid white;
+      left: 60px;
+      bottom: 60px;
+      height: 25px;
+      width: 25px;
+    }
+
+    .lype-loading-l-side {
+      position: absolute;
+      background-color: white;
+      top: 86px;
+      left: 89px;
+      width: 5px;
+      height: 25px;
+    }
+
+    .lype-loading-l-bottom {
+      position: absolute;
+      background-color: white;
+      top: 110px;
+      left: 89px;
+      width: 20px;
+      height: 5px;
+    }
+
+
+  }
 
 }

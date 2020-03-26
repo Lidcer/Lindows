@@ -2,6 +2,7 @@ import React from 'react';
 import './bootScreen.scss';
 import { services } from '../../services/services';
 import { SECOND } from '../../../shared/constants';
+import { launchApp } from '../../essential/apps';
 
 interface IBootScreenProps {
   next: (bios?: 'bios') => void;
@@ -58,7 +59,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     });
   }
   componentDidMount() {
-    if (services.isReady) {
+    if (services.ready) {
       this.allReady();
     }
     services.on('allReady', this.allReady);
@@ -104,9 +105,11 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   };
 
   allReady = () => {
-    setTimeout(() => {
-      this.props.next(this.state.goToBios ? 'bios' : undefined);
-    }, SECOND * 3);
+    this.props.next(this.state.goToBios ? 'bios' : undefined);
+    launchApp('lype');
+    // setTimeout(() => {
+    //   this.props.next(this.state.goToBios ? 'bios' : undefined);
+    // }, SECOND * 3);
   };
 
   onServiceReady = (name: string) => {

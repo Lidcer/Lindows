@@ -13,8 +13,10 @@ import {
   IAccountVerificationEmail,
   IAccountDeleteAccountRequest,
   VerificationType,
-} from '../../shared/ApiRequestsResponds';
+} from '../../shared/ApiUsersRequestsResponds';
 import { services } from './services';
+import { disassembleError } from '../essential/requests';
+import { fetchImage } from '../essential/requests';
 
 export interface IAccountInfo {
   accountId: string;
@@ -31,11 +33,12 @@ export declare interface IAccount {
 }
 
 export class IAccount extends EventEmitter {
-  private DEFAULT_AVATAR = './assets/images/DefaultAvatar.svg';
+  private DEFAULT_AVATAR = '/assets/images/DefaultAvatar.svg';
   private _token = '';
   private accountId: string;
   private username: string;
   private displayedName: string;
+  private isReady = false;
 
   private imageMap = new Map<string, string>();
   private avatar: string = null;
@@ -50,6 +53,7 @@ export class IAccount extends EventEmitter {
         /* ignored */
       })
       .finally(() => {
+        this.isReady = true;
         this.emit('ready', this.account);
       });
 
@@ -90,7 +94,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -110,7 +114,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch((error: any) => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -161,7 +165,7 @@ export class IAccount extends EventEmitter {
             pe.target.getResponseHeader('x-decompressed-content-length');
         if (totalLength !== null) callback(Math.round((pe.loaded * 100) / totalLength));
       };
-      await Axios.post<IAccountResponse>('/api/v1/users/change-avatar', formData, axiosRequestConfig)
+      await Axios.put<IAccountResponse>('/api/v1/users/change-avatar', formData, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
@@ -169,7 +173,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -191,7 +195,7 @@ export class IAccount extends EventEmitter {
         })
         .catch(error => {
           console.log(error);
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -210,14 +214,14 @@ export class IAccount extends EventEmitter {
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = token;
 
-      await Axios.post<IResponse<string>>(`/api/v1/users/alter/`, request, axiosRequestConfig)
+      await Axios.put<IResponse<string>>(`/api/v1/users/alter/`, request, axiosRequestConfig)
         .then(response => {
           const body = response.data;
           if (body.success && body.message) resolve(body.message);
           else reject(new Error('Invalid data received from server'));
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -233,7 +237,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -244,13 +248,13 @@ export class IAccount extends EventEmitter {
       if (!email.includes('@')) return reject('Not valid mail');
       const accountVerificationEmail: IAccountVerificationEmail = { email };
 
-      Axios.post<IResponse<string>>('/api/v1/users/reset-password', accountVerificationEmail)
+      Axios.put<IResponse<string>>('/api/v1/users/reset-password', accountVerificationEmail)
         .then(response => {
           if (response && response.data && response.data.message) resolve(response.data.message);
-          else reject(this.disassembleError('Invalid data received from server'));
+          else reject(disassembleError('Invalid data received from server'));
         })
         .catch(err => {
-          reject(this.disassembleError(err));
+          reject(disassembleError(err));
         });
     });
   }
@@ -272,7 +276,7 @@ export class IAccount extends EventEmitter {
         headers: {},
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-      Axios.post<IAccountResponse>('/api/v1/users/change-password', iAccountChangeAccount, axiosRequestConfig)
+      Axios.put<IAccountResponse>('/api/v1/users/change-password', iAccountChangeAccount, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
@@ -280,7 +284,7 @@ export class IAccount extends EventEmitter {
           resolve(this.account);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -298,7 +302,7 @@ export class IAccount extends EventEmitter {
         headers: {},
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-      Axios.post<IAccountResponse>('/api/v1/users/change-displayed-name', accountRegisterRequest, axiosRequestConfig)
+      Axios.put<IAccountResponse>('/api/v1/users/change-displayed-name', accountRegisterRequest, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
@@ -306,7 +310,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -325,7 +329,7 @@ export class IAccount extends EventEmitter {
         headers: {},
       };
       axiosRequestConfig.headers[TOKEN_HEADER] = this.token;
-      Axios.post<IAccountResponse>('/api/v1/users/change-email', iAccountChangeEmailAccount, axiosRequestConfig)
+      Axios.put<IAccountResponse>('/api/v1/users/change-email', iAccountChangeEmailAccount, axiosRequestConfig)
         .then(response => {
           const ok = this.disassembleResponse(response);
           if (!ok) return reject(new Error('Invalid data received from server'));
@@ -333,7 +337,7 @@ export class IAccount extends EventEmitter {
           resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
@@ -359,12 +363,12 @@ export class IAccount extends EventEmitter {
           else resolve(response.data.message);
         })
         .catch(error => {
-          reject(this.disassembleError(error));
+          reject(disassembleError(error));
         });
     });
   }
 
-  private get token() {
+  get token() {
     this._token = localStorage.getItem('auth');
     return this._token;
   }
@@ -388,33 +392,6 @@ export class IAccount extends EventEmitter {
           reject(err);
         });
     });
-  }
-
-  private fetchUserImage(imageUrl: string): Promise<string | null> {
-    return new Promise((resolve, reject) => {
-      console.log(imageUrl);
-      const image = this.imageMap.get(imageUrl);
-      if (image) return resolve(image);
-
-      Axios.get(imageUrl, {
-        responseType: 'arraybuffer',
-      })
-        .then(response => {
-          const imageBase64 = Buffer.from(response.data, 'binary').toString('base64');
-          resolve(imageBase64);
-        })
-        .catch(err => {
-          reject(err);
-        });
-    });
-  }
-
-  fetchImage() {
-    if (this.avatar !== this.DEFAULT_AVATAR) {
-      this.fetchUserImage(this.avatar).catch(err => {
-        console.error(err);
-      });
-    }
   }
 
   private disassembleResponse(response: AxiosResponse<IAccountResponse>, token?: string): boolean {
@@ -447,25 +424,31 @@ export class IAccount extends EventEmitter {
     services.broadcaster.emit(`${this.serviceName}-logout`);
   }
 
-  private disassembleError(error: any) {
-    if (error && error.response && error.response.data && error.response.data.error) {
-      return new Error(error.response.data.error);
-    } else {
-      return new Error('Problem server');
+  private fetchImage() {
+    if (this.avatar !== this.DEFAULT_AVATAR) {
+      fetchImage(this.avatar).catch(err => {
+        console.error(err);
+      });
     }
   }
 
-  public get account(): IAccountInfo {
+  public get account(): IAccountInfo | null {
     if (!this.username) return null;
-    return {
+    const accountInfo = {
       accountId: this.accountId,
       displayedName: this.displayedName,
       username: this.username,
       avatar: this.avatar || this.DEFAULT_AVATAR,
     };
+    Object.freeze(accountInfo);
+    return accountInfo;
   }
   public destroy() {
     services.broadcaster.removeListener(`${this.serviceName}-login`, this.loginFromOtherSources);
     services.broadcaster.removeListener(`${this.serviceName}-logout`, this.logout);
+  }
+
+  get ready() {
+    return this.isReady;
   }
 }

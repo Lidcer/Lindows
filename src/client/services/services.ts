@@ -17,7 +17,7 @@ export class IServices extends EventEmitter {
   private _fingerprinter: IFingerpriner;
   private _account: IAccount;
   private _broadcaster: Broadcaster;
-  private ready = false;
+  private isReady = false;
 
   constructor() {
     super();
@@ -36,7 +36,7 @@ export class IServices extends EventEmitter {
     this.emit('onServiceReady', 'Account');
     await this.initProcessor();
     this.emit('onServiceReady', 'Processor');
-    this.ready = true;
+    this.isReady = true;
     this.emit('allReady', this);
   }
 
@@ -79,8 +79,8 @@ export class IServices extends EventEmitter {
     });
   }
 
-  get isReady() {
-    return this.ready;
+  get ready() {
+    return this.isReady;
   }
 
   get processor() {

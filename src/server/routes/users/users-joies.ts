@@ -9,7 +9,7 @@ import {
   IAccountResetPasswordRequest,
   IAccountDeleteAccountRequest,
   IAccountEmailRequest,
-} from './ApiRequestsResponds';
+} from '../../../shared/ApiUsersRequestsResponds';
 
 // CONSTANTS
 const USERNAME = Joi.string()

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title> Lindows </title>
+    <title> TEST </title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
         integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
@@ -11,7 +11,6 @@
         integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous">
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
-
     <style>
         body {
             background: #222;
@@ -52,10 +51,7 @@
 
 <body>
     <div id="app">
-        <div id="header">
-            <p></p>
-            <div id="cursor"></div>
-        </div>
+        Loading test page
     </div>
     <% if(process.env.NODE_ENV === 'production') { %>
     <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
@@ -66,7 +62,7 @@
     <% } %>
     <script type="text/javascript" src="<%- manifest["vendors.js"] %>"></script>
     <script type="text/javascript" src="<%- manifest["material-ui.js"] %>"></script>
-    <script type="text/javascript" src="<%- manifest["main.js"] %>"></script>
+    <script type="text/javascript" src="<%- manifest["test.js"] %>"></script>
 </body>
 
 </html>

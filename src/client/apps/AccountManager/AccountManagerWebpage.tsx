@@ -2,7 +2,7 @@ import './AccountManager.scss';
 import React from 'react';
 import { services } from '../../services/services';
 import { IAccountInfo } from '../../services/account';
-import { VerificationType } from '../../../shared/ApiRequestsResponds';
+import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
 import { OpenFileDialog } from '../../essential/FileDialog';
 import { SECOND } from '../../../shared/constants';
 
@@ -59,7 +59,7 @@ interface IAccountState {
   info: string;
 }
 
-const DEFAULT_AVATAR = './assets/images/appsIcons/AccountManager.svg';
+const DEFAULT_AVATAR = '/assets/images/appsIcons/AccountManager.svg';
 
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
   private destroyed = false;
@@ -691,7 +691,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   componentDidMount() {
-    if (services.isReady) return this.startup();
+    if (services.ready) return this.startup();
     services.on('allReady', this.startup);
   }
 

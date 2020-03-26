@@ -6,7 +6,7 @@ import { AccountManagerWebpage } from './AccountManagerWebpage';
 export const manifest: IManifest = {
   fullAppName: 'Account Manager',
   launchName: 'accountmgr',
-  icon: './assets/images/appsIcons/AccountManager.svg',
+  icon: '/assets/images/appsIcons/AccountManager.svg',
 };
 
 export class AccountManager extends BaseWindow {
@@ -15,7 +15,7 @@ export class AccountManager extends BaseWindow {
       title: 'Account Manager',
       image: manifest.icon,
       redirectToWebpageButton: 'account',
-      minHeight: 620,
+      minHeight: 600,
       minWidth: 400,
     });
   }

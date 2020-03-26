@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as jwt from 'jsonwebtoken';
-import { TOKEN_HEADER, WEEK, HOUR } from '../../shared/constants';
+import { TOKEN_HEADER, WEEK, HOUR } from '../../../shared/constants';
 import { profanity } from '@2toad/profanity';
 
 import {
@@ -15,8 +15,8 @@ import {
   getUserImage,
   changeEmailOnAccount,
   doesUserWithDisplayedNamesExist,
-} from '../database/Users';
-import { PRIVATE_KEY } from '../config';
+} from './users-database';
+import { PRIVATE_KEY } from '../../config';
 import {
   joi$registerUser,
   joi$loginUser,
@@ -27,42 +27,40 @@ import {
   joi$resetPassword,
   joi$deleteAccount,
   joi$email,
-} from '../../shared/joi';
+} from './users-joies';
 import {
   IAccountRegisterRequest,
   IAccountLoginRequest,
   IAccountChangePasswordRequest,
   IAccountChangeEmailRequest,
   IAccountResponse,
-  IAccount,
   IResponse,
   IAccountDisplayedNameRequest,
   IAccountVerificationRequest,
-  IAccountVerificationEmail,
   IAccountVerificationPassword,
   IAccountDeleteAccountRequest,
   VerificationType,
   IAccountEmailRequest,
-} from '../../shared/ApiRequestsResponds';
-import { verifyPassword } from '../database/passwordHasher';
-import { SpamProtector } from '../routes/SpamProtector';
+} from '../../../shared/ApiUsersRequestsResponds';
+import { verifyPassword } from '../../database/passwordHasher';
+import { SpamProtector } from '../SpamProtector';
 import fileUpload = require('express-fileupload');
-import { logError } from './Error';
+import { logError } from '../Error';
 import { randomBytes } from 'crypto';
-import { mailService } from '../main';
-import { ObjectSchema } from '@hapi/joi';
-import { isTokenBlackListed, addTokenToBlackList } from '../database/tokensBlacklist';
-import { IMailAccountInfo } from './mail';
-interface IJWTAccount {
-  id: string;
-  exp: number;
-}
-const temporaryToken = randomBytes(64).toString('base64');
+import { mailService } from '../../main';
+import { isTokenBlackListed, addTokenToBlackList } from '../../database/tokensBlacklist';
+import { IMailAccountInfo } from '../mail';
+import {
+  respondWithError,
+  verifyJoi,
+  rIsUserForbidden,
+  getClientAccount,
+  rGetTokenData,
+  IJWTAccount,
+  IJWVerificationCode,
+} from '../common';
 
-interface IJWVerificationCode extends IJWTAccount {
-  type: VerificationType;
-  data?: string;
-}
+const temporaryToken = randomBytes(64).toString('base64');
 
 const spamProtector = new SpamProtector();
 
@@ -439,88 +437,4 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
     logError(error, 'Verification code');
     return respondWithError(res, 500, 'Internal server error');
   }
-}
-
-//COMMON
-function rGetTokenData(req: Request, res: Response, verificaiton = false): IJWTAccount | IJWVerificationCode | null {
-  const token = req.headers[TOKEN_HEADER];
-  if (!token) {
-    respondWithError(res, 400, 'Missing token');
-    return null;
-  }
-  if (typeof token !== 'string') {
-    respondWithError(res, 400, 'Invalid token provided');
-    return null;
-  }
-  const data = jwt.decode(token) as IJWVerificationCode;
-  if (!data) {
-    respondWithError(res, 400, 'Invalid token');
-    return null;
-  }
-  if (data.id && data.exp) {
-    if (typeof data.exp !== 'number') {
-      respondWithError(res, 400, 'Invalid token');
-      return null;
-    }
-    if (data.exp < Date.now()) {
-      respondWithError(res, 401, 'Token has expired');
-      return null;
-    }
-    if (verificaiton && !data.type) {
-      respondWithError(res, 401, 'Problem with token');
-      return null;
-    }
-    return data;
-  }
-  respondWithError(res, 400, 'Could not authenticate user');
-  return null;
-}
-
-function rIsUserForbidden(res: Response, user: IMongooseUserSchema, verification = false): boolean {
-  if (!user) {
-    respondWithError(res, 400, 'Account does not exist');
-    return true;
-  }
-  if (!user.verified && verification) {
-    respondWithError(res, 400, 'User has not verified email');
-    return true;
-  }
-  if (user.banned) {
-    respondWithError(res, 400, 'Account has been banned');
-    return true;
-  }
-  if (user.compromised) {
-    respondWithError(res, 400, 'Account has been compromised');
-    return true;
-  }
-  return false;
-}
-
-function verifyJoi<A>(req: Request, res: Response, joiObject: ObjectSchema): A | null {
-  const body: A = req.body;
-  const response: IResponse<null> = {};
-
-  const joiResult = joiObject.validate(body);
-  if (joiResult.error) {
-    response.error = joiResult.error.message;
-    response.details = joiResult.error;
-    res.status(400).json(response);
-    return null;
-  }
-  return body;
-}
-
-function respondWithError(res: Response, status: number, error: string, details?: any) {
-  const response: IResponse<null> = { error };
-  if (details) response.details = details;
-  res.status(status).json(response);
-}
-
-function getClientAccount(user: IMongooseUserSchema): IAccount {
-  return {
-    displayedName: user.displayedName,
-    id: user._id,
-    username: user.username,
-    avatar: getUserImage(user),
-  };
 }

@@ -19,7 +19,7 @@ interface ITerminal {
 export const manifest: IManifest = {
   fullAppName: 'Terminal',
   launchName: 'lterminal',
-  icon: './assets/images/appsIcons/Terminal.svg',
+  icon: '/assets/images/appsIcons/Terminal.svg',
 };
 
 function terminalName() {

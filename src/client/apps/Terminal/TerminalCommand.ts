@@ -15,7 +15,7 @@ export class TerminalCommand {
   private _args: string[];
   private _iWindow: IWindow;
   private _IBounds: IBounds;
-  pr;
+  //pr;
   private destroyed = false;
 
   constructor(entry?: string, window?: IWindow, bounds?: IBounds, iTerminal?: BaseWindow) {

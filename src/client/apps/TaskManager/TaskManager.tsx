@@ -6,7 +6,7 @@ import { services } from '../../services/services';
 export const manifest: IManifest = {
   fullAppName: 'TaskManager',
   launchName: 'taskmgr',
-  icon: './assets/images/appsIcons/TaskManager.svg',
+  icon: '/assets/images/appsIcons/TaskManager.svg',
 };
 
 export class TaskManager extends BaseWindow {

@@ -13,15 +13,9 @@ import {
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { services } from '../../services/services';
 import { random, clamp } from 'lodash';
-import {
-  IBaseWindowEmitter,
-  WindowEvent,
-  IBaseWindowEmitterType,
-  IBaseWindowKeyboard,
-  KeyboardEmitterType,
-} from './WindowEvent';
+import { IBaseWindowEmitter, WindowEvent, IBaseWindowEmitterType, IBaseWindowKeyboard } from './WindowEvent';
 
-const DEFAULT_APP_IMAGE = './assets/images/unknown-app.svg';
+const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
   id: number;
@@ -127,7 +121,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     this.emitter = new IBaseWindowEmitter(this);
     this.keyboardEmitter = new IBaseWindowKeyboard();
     this.manifest = manifest;
-    Object.seal(this.manifest);
+    Object.freeze(this.manifest);
     this.phone = services.fingerprinter.mobile.phone();
     this.ref = React.createRef();
     this.minWidth = options && options.minWidth ? options.minWidth : this.minWidth;
@@ -746,15 +740,18 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (!shouldContinue) this.exit();
   };
 
-  exit() {
-    this.emitter.emit('exit');
-    this.setState({
-      animate: 'out',
+  exit = (): Promise<void> => {
+    return new Promise(resolve => {
+      this.emitter.emit('exit');
+      this.setState({
+        animate: 'out',
+      });
+      setTimeout(() => {
+        services.processor.killProcess(this);
+        resolve();
+      }, 200);
     });
-    setTimeout(() => {
-      services.processor.killProcess(this);
-    }, 200);
-  }
+  };
 
   private buttonRestore = () => {
     const shouldPrevent = this.emitter.emit('buttonMaximize');
@@ -802,8 +799,12 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     callback?: () => void,
   ): void {
     //console.log(state);
-    super.setState(state, callback);
-    this.emitter.emit('stateUpdate');
+    if (this.destroyed) {
+      console.error(new Error('Trying to update destroyed component'));
+    } else {
+      super.setState(state, callback);
+      this.emitter.emit('stateUpdate');
+    }
   }
 
   _silentSetState(
@@ -909,6 +910,6 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   get _manifest() {
-    return { ...this.manifest };
+    return this.manifest;
   }
 }

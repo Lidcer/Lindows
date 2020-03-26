@@ -10,6 +10,8 @@ $thumbBG: rgb(48, 50, 51);
 
 .window {
     position: absolute;
+    display: flex;
+    flex-direction: column;
 
     background-color: black;
     color: white;
@@ -26,6 +28,7 @@ $thumbBG: rgb(48, 50, 51);
 .title-bar {
     height: $titleBarHeight;
     width: 100%;
+    flex: none;
 }
 
 
@@ -95,7 +98,9 @@ $thumbBG: rgb(48, 50, 51);
 }
 
 .window-content {
-    height: calc(100% - 20pt);
+    position: relative;
+    height: 100%;
+    flex: auto;
     width: 100%;
     display: block;
     background-color: #242323;
