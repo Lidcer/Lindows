@@ -10,7 +10,6 @@
 
 .context-menu-item {
     padding: 5pt;
-
     display: flex;
 
     &:hover {
@@ -22,14 +21,6 @@
         width: 10pt;
         padding-right: 5pt;
     }
-
-    svg {
-        height: 10pt;
-        width: 10pt;
-        padding-left: 5pt;
-        right: 0;
-    }
-
 }
 
 .context-column {
@@ -66,5 +57,14 @@
 
     svg {
         filter: grayscale(100%);
+    }
+}
+
+.context-icon{
+    padding-right: 10px;
+    font-size: 15px;
+    img{
+        width: 25px;
+        height: 25px;
     }
 }

@@ -1,28 +1,46 @@
 import './Lype.scss';
-import React from 'react';
-import { services } from '../../services/services';
+import React, { ChangeEvent } from 'react';
+import { services } from '../../services/SystemService/ServiceHandler';
 import { launchApp } from '../../essential/apps';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUserPlus, faHome, faCog, faMicrophone, faVolumeUp } from '@fortawesome/free-solid-svg-icons';
 import {
-  backgroundServices,
-  bgService,
-  bgRunningService,
-  killBGService,
-} from '../../services/backgroundService/ServicesHandler';
-import { ILypeService, LypeServiceState } from '../../services/backgroundService/LypeServices';
-import { LypeStatus } from '../../../shared/ApiUsersRequestsResponds';
+  faUserPlus,
+  faHome,
+  faUserTimes,
+  faUserClock,
+  faCog,
+  faMicrophone,
+  faVolumeUp,
+  faSearch,
+  faTimes,
+  faPhoneAlt,
+  faUserMinus,
+  faUserSlash,
+  faCheck,
+} from '@fortawesome/free-solid-svg-icons';
+import { bgService, bgRunningService, killBGService } from '../../services/BackgroundService/ServicesHandler';
+import { ILypeService, LypeServiceState, getStatusColour } from '../../services/BackgroundService/LypeServices';
+import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsResponds';
+import { LypeAccountInfo } from './LypeAccount';
+import { popup } from '../../components/Popup/popupRenderer';
+import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';
 interface ILypeProps {
   window?: boolean;
   destroy?: () => void;
 }
 
-type Tab = 'friends' | 'addFriend' | 'something';
+type Tab = 'friends' | 'addFriends' | 'friendRequests' | 'blockedUsers';
 
 interface ILypeState {
   ready: boolean;
   error: string;
   tab: Tab;
+  searchBar: string;
+  searchAutoComplete: string;
+  filterTab: string;
+  inProgress: boolean;
+  friendsSearch: ILypeAccount[];
+  warn: string;
   animation: {
     x: number;
     y: number;
@@ -45,6 +63,12 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       tab: 'friends',
       ready: false,
       error: '',
+      filterTab: '',
+      searchAutoComplete: 'filter',
+      inProgress: false,
+      searchBar: '',
+      warn: '',
+      friendsSearch: [],
       animation: {
         x: this.animationMaxOffset,
         y: this.animationMaxOffset,
@@ -55,9 +79,33 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   render() {
     return (
       <div ref={this.ref} className='lype'>
-        {this.lypeContent}
+        {this.loadingOverlay}
+        {this.renderWarn}
+        <div className='lype-content'>{this.lypeContent}</div>
       </div>
     );
+  }
+  get loadingOverlay() {
+    if (!this.state.inProgress) return null;
+    return (
+      <>
+        {this.loadingAnimation}
+        <div className='lype-loading-overlay'></div>
+      </>
+    );
+  }
+
+  get renderWarn() {
+    if (this.state.warn)
+      return (
+        <div className='lype-warn-content animated bounceIn faster'>
+          {this.state.warn}
+          <div className='lype-warn-ignore'>
+            <FontAwesomeIcon onClick={() => this.setState({ warn: '' })} icon={faTimes}></FontAwesomeIcon>
+          </div>
+        </div>
+      );
+    return null;
   }
 
   get lypeContent() {
@@ -160,16 +208,35 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
               className={`lype-left-navbar-button${this.state.tab === 'friends' ? ' llnb-active' : ''}`}
               onClick={() => this.switchTab('friends')}
             >
-              <FontAwesomeIcon icon={faHome}></FontAwesomeIcon>
+              <FontAwesomeIcon title='Add home' icon={faHome}></FontAwesomeIcon>
             </div>
             <div
-              className={`lype-left-navbar-button${this.state.tab === 'addFriend' ? ' llnb-active' : ''}`}
-              onClick={() => this.switchTab('addFriend')}
+              className={`lype-left-navbar-button${this.state.tab === 'addFriends' ? ' llnb-active' : ''}`}
+              onClick={() => this.switchTab('addFriends')}
             >
-              <FontAwesomeIcon icon={faUserPlus}></FontAwesomeIcon>
+              <FontAwesomeIcon title='Add friend' icon={faUserPlus}></FontAwesomeIcon>
+            </div>
+            <div
+              className={`lype-left-navbar-button${this.state.tab === 'friendRequests' ? ' llnb-active' : ''}`}
+              onClick={() => this.switchTab('friendRequests')}
+            >
+              <FontAwesomeIcon title='Friend request' icon={faUserClock}></FontAwesomeIcon>
+            </div>
+            <div
+              className={`lype-left-navbar-button${this.state.tab === 'blockedUsers' ? ' llnb-active' : ''}`}
+              onClick={() => this.switchTab('blockedUsers')}
+            >
+              <FontAwesomeIcon title='Blocked users' icon={faUserTimes}></FontAwesomeIcon>
             </div>
           </div>
-          <input type='text' autoComplete='off' />
+          <input
+            type='text'
+            autoComplete='off'
+            value={this.state.searchBar}
+            placeholder={this.state.searchAutoComplete}
+            onChange={this.onSearchInputChange}
+            onKeyUp={this.searchKeyUp}
+          />
         </div>
         <div className='lype-left-friends'>
           <ul>{this.renderFriendsList()}</ul>
@@ -196,6 +263,35 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     );
   }
 
+  searchKeyUp = async (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    if (ev.keyCode !== 13) return;
+    if (this.state.tab !== 'addFriends') return;
+    if (!this.state.searchBar) return;
+    if (this.state.warn) this.setState({ warn: '' });
+    this.setState({ inProgress: true });
+    await this.startLoading();
+    try {
+      const result = await this.lypeService.findUsers(this.state.searchBar);
+      const state = { ...this.state };
+      if (!result.length) return this.setState({ warn: 'Nothing found', inProgress: false });
+      state.friendsSearch = result;
+      state.inProgress = false;
+      this.setState(state);
+    } catch (error) {
+      this.setState({ inProgress: false, warn: error.message });
+    }
+    setTimeout(() => {
+      this.setState({ inProgress: false });
+    }, 20);
+  };
+
+  onSearchInputChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const target = ev.target;
+    const state = { ...this.state };
+    state.searchBar = target.value;
+    this.setState(state);
+  };
+
   handleConnect = () => {
     this.lypeService.createLypeUser();
   };
@@ -213,32 +309,312 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     return (
       <div className='la-status'>
         <img src={ac.avatar} alt={ac.username} />
-        <div className='lype-account-status-badge' style={{ backgroundColor: this.getStatusColour(ac.status) }}></div>
+        <div className='lype-account-status-badge' style={{ backgroundColor: getStatusColour(ac.status) }}></div>
       </div>
     );
   };
 
   renderFriendsList() {
-    const fakeFriends: string[] = [];
-    for (let i = 0; i < 99; i++) {
-      fakeFriends.push(i.toString());
-    }
+    const lypeAccount = this.lypeService.account;
 
     switch (this.state.tab) {
-      case 'addFriend':
-        return <div>test</div>;
       case 'friends':
-        return fakeFriends.map((e, i) => (
-          <li key={i} onClick={() => this.friendClick}>
-            {e}
-          </li>
-        ));
+        return this.renderFriendsTab();
+      case 'addFriends':
+        return this.renderAddFriendsTab();
+      case 'friendRequests':
+        return this.renderFriendRequestsTab();
+      case 'blockedUsers':
+        return this.renderBlockedUsersTab();
 
       default:
-        return <div>eee</div>;
+        return (
+          <div className='lype-left-empty lype-left-friends'>
+            Ops... Something went wrong.
+            <a
+              onClick={ev => {
+                ev.stopPropagation();
+                this.switchTab('addFriends');
+              }}
+            >
+              Click here
+            </a>
+            to return.
+          </div>
+        );
     }
   }
-  //TODO: replace with proper list
+
+  areYouSureContext = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>, yes: () => void, no?: () => void) => {
+    const element = (
+      <ContextMenu
+        x={ev.clientX}
+        y={ev.clientY}
+        onAnyClick={() => popup.remove(element)}
+        elements={[
+          { content: 'Are you sure' },
+          {
+            content: <span className='text-success'>Yes</span>,
+            iconOrPicture: faCheck,
+            onClick: () => yes(),
+          },
+          {
+            content: <span className='text-danger'>No</span>,
+            iconOrPicture: faTimes,
+            onClick: () => {
+              if (no) no();
+            },
+          },
+        ]}
+      />
+    );
+    setTimeout(() => {
+      popup.add(element);
+    });
+  };
+
+  openContentMenu = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>, account: ILypeAccount) => {
+    const iElements: IElement[] = [];
+    if (this.lypeService.friends.find(f => f.id === account.id)) {
+      iElements.push({ content: 'Call', iconOrPicture: faPhoneAlt });
+      iElements.push({
+        content: <span className='text-danger'>Remove friend</span>,
+        iconOrPicture: faUserMinus,
+        onClick: event => {
+          this.areYouSureContext(event, () => this.onAddOrRemoveFriend(account.id, false));
+        },
+      });
+    }
+    if (this.lypeService.friendRequest.find(f => f.id === account.id)) {
+      iElements.push({
+        content: <span className='text-success'>Accept</span>,
+        iconOrPicture: faCheck,
+        onClick: () => {
+          this.onAddOrRemoveFriend(account.id, true);
+        },
+      });
+      iElements.push({
+        content: <span className='text-danger'>Deny</span>,
+        iconOrPicture: faTimes,
+        onClick: () => {
+          this.onAddOrRemoveFriend(account.id, true);
+        },
+      });
+    }
+    if (this.lypeService.pendingRequests.find(f => f.id === account.id)) {
+      iElements.push({
+        content: <span className='text-danger'>Remove friend request</span>,
+        iconOrPicture: faTimes,
+        onClick: () => {
+          this.onAddOrRemoveFriend(account.id, false);
+        },
+      });
+    }
+    if (this.state.friendsSearch.find(f => f.id === account.id)) {
+      iElements.push({
+        content: <span className='text-success'>Add friend</span>,
+        iconOrPicture: faUserPlus,
+        onClick: () => {
+          const state = { ...this.state };
+          const indexOf = state.friendsSearch.indexOf(account);
+          if (indexOf !== -1) state.friendsSearch.splice(indexOf, 1);
+          this.setState(state);
+          this.onAddOrRemoveFriend(account.id, true);
+        },
+      });
+    }
+
+    if (this.lypeService.blockedUsers.find(f => f.id === account.id)) {
+      iElements.push({
+        content: <span className='text-danger'>Unblock User</span>,
+        iconOrPicture: faUserPlus,
+        onClick: () => {
+          console.log('will block');
+        },
+      });
+    } else {
+      iElements.push({
+        content: <span className='text-danger'>Block user</span>,
+        iconOrPicture: faUserSlash,
+        onClick: () => {
+          console.log('will block');
+        },
+      });
+    }
+
+    const element = (
+      <ContextMenu
+        x={ev.clientX}
+        y={ev.clientY}
+        onAnyClick={() => {
+          popup.remove(element);
+        }}
+        elements={iElements}
+      />
+    );
+    popup.add(element);
+  };
+
+  renderFriendsTab = () => {
+    const lypeAccount = this.lypeService.account;
+    if (lypeAccount.friends.length === 0) {
+      return (
+        <div className='lype-left-empty lype-left-friends'>
+          No friends. Press <FontAwesomeIcon icon={faUserPlus}></FontAwesomeIcon> to find some.
+        </div>
+      );
+    }
+    return (
+      <div className='lype-left-friends'>
+        {lypeAccount.friends.map((e, i) => (
+          <LypeAccountInfo
+            key={i}
+            account={e}
+            onClick={ev => console.log('test')}
+            onContextMenu={ev => {
+              ev.preventDefault();
+              this.openContentMenu(ev, e);
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  renderAddFriendsTab = () => {
+    if (this.state.friendsSearch.length === 0 && this.lypeService.pendingRequests.length === 0) {
+      return (
+        <div className='lype-left-empty lype-left-friends'>
+          Type something in search bar <FontAwesomeIcon icon={faSearch}></FontAwesomeIcon> to user.
+        </div>
+      );
+    }
+
+    return (
+      <div className='lype-left-friends'>
+        {this.state.friendsSearch.map((e, i) => (
+          <LypeAccountInfo
+            key={i}
+            account={e}
+            onContextMenu={ev => {
+              ev.preventDefault();
+              this.openContentMenu(ev, e);
+            }}
+            buttons={[
+              {
+                onClick: () => {
+                  const state = { ...this.state };
+                  state.friendsSearch.splice(i, 1);
+                  this.setState(state);
+                  this.onAddOrRemoveFriend(e.id, true);
+                },
+                content: 'Add friend',
+              },
+            ]}
+          />
+        ))}
+        {this.lypeService.pendingRequests.map((e, i) => (
+          <LypeAccountInfo
+            key={i}
+            account={e}
+            onContextMenu={ev => {
+              ev.preventDefault();
+              this.openContentMenu(ev, e);
+            }}
+            buttons={[
+              {
+                onClick: () => {
+                  this.onAddOrRemoveFriend(e.id, false);
+                },
+                content: 'Remove friend Request',
+              },
+            ]}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  onAddOrRemoveFriend = async (id: string, add: boolean) => {
+    try {
+      if (this.state.warn) this.setState({ warn: '' });
+      this.setState({ warn: '', inProgress: true });
+      await this.startLoading();
+      await this.lypeService.addOrRemoveFriend(id, add);
+      if (!this.destroyed) this.setState({ inProgress: false });
+    } catch (error) {
+      if (!this.destroyed) this.setState({ warn: error.message, inProgress: false });
+    }
+  };
+
+  renderFriendRequestsTab = () => {
+    const lypeAccount = this.lypeService.account;
+    if (lypeAccount.friendRequest.length === 0) {
+      return <div className='lype-left-empty lype-left-friends'>No pending requests.</div>;
+    }
+    return (
+      <div className='lype-left-friends'>
+        {lypeAccount.friendRequest.map((e, i) => (
+          <li key={i} onClick={() => this.friendClick}>
+            <LypeAccountInfo
+              key={i}
+              onContextMenu={ev => {
+                ev.preventDefault();
+                this.openContentMenu(ev, e);
+              }}
+              account={e}
+              buttons={[
+                {
+                  onClick: () => {
+                    this.onAddOrRemoveFriend(e.id, true);
+                  },
+                  content: 'Accept',
+                },
+                {
+                  onClick: () => {
+                    this.onAddOrRemoveFriend(e.id, false);
+                  },
+                  content: 'Deny',
+                },
+              ]}
+            />
+          </li>
+        ))}
+      </div>
+    );
+  };
+
+  renderBlockedUsersTab = () => {
+    const lypeAccount = this.lypeService.account;
+    if (lypeAccount.friends.length === 0) {
+      return <div className='lype-left-empty lype-left-friends'>Yay no blocks.</div>;
+    }
+    return (
+      <div className='lype-left-friends'>
+        {lypeAccount.blocked.map((e, i) => (
+          <li key={i} onClick={() => this.friendClick}>
+            {e.username}
+          </li>
+        ))}
+      </div>
+    );
+  };
+
+  addFriend = () => {
+    const lypeAccount = this.lypeService.account;
+    if (lypeAccount.friends.length === 0) {
+      return <div className='lype-left-friends'>No friends</div>;
+    }
+    return (
+      <div className='lype-left-friends'>
+        {lypeAccount.friends.map((e, i) => (
+          <li key={i} onClick={() => this.friendClick}>
+            {e.username}
+          </li>
+        ))}
+      </div>
+    );
+  };
 
   renderMessages() {
     //TODO: render message
@@ -274,27 +650,15 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     this.setState(state);
   };
 
-  getStatusColour = (status: LypeStatus) => {
-    switch (status) {
-      case 'online':
-        return '#43b581';
-      case 'awayFromKeyboard':
-        return '#faa61a';
-      case 'doNotDisturb':
-        return '#f04747';
-      default:
-        return '#747f8d';
-    }
-  };
-
   animateLoading = () => {
     if (this.destroyed) return;
-    if (!this.shouldLoad) {
+    if (!this.shouldLoad && !this.state.inProgress) {
       const state = { ...this.state };
       state.animation.x = this.animationMaxOffset;
       state.animation.y = this.animationMaxOffset;
       this.animationState = 'idle';
       this.setState(state);
+      return;
     }
     const performanceNow = performance.now();
     if (this.performance === -1) {
@@ -373,7 +737,8 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   onStateChange = (lypeState: LypeServiceState) => {
     const state = { ...this.state };
     if (lypeState === LypeServiceState.Loading) {
-      this.animateLoading();
+      this.startLoading();
+      return;
     } else if (lypeState === LypeServiceState.Error) {
       state.error = this.lypeService.errorMessage ? this.lypeService.errorMessage : 'Unknown';
     }
@@ -390,7 +755,6 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       this.lypeService.on('stateChange', this.startup);
       return;
     }
-    console.log(this.lypeService.state);
     this.lypeService.removeListener('stateChange', this.startup);
     this.lypeService.on('stateChange', this.onStateChange);
     this.lypeService.on('destroy', this.lypeServiceCrash);
@@ -403,6 +767,15 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     this.setState(state);
   };
 
+  startLoading() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        this.animateLoading();
+        resolve();
+      });
+    });
+  }
+
   get shouldLoad() {
     if (!this.lypeService) return true;
     if (this.lypeService.state === 'notReady') return true;
@@ -413,6 +786,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   switchTab(tab: Tab) {
     const state = { ...this.state };
+    state.searchBar = '';
     state.tab = tab;
     this.setState(state);
   }

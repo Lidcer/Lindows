@@ -1,6 +1,6 @@
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
-import { services } from '../../../services/services';
+import { services } from '../../../services/SystemService/ServiceHandler';
 import moment from 'moment';
 
 export const COMMANDS = ['leofetch'];
@@ -46,7 +46,6 @@ export class Leofetch extends BaseCommand {
     //     COPY_LIDCER_LOGO[i] = line.join('');
     //   }
     // }
-
     // COPY_LIDCER_LOGO[0] += `${name}`;
     // COPY_LIDCER_LOGO[1] += '-'.repeat(name.length);
     // //COPY_LIDCER_LOGO[2] += `Frontend: ${services.processor.frontend}`;
@@ -56,9 +55,7 @@ export class Leofetch extends BaseCommand {
     //   services.fingerprinter.userAgent.getOS().version
     //   } `;
     // COPY_LIDCER_LOGO[5] += `Uptime: ${moment(services.processor.uptime)} `;
-
     // this.terminalCommand.content = COPY_LIDCER_LOGO.join('\n');
-
     // this.terminalCommand.finish();
   }
   public onTab(input: string) {

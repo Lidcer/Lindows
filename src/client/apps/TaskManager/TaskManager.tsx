@@ -1,7 +1,7 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
 import './taskManager.scss';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 
 export const manifest: IManifest = {
   fullAppName: 'TaskManager',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { appConstructorGenerator, allApps } from '../essential/apps';
-import { services } from '../services/services';
+import { services } from '../services/SystemService/ServiceHandler';
 import { BaseWindow } from '../apps/BaseWindow/BaseWindow';
 
 interface IWindowTesterState {
@@ -26,6 +26,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
   }
 
   componentDidMount() {
+    console.info(`Initalizing kernel...`);
     this.start();
   }
 
@@ -91,7 +92,9 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
     });
     return allApps.map((a, i) => (
       <li key={i} onClick={() => this.redirect(a.manifest.launchName)}>
-        {a.manifest.launchName}
+        <button type='button' className='btn btn-primary m-2'>
+          {a.manifest.launchName}
+        </button>
       </li>
     ));
   }
@@ -99,7 +102,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
   get subProcesses() {
     if (!services.ready) return null;
     return services.processor.runningApps.map((a, i) => {
-      return a.app;
+      return a.app ;
     });
   }
 

@@ -31,7 +31,7 @@ export function setupUsersApi(router: Router) {
     uploadImage(req, res);
   });
 
-  router.put(`/api/v1/users/alter`, (req, res) => {
+  router.put(`/api/v1/users/token-alter`, (req, res) => {
     temporarilyTokenAccountAltering(req, res);
   });
 
@@ -62,4 +62,5 @@ export function setupUsersApi(router: Router) {
   router.get(`/${imagesPath.join('/')}`, (req, res) => {
     res.send(403).json({ error: 'Not Allowed' });
   });
+
 }

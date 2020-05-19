@@ -5,18 +5,22 @@ import { BlueScreen } from './components/BlueScreen/BlueScreen';
 import './App.scss';
 import { AccountManagerWebpage } from './apps/AccountManager/AccountManagerWebpage';
 import { LypeWebpage } from './apps/Lype/LypeWebpage';
+import { PopupRenderer } from './components/Popup/popupRenderer';
 
 export class App extends React.Component {
   render() {
     return (
-      <BrowserRouter>
-        <Switch>
-          <Route exact path='/' component={Main} />
-          <Route exact path='/account' component={AccountManagerWebpage} />
-          <Route exact path='/lype' component={LypeWebpage} />
-          <Route path='*' component={BlueScreen} />
-        </Switch>
-      </BrowserRouter>
+      <>
+        <BrowserRouter>
+          <Switch>
+            <Route exact path='/' component={Main} />
+            <Route exact path='/account' component={AccountManagerWebpage} />
+            <Route exact path='/lype' component={LypeWebpage} />
+            <Route path='*' component={BlueScreen} />
+          </Switch>
+        </BrowserRouter>
+        <PopupRenderer />
+      </>
     );
   }
 }

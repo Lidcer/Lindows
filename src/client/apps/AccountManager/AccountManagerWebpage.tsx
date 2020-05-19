@@ -1,7 +1,7 @@
 import './AccountManager.scss';
 import React from 'react';
-import { services } from '../../services/services';
-import { IAccountInfo } from '../../services/account';
+import { services } from '../../services/SystemService/ServiceHandler';
+import { IAccountInfo } from '../../services/SystemService/AccounSystem';
 import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
 import { OpenFileDialog } from '../../essential/FileDialog';
 import { SECOND } from '../../../shared/constants';
@@ -45,7 +45,7 @@ interface IAccountState {
     password: string;
     newPassword: string;
     repeatPassword: string;
-    alteringProfile: string[];
+    alteringProfile: (string | JSX.Element)[];
     file?: File;
   };
   verifyResult: string;
@@ -59,7 +59,7 @@ interface IAccountState {
   info: string;
 }
 
-const DEFAULT_AVATAR = '/assets/images/appsIcons/AccountManager.svg';
+export const DEFAULT_AVATAR = '/assets/images/appsIcons/AccountManager.svg';
 
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
   private destroyed = false;
@@ -406,6 +406,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     state.settings.password = '';
     const ap = state.settings.alteringProfile;
     const ac = services.account;
+
+    const goBack = () => {
+      state.settings.alteringProfile = [];
+      this.setState(state);
+      this.resetWarnings();
+      this.clearParameters();
+    };
+
     try {
       if (state.settings.file) {
         ap.push('Uploading file....');
@@ -447,27 +455,22 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       }
 
       ap.push('Done...');
-      ap.push('Redirecting back in 30sec');
+      ap.push(
+        <button className='btn btn-secondary' onClick={goBack}>
+          Go back
+        </button>,
+      );
       this.setInfoMsg('All altering jobs have finished');
-      setTimeout(() => {
-        if (this.destroyed) return;
-        state.settings.alteringProfile = [];
-        this.setState(state);
-        this.clearParameters();
-        this.resetWarnings();
-      }, SECOND * 30);
     } catch (error) {
       state.error = error.message;
       if (this.destroyed) return;
       ap.push('Altering Failed!');
-      ap.push('Redirecting back in 30sec');
+      ap.push(
+        <button className='btn btn-secondary' onClick={goBack}>
+          Go back
+        </button>,
+      );
       this.setState(state);
-      setTimeout(() => {
-        if (this.destroyed) return;
-        state.settings.alteringProfile = [];
-        this.setState(state);
-        this.clearParameters();
-      }, SECOND * 30);
     }
   };
 

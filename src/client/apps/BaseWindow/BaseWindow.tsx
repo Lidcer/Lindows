@@ -11,7 +11,7 @@ import {
   faFile,
 } from '@fortawesome/free-solid-svg-icons';
 import { navBarPos } from '../../components/TaskBar/TaskBar';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 import { random, clamp } from 'lodash';
 import { IBaseWindowEmitter, WindowEvent, IBaseWindowEmitterType, IBaseWindowKeyboard } from './WindowEvent';
 

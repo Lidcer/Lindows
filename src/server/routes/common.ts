@@ -4,6 +4,7 @@ import { IResponse, IAccount, VerificationType } from '../../shared/ApiUsersRequ
 import { ObjectSchema } from '@hapi/joi';
 import { TOKEN_HEADER } from '../../shared/constants';
 import * as jwt from 'jsonwebtoken';
+import { logger } from '../database/EventLog';
 
 export interface IJWTAccount {
   id: string;
@@ -44,6 +45,7 @@ export function verifyJoi<A>(req: Request, res: Response, joiObject: ObjectSchem
     response.error = joiResult.error.message;
     response.details = joiResult.error;
     res.status(400).json(response);
+    logger.error(`Joi verification failed`, req.originalUrl, req.body);
     return null;
   }
   return body;
@@ -52,6 +54,7 @@ export function verifyJoi<A>(req: Request, res: Response, joiObject: ObjectSchem
 export function respondWithError(res: Response, status: number, error: string, details?: any) {
   const response: IResponse<null> = { error };
   if (details) response.details = details;
+  logger.debug(`Error response`, status, error, response);
   res.status(status).json(response);
 }
 
@@ -99,5 +102,25 @@ export function rGetTokenData(
     return data;
   }
   respondWithError(res, 400, 'Could not authenticate user');
+  return null;
+}
+
+export function getTokenData(req?: Request, token?: string): IJWTAccount | null {
+  if (!req && !token) return null;
+  if (!token && req) {
+    const t = req.headers[TOKEN_HEADER];
+    if (typeof t !== 'string') return null;
+    token = t;
+  }
+  if (!token) return null;
+  if (typeof token !== 'string') return null;
+  const data = jwt.decode(token) as IJWVerificationCode;
+  if (!data) return null;
+
+  if (data.id && data.exp) {
+    if (typeof data.exp !== 'number') return null;
+    if (data.exp < Date.now()) return null;
+    return data;
+  }
   return null;
 }

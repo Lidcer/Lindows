@@ -4,241 +4,27 @@ $lype-animation-width: 32px;
 $lype-animation-height: 25px;
 $lype-animation-left: 83px;
 
+
 .lype {
   background-color: #232323;
-  color: #2d8ceb;
   position: absolute;
+  display: flex;
   height: 100%;
   width: 100%;
-  display: flex;
-  flex-direction: row;
+  flex-direction: column;
 
-  .lype-login-required {
+  .lype-loading-overlay {
     position: absolute;
-    text-align: center;
-    align-items: center;
-
-    padding: 5pt;
-
-
-    box-shadow: 0 0 10pt black;
-
-    width: 100%;
     height: 100%;
-    overflow: auto;
-
-    button {
-      color: #6d6f70;
-      background-color: #1d1d1d;
-      border-radius: 5pt;
-      padding: 5pt;
-      border: none;
-
-
-      &:hover {
-        background-color: #2a2a2a;
-      }
-    }
-
-    h1 {
-      font-size: 15pt;
-      color: #b9b9b9;
-    }
+    width: 100%;
+    background-color: black;
+    opacity: 0.25;
+    z-index: 50;
   }
 
-  .lype-left-bar {
-    display: flex;
-    flex-direction: column;
-    width: 240px;
-  }
-
-  .lype-left-navbar {
-    flex: none;
-    display: flex;
-    flex-direction: column;
-    height: 50pt;
-    background-color: #363636;
-
-
-    .lype-left-navbar-buttons {
-      display: flex;
-      flex-direction: row;
-      width: 100%;
-      background-color: #262626;
-      height: 20pt;
-    }
-
-    .lype-left-navbar-button {
-      height: 30pt;
-      width: 30pt;
-      padding: 2pt;
-      text-align: center;
-      align-items: center;
-
-      color: #878787;
-      background-color: #262626;
-
-      &:hover {
-        background-color: #2e2e2e;
-      }
-
-    }
-
-    .llnb-active {
-      color: #e1e1e1;
-      background-color: #323232;
-    }
-
-    input {
-      background-color: transparent;
-      border: transparent;
-      color: #e1e1e1;
-      border-bottom: solid black 1pt;
-      margin: 5pt;
-
-      &:focus {
-        outline: none;
-      }
-    }
-
-
-  }
-
-  .lype-left-friends {
-    margin: 5pt;
-    height: auto;
-    overflow-y: auto;
-  }
-
-  .lype-left-userInfo {
-    display: flex;
-    flex-direction: row;
-    flex: none;
-    height: $lype-bottom-height;
-    background-color: #1d1d1d;
-
-    .lype-left-userInfo-avatar {
-      flex: none;
-      align-items: center;
-      text-align: center;
-      margin: 5pt;
-
-      img {
-        border-radius: 5pt;
-        border: 1pt solid black;
-        height: 25pt;
-        width: 25pt;
-      }
-
-      .la-status {
-        display: flex;
-      }
-
-
-      .lype-account-status-badge {
-        position: absolute;
-        height: 10pt;
-        width: 10pt;
-        margin-left: 18pt;
-        margin-top: 18pt;
-        border: 1pt solid black;
-        border-radius: 100%;
-      }
-    }
-
-    .lype-left-userInfo-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      padding: 4pt;
-      width: auto;
-      flex: auto;
-      overflow: hidden;
-
-      .lype-lui-displayed-name {
-        text-overflow: ellipsis;
-        font-weight: bold;
-        color: white;
-
-      }
-
-      .lype-lui-custom-status {
-        text-overflow: ellipsis;
-        color: #6d6f70;
-      }
-
-    }
-
-    .lype-left-userInfo-settings {
-      width: auto;
-      display: flex;
-      flex: none;
-      align-items: center;
-      text-align: center;
-
-      .lype-lus-button {
-        height: 20pt;
-        width: 20pt;
-        padding: 1pt;
-        padding-top: 3pt;
-        align-items: center;
-        text-align: center;
-        border-radius: 5pt;
-
-        &:hover {
-          background-color: transparentize($color: #ffffff, $amount: 0);
-        }
-      }
-
-
-    }
-
-  }
-
-
-  .lype-chat {
-    display: flex;
-    flex-direction: column;
-    flex: auto;
-    width: auto;
-  }
-
-  .lype-chat-header {
-    height: 100px;
-    background-color: #272727;
-    flex: none;
-    border-bottom: #000000 1pt solid;
-  }
-
-  .lype-chat-content {
-    border-top: #464646 1pt solid;
-    height: auto;
-    flex: auto;
-    overflow: auto;
-    padding: 10pt;
-  }
-
-  .lype-chat-input {
-    display: flex;
-    height: $lype-bottom-height;
-    padding: 5pt;
-    flex: none;
-    align-items: center;
-    border-top: 1pt solid #161616;
-
-    input {
-      width: 100%;
-      padding: 5pt;
-      background-color: #161616;
-      border-radius: 5pt;
-      border: none;
-      color: white;
-
-      &:focus {
-        outline: none;
-      }
-    }
-
+  .lype-left-empty {
+    margin: 10px;
+    color: #6d6f70;
   }
 
   .lype-loading {
@@ -248,6 +34,7 @@ $lype-animation-left: 83px;
     position: absolute;
     top: 50%;
     left: 50%;
+    z-index: 100;
     transform: translate(-50%, -50%);
 
     .lype-loading-box {
@@ -359,8 +146,351 @@ $lype-animation-left: 83px;
       width: 20px;
       height: 5px;
     }
+  }
+
+
+  .lype-warn-content {
+
+    background-color: red;
+    color: white;
+    font-size: 12pt;
+    font-weight: bold;
+    text-align: center;
+
+    .lype-warn-ignore {
+      height: 20px;
+      width: 20px;
+      float: right;
+      margin: 2px;
+      margin-right: 5px;
+      border-radius: 5px;
+
+      &:hover {
+        background-color: #ff4343;
+        transform: background-color 1s;
+      }
+    }
+  }
+
+}
+
+.lype-content {
+  position: relative;
+  background-color: #232323;
+  color: #2d8ceb;
+
+
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex: auto;
+  flex-direction: row;
+
+  .lype-login-required {
+    position: absolute;
+    text-align: center;
+    align-items: center;
+
+    padding: 5pt;
+
+
+    box-shadow: 0 0 10pt black;
+
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+
+    button {
+      color: #6d6f70;
+      background-color: #1d1d1d;
+      border-radius: 5pt;
+      padding: 5pt;
+      border: none;
+
+
+      &:hover {
+        background-color: #2a2a2a;
+      }
+    }
+
+    h1 {
+      font-size: 15pt;
+      color: #b9b9b9;
+    }
+  }
+
+  .lype-left-bar {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+  }
+
+  .lype-left-navbar {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    height: 50pt;
+    background-color: #363636;
+
+
+    .lype-left-navbar-buttons {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      background-color: #262626;
+      height: 20pt;
+    }
+
+    .lype-left-navbar-button {
+      height: 30pt;
+      width: 30pt;
+      padding: 2pt;
+      text-align: center;
+      align-items: center;
+
+      color: #878787;
+      background-color: #262626;
+
+      &:hover {
+        background-color: #2e2e2e;
+      }
+
+    }
+
+    .llnb-active {
+      color: #e1e1e1;
+      background-color: #323232;
+    }
+
+    input {
+      background-color: transparent;
+      border: transparent;
+      color: #e1e1e1;
+      border-bottom: solid black 1pt;
+      margin: 5pt;
+
+      &:focus {
+        outline: none;
+      }
+    }
 
 
   }
 
+  .lype-left-friends {
+    height: auto;
+    flex: auto;
+    overflow-y: auto;
+  }
+
+  .lype-left-userInfo {
+    display: flex;
+    flex-direction: row;
+    flex: none;
+    height: $lype-bottom-height;
+    background-color: #1d1d1d;
+
+    .lype-left-userInfo-avatar {
+      flex: none;
+      align-items: center;
+      text-align: center;
+      margin: 5pt;
+
+      img {
+        border-radius: 5pt;
+        border: 1pt solid black;
+        height: 25pt;
+        width: 25pt;
+      }
+
+      .la-status {
+        display: flex;
+      }
+
+
+      .lype-account-status-badge {
+        position: absolute;
+        height: 10pt;
+        width: 10pt;
+        margin-left: 18pt;
+        margin-top: 18pt;
+        border: 1pt solid black;
+        border-radius: 100%;
+      }
+    }
+
+    .lype-left-userInfo-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 4pt;
+      width: auto;
+      flex: auto;
+      overflow: hidden;
+
+      .lype-lui-displayed-name {
+        text-overflow: ellipsis;
+        font-weight: bold;
+        color: white;
+
+      }
+
+      .lype-lui-custom-status {
+        text-overflow: ellipsis;
+        color: #6d6f70;
+      }
+
+
+    }
+
+    .lype-left-userInfo-settings {
+      width: auto;
+      display: flex;
+      flex: none;
+      align-items: center;
+      text-align: center;
+
+      .lype-lus-button {
+        height: 20pt;
+        width: 20pt;
+        padding: 1pt;
+        padding-top: 3pt;
+        align-items: center;
+        text-align: center;
+        border-radius: 5pt;
+
+        &:hover {
+          background-color: transparentize($color: #ffffff, $amount: 0);
+        }
+      }
+    }
+  }
+
+
+  .lype-chat {
+    display: flex;
+    flex-direction: column;
+    flex: auto;
+    width: auto;
+  }
+
+  .lype-chat-header {
+    height: 100px;
+    background-color: #272727;
+    flex: none;
+    border-bottom: #000000 1pt solid;
+  }
+
+  .lype-chat-content {
+    border-top: #464646 1pt solid;
+    height: auto;
+    flex: auto;
+    overflow: auto;
+    padding: 10pt;
+  }
+
+  .lype-chat-input {
+    display: flex;
+    height: $lype-bottom-height;
+    padding: 5pt;
+    flex: none;
+    align-items: center;
+    border-top: 1pt solid #161616;
+
+    input {
+      width: 100%;
+      padding: 5pt;
+      background-color: #161616;
+      border-radius: 5pt;
+      border: none;
+      color: white;
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  .lype-warn-message {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+
+  .lype-warn-top {
+    min-height: 25px;
+    color: white;
+    background-color: red;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .lype-warn-content {
+    position: relative;
+    display: block;
+    height: auto;
+    flex: auto;
+  }
+
+  .lype-account-info {
+    margin: 2px;
+    padding: 5px;
+    border-radius: 2px;
+   display: flex;
+  }
+
+  .lype-account-info-name{
+    word-break: break-all;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 17px;
+    color: white;
+    font-weight: bold;
+  }
+  
+  .lype-account-info-details{
+    word-break: break-all;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: gray;
+    font-weight: bold;
+    flex: auto;
+  }
+  .lype-account-info-buttons{
+    display: inline-block;
+  }
+
+  .lype-account-info-profile-pic{
+    display: block;
+    width: 60px;
+    flex: none;
+    img{
+      width: 50px;
+      height: 50px;
+    }
+  }
+
+  .lype-account-info-custom{
+    width: 100%;
+    span{
+      width: 100px;
+    }
+  }
+
+  .lype-account-info-btn{
+    height: 20px;
+    margin-left: 2px;
+    padding: 0 3px;
+    border: none;
+    border-radius: 2px;
+    float: right;
+  }
+  .clickable{
+    cursor: pointer;
+    &:hover{
+      background-color: transparentize($color: #000000, $amount: 0.80);
+    }
+  }
 }

@@ -1,7 +1,7 @@
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
 import { launchApp } from '../../../essential/apps';
-import { services } from '../../../services/services';
+import { services } from '../../../services/SystemService/ServiceHandler';
 
 export const COMMANDS = ['take'];
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import './bootScreen.scss';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 import { SECOND } from '../../../shared/constants';
 import { launchApp } from '../../essential/apps';
 

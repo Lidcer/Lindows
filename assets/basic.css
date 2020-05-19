@@ -1,0 +1,76 @@
+body, .terminal-background {
+    background: #222;
+    color: lime;
+    font-family: monospace;
+}
+.terminal-box{
+    transition: background-color 0.15s, color 0.15s  ;
+}
+.terminal-box:hover{
+    background-color: rgba(0, 128, 0, 1);
+    color: #222 !important;
+}
+
+
+.btn-terminal{
+    color: lime !important;
+    background-color: rgba(0, 255, 0, 0.05);
+    border-radius: 0;
+    margin: 5px;
+}
+
+.btn-terminal:hover {
+    background-color: lime !important;
+    color: black !important;
+}
+
+a.nostyle:link {
+    text-decoration: inherit;
+    display: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+a.nostyle:visited {
+    display: inherit;
+    text-decoration: inherit;
+    color: inherit;
+    cursor: pointer;
+}
+
+
+.border-terminal{
+    border: 1px solid lime !important;
+    max-width: 100%;
+    overflow: auto;
+}
+
+#header {
+    display: flex;
+    align-items: baseline;
+    margin: 15px;
+}
+
+/* blinking cursor */
+#cursor {
+    background: lime;
+    line-height: 17px;
+    margin-left: 3px;
+    -webkit-animation: blink 0.8s infinite;
+    width: 7px;
+    height: 15px;
+}
+
+@-webkit-keyframes blink {
+    0% {
+        background: #222
+    }
+
+    50% {
+        background: lime
+    }
+
+    100% {
+        background: #222
+    }
+}

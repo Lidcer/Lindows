@@ -96,6 +96,5 @@ export enum VerificationType {
   PasswordReset,
 }
 
-export type LypeStatus = 'online' | 'doNotDisturb' | 'awayFromKeyboard' | 'offline';
 export declare type IAccountResponse = IResponse<IAccount>;
 export declare type IIPResponse = IResponse<IP>;

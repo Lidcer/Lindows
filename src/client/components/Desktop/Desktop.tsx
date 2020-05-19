@@ -8,9 +8,11 @@ import Axios from 'axios';
 import { launchApp } from '../../essential/apps';
 import { HotKeyHandler } from '../../essential/apphotkeys';
 import { BlueScreen } from '../BlueScreen/BlueScreen';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 import { Keypress } from '../../essential/constants/Keypress';
-import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
+import { startBackgroundServices, backgroundServices } from '../../services/BackgroundService/ServicesHandler';
+import { ActivationWatermark } from '../activationWatermark/activationWatermark';
+import { popup } from '../Popup/popupRenderer';
 
 interface IState {
   ready: boolean;
@@ -25,11 +27,6 @@ interface IState {
     base64: string;
     width: number;
     height: number;
-    contextMenu: {
-      open: boolean;
-      x: number;
-      y: number;
-    };
   };
 }
 
@@ -43,11 +40,11 @@ const wallpaperContextMenu: IElement[] = [
   },
   { content: 'Refresh' },
   {},
-  { content: 'Paste', disabled: true },
-  { content: 'LVidia Control Panel', picture: './assets/images/livida.svg' },
+  { content: 'Paste' },
+  { content: 'LVidia Control Panel', iconOrPicture: './assets/images/livida.svg' },
   { content: 'New', elements: [{ content: 'Folder' }] },
-  { content: 'Browser Settings', picture: './assets/images/browserSettings.svg' },
-  { content: 'Personalize', picture: './assets/images/browserSettings.svg' },
+  { content: 'Browser Settings', iconOrPicture: './assets/images/browserSettings.svg' },
+  { content: 'Personalize', iconOrPicture: './assets/images/browserSettings.svg' },
 ];
 
 export class Desktop extends React.Component<{}, IState> {
@@ -71,11 +68,6 @@ export class Desktop extends React.Component<{}, IState> {
         base64: '',
         height: 1080,
         width: 1920,
-        contextMenu: {
-          open: false,
-          x: 0,
-          y: 0,
-        },
       },
     };
     window.onerror = message => {
@@ -84,6 +76,7 @@ export class Desktop extends React.Component<{}, IState> {
   }
 
   updateView = () => {
+    console.log('update')
     // this.terminal.reset();
     this.blueScreen.reset();
     this.killActiveWindow.reset();
@@ -186,14 +179,14 @@ export class Desktop extends React.Component<{}, IState> {
     if (!this.state.ready) return null;
 
     return (
-      <div onClick={event => this.wallpaperClick(event, false)}>
+      <div>
         <Cursor></Cursor>
         {this.processApps}
         {this.shouldShowSelectionBox()}
-        {this.shouldShowContext()}
         <div></div>
         <div className='screen'>{this.wallpaper()}</div>
         <TaskBar></TaskBar>
+        <ActivationWatermark></ActivationWatermark>
       </div>
     );
   }
@@ -210,23 +203,11 @@ export class Desktop extends React.Component<{}, IState> {
     return <SelectBox pos={{ x: pos.x, y: pos.y }}></SelectBox>;
   }
 
-  shouldShowContext() {
-    if (!this.state.wallpaper.contextMenu.open) return null;
-    return (
-      <ContextMenu
-        elements={wallpaperContextMenu}
-        x={this.state.wallpaper.contextMenu.x}
-        y={this.state.wallpaper.contextMenu.y}
-      ></ContextMenu>
-    );
-  }
-
   wallpaper() {
     if (!this.state.wallpaper || !this.state.wallpaper.base64) {
       return (
         <img
           className={this.wallpaperClass}
-          onClick={event => this.wallpaperClick(event, false)}
           onMouseDown={this.onWallpaperMouseDown}
           onMouseUp={this.onWallpaperMouseUp}
           onContextMenu={this.wallpaperClick}
@@ -239,7 +220,6 @@ export class Desktop extends React.Component<{}, IState> {
     return (
       <img
         className={this.wallpaperClass}
-        onClick={event => this.wallpaperClick(event, false)}
         onContextMenu={this.wallpaperClick}
         src={this.state.wallpaper.base64}
         alt='bliss'
@@ -268,25 +248,13 @@ export class Desktop extends React.Component<{}, IState> {
     });
   };
 
-  wallpaperClick = (event: React.MouseEvent<HTMLImageElement | HTMLDivElement, MouseEvent>, open = true) => {
+  wallpaperClick = (event: React.MouseEvent<HTMLImageElement | HTMLDivElement, MouseEvent>) => {
     event.preventDefault();
-    const state = { ...this.state };
-    const isOpen = this.state.wallpaper.contextMenu.open;
-    state.wallpaper.contextMenu = {
-      open: open,
-      x: event.clientX,
-      y: event.clientY,
-    };
-    if (isOpen) {
-      state.wallpaper.contextMenu.open = !open;
-      this.setState(state);
-      setTimeout(() => {
-        state.wallpaper.contextMenu.open = open;
-        this.setState(state);
-      });
-    } else {
-      this.setState(state);
-    }
+    popup.add(
+      <ContextMenu elements={wallpaperContextMenu} x={event.clientX} y={event.clientY}></ContextMenu>,
+      false,
+      true,
+    );
   };
 
   get wallpaperClass() {

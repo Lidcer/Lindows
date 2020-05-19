@@ -31,3 +31,13 @@ export function fetchImage(imageUrl: string): Promise<string | null> {
       });
   });
 }
+
+export function attachDebugMethod(value: string, method: any) {
+  if (isDev()) {
+    (window as any)[value] = method;
+  }
+}
+
+export function isDev() {
+  return (window as any).DEVELOPMENT;
+}

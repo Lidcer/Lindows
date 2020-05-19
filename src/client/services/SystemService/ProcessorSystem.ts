@@ -1,10 +1,11 @@
-import { BaseWindow, IManifest } from '../apps/BaseWindow/BaseWindow';
+import { BaseWindow, IManifest } from '../../apps/BaseWindow/BaseWindow';
 import { EventEmitter } from 'events';
 import { random } from 'lodash';
-import { reactGeneratorFunction, appConstructorGenerator, launchApp } from '../essential/apps';
-import { IBrowserStorage } from './browserStorage';
-import { Broadcaster } from './broadcaster';
-import { IJSONWindowEvent } from '../apps/BaseWindow/WindowEvent';
+import { reactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
+import { Broadcaster } from './BroadcasterSystem';
+import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
+import { BrowserStorage } from './BrowserStorageSystem';
+import { BaseSystemService } from './BaseSystemService';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -18,14 +19,7 @@ interface IDisplayingApp {
   state?: any;
 }
 
-export declare interface IProcessor {
-  on(event: 'appAdd', listener: (object: BaseWindow) => void): this;
-  on(event: 'appRemove', listener: (object: BaseWindow) => void): this;
-  on(event: 'appDisplayingAdd', listener: (object: IDisplayingApp) => void): this;
-  on(event: 'slowSystem', listener: (performance: number) => void): this;
-}
-
-export class IProcessor extends EventEmitter {
+export class Processor extends BaseSystemService {
   private readonly browserStorageKey = '__processor';
   private readonly serviceName = 'procesor';
   private readonly processorId = random(1000, 9999);
@@ -42,9 +36,13 @@ export class IProcessor extends EventEmitter {
   private monitorFunction: number;
   private lastPerformance = 0;
   private paused = false;
+  private eventEmitter = new EventEmitter();
 
-  constructor(private browserStorage: IBrowserStorage, private broadcaster: Broadcaster) {
+  constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
     super();
+  }
+
+  start() {
     this.broadcastNewProcess();
 
     // this.broadcaster.on(`${this.serviceName}-attach`, this.addNewProcess);
@@ -56,8 +54,17 @@ export class IProcessor extends EventEmitter {
       this.monitor();
       this.lastPerformance = performance.now();
     });
+  }
 
-    this.setReady();
+  destroy() {
+    // this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
+    // this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
+    // this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
+    // this.broadcaster.removeListener(`${this.serviceName}-addApp`, this.remoteAppAdd);
+  }
+
+  get ok() {
+    return !this.destroyed;
   }
 
   updateProcesses = (json: IJSONWindowEvent) => {
@@ -86,6 +93,26 @@ export class IProcessor extends EventEmitter {
 
     this.lastPerformance = perf;
   };
+
+  on(value: 'appAdd', listener: (object: BaseWindow) => void): void;
+  on(value: 'appRemove', listener: (object: BaseWindow) => void): void;
+  on(value: 'appDisplayingAdd', listener: (object: IDisplayingApp) => void): void;
+  on(value: 'slowSystem', listener: (performance: number) => void): void;
+  on(value: string | symbol, listener: (...args: any[]) => void) {
+    this.eventEmitter.on(value, listener);
+  }
+
+  private emit(value: 'appAdd', object: BaseWindow): void;
+  private emit(value: 'appRemove', object: BaseWindow): void;
+  private emit(value: 'appDisplayingAdd', object: IDisplayingApp): void;
+  private emit(value: 'slowSystem', performance: number): void;
+  private emit(value: string | symbol, ...args: any[]) {
+    this.eventEmitter.emit.apply(this.eventEmitter, [value, ...args]);
+  }
+
+  removeListener(value: string | symbol, listener: (...args: any[]) => void) {
+    this.eventEmitter.removeListener(value, listener);
+  }
 
   private broadcastNewProcess = () => {
     this.broadcaster.emit(`${this.serviceName}-attach`, this._uptime);
@@ -176,7 +203,7 @@ export class IProcessor extends EventEmitter {
           const displaying = this.displaying.find(o => o.processID === object.id);
           const indexOfDisplaying = this.displaying.indexOf(displaying);
           if (indexOfDisplaying !== -1) this.displaying.splice(indexOfDisplaying, 1);
-          this.emit('appRemove', process);
+          this.emit('appRemove', lindowsProcess);
           lindowsProcess.changeActiveState(true);
           return;
         }

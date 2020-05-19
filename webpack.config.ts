@@ -20,6 +20,7 @@ const entry: Configuration['entry'] = {
 if (IS_DEV) {
   entry.test = './src/client/test';
 }
+entry.admin = './src/client/admin';
 
 const config: Configuration = {
   mode: IS_DEV ? 'development' : 'production',

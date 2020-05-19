@@ -59,6 +59,7 @@ import {
   IJWTAccount,
   IJWVerificationCode,
 } from '../common';
+import { logger } from '../../database/EventLog';
 
 const temporaryToken = randomBytes(64).toString('base64');
 
@@ -66,6 +67,7 @@ const spamProtector = new SpamProtector();
 
 //Register
 export async function registerUser(req: Request, res: Response) {
+  logger.debug(`Registering...`, req.body);
   if (!req.headers.origin) respondWithError(res, 400, 'Something went wrong with your request');
   const request = verifyJoi<IAccountRegisterRequest>(req, res, joi$registerUser);
   if (!request) return;
@@ -80,13 +82,14 @@ export async function registerUser(req: Request, res: Response) {
       else return respondWithError(res, 404, 'Username is already in use by someone');
     }
   } catch (error) {
-    logError(error, 'Fetching user from database');
+    logger.error('Fetching user from database', error);
     return respondWithError(res, 500, 'Internal server error');
   }
 
   if (!spamProtector.addIP(req.ip)) return respondWithError(res, 429, 'To many requests');
 
   try {
+    logger.debug(`Registering user`);
     const user = await registerUserInDatabase(request.username, request.email, request.password, req.ip);
     const tokenData: IJWVerificationCode = {
       id: user._id,
@@ -104,21 +107,23 @@ export async function registerUser(req: Request, res: Response) {
         reason: 'Someone registered to our webpage',
       })
       .catch(err => {
-        logError(err, 'Unable to send email');
+        logger.error(`Unable to send email`, err);
       });
     const response: IResponse<string> = {
       success: 'Email has been sent',
       message: 'Email has been sent',
     };
+    logger.debug(`User registered`, response);
     return res.status(200).json(response);
   } catch (error) {
-    logError(error, 'Registering user');
+    logger.error(`Unable to register user`, error);
     return respondWithError(res, 500, 'Internal server error');
   }
 }
 
 //Login
 export async function loginUser(req: Request, res: Response) {
+  logger.debug(`Login`, req.body);
   const request = verifyJoi<IAccountLoginRequest>(req, res, joi$loginUser);
   if (!request) return;
 
@@ -126,6 +131,8 @@ export async function loginUser(req: Request, res: Response) {
 
   const user = await getUserByAccountOrEmail(request.usernameOrEmail);
   if (rIsUserForbidden(res, user)) return;
+
+  logger.debug(`User found`, user.username);
 
   try {
     if (!spamProtector.addIP(req.ip)) return respondWithError(res, 429, 'To many requests');
@@ -145,12 +152,14 @@ export async function loginUser(req: Request, res: Response) {
 
   response.success = data;
   response.message = 'User loggined';
+  logger.debug(`User loggined`, response);
   res.header(TOKEN_HEADER, jwtToken);
   res.status(200).json(response);
 }
 
 //Check user
 export async function checkUser(req: Request, res: Response) {
+  logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
   const decoded: IJWTAccount = rGetTokenData(req, res);
   if (!decoded) return;
 
@@ -158,7 +167,7 @@ export async function checkUser(req: Request, res: Response) {
   try {
     user = await getUserById(decoded.id);
   } catch (error) {
-    logError(error, 'Cannot get user by id');
+    logger.error('Cannot get user by id', error);
     return respondWithError(res, 500, 'Internal server error');
   }
   if (rIsUserForbidden(res, user)) return;
@@ -166,13 +175,15 @@ export async function checkUser(req: Request, res: Response) {
   const response: IAccountResponse = {
     success: getClientAccount(user),
   };
+  logger.debug(`User checked`, response);
   res.status(200).json(response);
   user.lastOnlineAt = Date.now();
-  user.save().catch(err => logError(err, 'Unable to save last online at'));
+  user.save().catch(err => logger.error(err, 'Unable to save last online at'));
   return;
 }
 
 export async function changeDisplayedName(req: Request, res: Response) {
+  logger.debug('Change displayed name', req.body);
   const request = verifyJoi<IAccountDisplayedNameRequest>(req, res, joi$displayedName);
   if (!request) return;
   const decoded: IJWTAccount = rGetTokenData(req, res);
@@ -181,6 +192,7 @@ export async function changeDisplayedName(req: Request, res: Response) {
   const user = await getUserById(decoded.id);
   if (rIsUserForbidden(res, user)) return;
 
+  logger.debug('User found', user.username);
   const correctPassword = await verifyPassword(request.password, user.password);
   if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
   if (user.displayedName.toLowerCase() === request.displayedName.toLowerCase())
@@ -196,17 +208,20 @@ export async function changeDisplayedName(req: Request, res: Response) {
       success: getClientAccount(user),
       message: 'Displayed name changed',
     };
+    logger.debug('name changed', response);
     res.status(200).json(response);
     user.lastOnlineAt = Date.now();
-    user.save().catch(err => logError(err, 'Unable to save last online at'));
+    user.save().catch(err => logger.error(err, 'Unable to save last online at'));
     return;
   } catch (error) {
-    logError(error, 'display name change');
+    logger.error('Cannot change displayed name', error);
     return respondWithError(res, 500, 'Internal server Error');
   }
 }
 
 export async function changePassword(req: Request, res: Response) {
+  logger.debug('Change password', req.body);
+
   const request = verifyJoi<IAccountChangePasswordRequest>(req, res, joi$changePassword);
   if (!request) return;
   const decoded = rGetTokenData(req, res) as IJWVerificationCode;
@@ -215,6 +230,7 @@ export async function changePassword(req: Request, res: Response) {
 
   const user = await getUserById(decoded.id);
   if (rIsUserForbidden(res, user)) return;
+  logger.debug('User found', user.username);
 
   const correctPassword = await verifyPassword(request.oldPassword, user.password);
   if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
@@ -224,6 +240,7 @@ export async function changePassword(req: Request, res: Response) {
     response.success = getClientAccount(user);
 
     response.message = 'Password has been changed successfully';
+    logger.debug('Password changed', response);
     res.status(200).json(response);
     return;
   } catch (error) {
@@ -233,6 +250,7 @@ export async function changePassword(req: Request, res: Response) {
 
 // VERIFICATION SEND
 export async function changeEmail(req: Request, res: Response) {
+  logger.debug('Change email', req.body);
   if (!req.headers.origin) respondWithError(res, 400, 'Something went wrong with your request');
   const request = verifyJoi<IAccountChangeEmailRequest>(req, res, joi$changeEmail);
   if (!request) return;
@@ -241,6 +259,7 @@ export async function changeEmail(req: Request, res: Response) {
 
   const user = await getUserById(decoded.id);
   if (rIsUserForbidden(res, user)) return;
+  logger.debug('User found', user.username);
 
   try {
     const correctPassword = await verifyPassword(request.password, user.password);
@@ -262,26 +281,30 @@ export async function changeEmail(req: Request, res: Response) {
         verificationURL,
         reason: 'Someone requested change email on our webpage',
       })
-      .catch(err => logError(err, 'Unable to send email'));
+      .catch(err => logger.error(err, 'Unable to send email'));
 
     const response: IAccountResponse = {
       success: getClientAccount(user),
       message: 'Mail has been sent',
     };
 
+    logger.debug('User email sent', response);
     return res.status(200).json(response);
   } catch (error) {
+    logger.error('Change email', error);
     return respondWithError(res, 500, 'Internal server Error');
   }
 }
 
 export async function resetPasswordLink(req: Request, res: Response) {
+  logger.debug('Reset password link', req.body);
   if (!req.headers.origin) respondWithError(res, 400, 'Something went wrong with your request');
   const request = verifyJoi<IAccountEmailRequest>(req, res, joi$email);
   if (!request) return;
 
   try {
     const user = await findUserByEmail(request.email);
+    logger.debug('User found', user.username);
     const response: IResponse<string> = {
       success: 'If user exist the email has been sent',
       message: 'If user exist the email has been sent',
@@ -307,15 +330,16 @@ export async function resetPasswordLink(req: Request, res: Response) {
         reason: 'Someone requested password reset on our webpage',
       })
       .catch(err => {
-        logError(err, 'Unable to send email');
+        logger.error('Unable to send email', err, verificationURL);
       });
   } catch (error) {
-    logError(error, 'Unable to send verification code');
+    logger.error('Unable to send verification code', error);
     return respondWithError(res, 500, 'Internal server Error');
   }
 }
 
 export async function uploadImage(req: Request, res: Response) {
+  logger.debug('User found', req.body);
   const request = verifyJoi<IAccountVerificationRequest>(req, res, joi$verification);
   if (!request) return;
   const decoded = rGetTokenData(req, res);
@@ -332,6 +356,7 @@ export async function uploadImage(req: Request, res: Response) {
 
   try {
     const user = await getUserById(decoded.id);
+    logger.debug('User found', user.username);
     if (rIsUserForbidden(res, user)) return;
     const correctPassword = await verifyPassword(request.password, user.password);
     if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
@@ -341,13 +366,16 @@ export async function uploadImage(req: Request, res: Response) {
     response.success = getClientAccount(user);
     response.message = 'Avatar changed';
 
+    logger.debug('Image uploaded', response);
     res.status(200).json(response);
   } catch (error) {
+    logger.error('Upload image', error);
     return respondWithError(res, 500, 'Internal server error');
   }
 }
 
 export async function deleteAccount(req: Request, res: Response) {
+  logger.debug('delete account', req.body);
   const request = verifyJoi<IAccountDeleteAccountRequest>(req, res, joi$deleteAccount);
   if (!request) return;
   const decoded = rGetTokenData(req, res);
@@ -356,11 +384,14 @@ export async function deleteAccount(req: Request, res: Response) {
   const user = await getUserById(decoded.id);
   if (!user) respondWithError(res, 400, 'user has already been removed from database');
 
+  logger.debug('User found', user.username);
+
   const correctPassword = await verifyPassword(request.password, user.password);
   if (!correctPassword) return respondWithError(res, 400, 'Incorrect password');
   if (user.banned) return respondWithError(res, 400, 'Cannot delete banned account');
-  if (user.flags.length !== 0)
+  if (user.flags.length !== 0) {
     return respondWithError(res, 400, 'Your account has been flagged and it cannot be removed from database');
+  }
 
   const email = user.email;
   const emailData: IMailAccountInfo = {
@@ -376,11 +407,13 @@ export async function deleteAccount(req: Request, res: Response) {
   const response: IResponse<string> = {
     success: 'Account successfully deleted',
   };
+  logger.debug('User deleted', response);
   res.status(200).json(response);
 }
 
 export async function checkOutTemporarilyToken(req: Request, res: Response) {
   const token = req.headers[TOKEN_HEADER];
+  logger.debug('Checking token', token);
   const isTokenBlackListedResult = await isTokenBlackListed(token as string);
   if (isTokenBlackListedResult) return respondWithError(res, 400, 'This token has already been used');
   const decoded = rGetTokenData(req, res, true) as IJWVerificationCode;
@@ -388,10 +421,12 @@ export async function checkOutTemporarilyToken(req: Request, res: Response) {
   const response: IResponse<VerificationType> = {
     success: decoded.type,
   };
+  logger.debug('Token checked', response);
   res.status(200).json(response);
 }
 
 export async function temporarilyTokenAccountAltering(req: Request, res: Response) {
+  logger.debug('Checking temporary token', req.headers[TOKEN_HEADER]);
   const response: IResponse<string> = {};
   const decoded = rGetTokenData(req, res, true) as IJWVerificationCode;
   if (!decoded) return;
@@ -401,6 +436,8 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
     if (isTokenBlackListedResult) return respondWithError(res, 400, 'This token has already been used');
     const user = await getUserById(decoded.id);
     if (rIsUserForbidden(res, user)) return;
+
+    logger.debug('User found', user.username);
 
     switch (decoded.type) {
       case VerificationType.PasswordReset:
@@ -421,7 +458,6 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
         if (!decoded.data) return respondWithError(res, 400, 'Invalid Token');
         response.success = 'Account verified';
         response.message = `Alright ${user.displayedName} your email has been changed`;
-        console.log(decoded.data);
         await changeEmailOnAccount(user, decoded.data, false);
         break;
 
@@ -432,9 +468,10 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
     user.verified = true;
     user.lastOnlineAt = Date.now();
     await user.save();
+    logger.debug('Token verified', response);
     res.status(200).json(response);
   } catch (error) {
-    logError(error, 'Verification code');
+    logger.error('Verification code failed', error);
     return respondWithError(res, 500, 'Internal server error');
   }
 }

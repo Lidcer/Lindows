@@ -1,0 +1,31 @@
+.overlay-blocker{
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    z-index: 9999999; 
+    transition: opacity 0.5s,background-color 0.5s ;
+    pointer-events: none;
+    background-color: transparent;
+}
+.block-events{
+    pointer-events: all;
+}
+
+.darken{
+    background-color: black;
+    opacity: 0.75;
+}
+
+.popup-element{
+    position: fixed;
+    z-index: 999999999;   
+}
+
+.popup{
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 999999;
+    transition: width 0.25, height 0.25;
+  }

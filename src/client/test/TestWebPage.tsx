@@ -12,7 +12,7 @@ export class TestWebPage extends React.Component {
             <a href='lype'>Lype</a>
           </li>
           <li>
-            <a href='appTester'>appTester</a>
+            <a href='app-tester'>appTester</a>
           </li>
         </ul>
       </div>

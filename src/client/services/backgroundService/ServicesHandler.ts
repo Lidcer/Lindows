@@ -1,6 +1,7 @@
 import { ILypeService } from './LypeServices';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
+import { attachDebugMethod } from '../../essential/requests';
 
 interface IBackgroundServices {
   name: string;
@@ -150,6 +151,6 @@ export function killBGService<T>(name: string): Promise<void> {
 export function startBackgroundServices(loadAllStartUpServices = false) {
   if (service) return service;
   service = new BackgroundServices(loadAllStartUpServices);
-  window.s = service;
+  attachDebugMethod('service', service);
   return service;
 }

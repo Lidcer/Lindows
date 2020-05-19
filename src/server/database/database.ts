@@ -22,12 +22,12 @@ export function setupDatabase(): Promise<void> {
       .then(() => {
         exists(data, async doesExist => {
           if (doesExist) {
-            await setupStorage();
+            await setupImages();
             resolve();
           } else {
             mkdir(data, async err => {
               if (err) return reject(err);
-              await setupStorage();
+              await setupImages();
               resolve();
             });
           }
@@ -36,16 +36,5 @@ export function setupDatabase(): Promise<void> {
       .catch(err => {
         reject(err);
       });
-  });
-}
-
-function setupStorage(): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      await setupImages();
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
   });
 }

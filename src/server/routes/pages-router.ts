@@ -11,6 +11,21 @@ export function pagesRouter() {
     });
   }
 
+  router.get(`/admin/**`, async (_, res) => {
+    const manifest = await getManifest();
+    res.render('admin.ejs', { manifest });
+  });
+
+  router.get(`/obsolete-browser**`, async (_, res) => {
+    const manifest = await getManifest();
+    res.render('obsolete-browser.ejs', { manifest });
+  });
+
+  router.get(`/terms-of-service**`, async (_, res) => {
+    const manifest = await getManifest();
+    res.render('terms-of-service.ejs', { manifest });
+  });
+
   router.get(`/**`, async (_, res) => {
     const manifest = await getManifest();
     res.render('page.ejs', { manifest });

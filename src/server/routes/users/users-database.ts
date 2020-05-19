@@ -4,6 +4,7 @@ import { hashPassword } from '../../database/passwordHasher';
 import { join } from 'path';
 import { exists, mkdir, unlink } from 'fs';
 import * as Jimp from 'jimp';
+import { StringSchema } from '@hapi/joi';
 
 export const imagesPath = ['data', 'avatars'];
 export const dataImages = join(process.cwd(), 'data', 'avatars');
@@ -24,7 +25,7 @@ export function setupImages(): Promise<void> {
   });
 }
 
-declare type UserAccountFlags = 'noImageUpload';
+export declare type UserAccountFlags = 'noImageUpload';
 export interface IMongooseUserSchema extends Document {
   username: string;
   displayedName: string;
@@ -34,13 +35,12 @@ export interface IMongooseUserSchema extends Document {
   createdAt: number;
   lastOnlineAt: number;
   avatar: string;
-  settings: string;
   email: string;
+  note: string;
   verified: boolean;
   ip: string[];
   roles: string[];
   flags: UserAccountFlags[];
-  permissions: string[];
 }
 
 const UserSchema = new Schema(
@@ -58,8 +58,6 @@ const UserSchema = new Schema(
     avatar: String,
     verified: Boolean,
     roles: [String],
-    settings: String,
-    permissions: [String],
     flags: [String],
   },
   {
@@ -71,159 +69,95 @@ const UserSchema = new Schema(
   },
 );
 
-const MongoUser = mongoose.model<IMongooseUserSchema>('User', UserSchema);
+export const MongoUser = mongoose.model<IMongooseUserSchema>('User', UserSchema);
+MongoUser.collection.createIndex({ username: 'text', displayedName: 'text' });
 
-export function getUserById(id: string): Promise<IMongooseUserSchema> {
-  return new Promise((resolve, reject) => {
-    MongoUser.findById(id)
-      .then(user => {
-        resolve(user);
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
+export async function getUserById(id: string): Promise<IMongooseUserSchema> {
+  return await MongoUser.findById(id);
 }
 
-export function doesUserWithDisplayedNamesExist(name: string): Promise<boolean> {
-  return new Promise((resolve, reject) => {
-    MongoUser.find()
-      .then(users => {
-        for (const user of users) {
-          if (user.displayedName.toLowerCase() === name.toLowerCase()) return resolve(true);
-        }
-        resolve(false);
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
+export async function doesUserWithDisplayedNamesExist(name: string) {
+  const users = await MongoUser.find();
+  for (const user of users) {
+    if (user.displayedName.toLowerCase() === name.toLowerCase()) return true;
+  }
+  return false;
 }
 
-export function findUserByName(username: string): Promise<IMongooseUserSchema> {
-  return new Promise((resolve, reject) => {
-    MongoUser.findOne({ username: username.toLowerCase().replace(/\s/g, '') })
-      .then(users => {
-        resolve(users);
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
+export async function findUserByName(username: string) {
+  return await MongoUser.findOne({ username: username.toLowerCase().replace(/\s/g, '') });
 }
 
-export function findUserByEmail(email: string): Promise<IMongooseUserSchema> {
-  return new Promise((resolve, reject) => {
-    MongoUser.findOne({ email })
-      .then(users => {
-        resolve(users);
-      })
-      .catch(err => {
-        reject(err);
-      });
-  });
+export async function findUserByEmail(email: string) {
+  return await MongoUser.findOne({ email });
 }
 
-export function registerUserInDatabase(
+export async function registerUserInDatabase(
   username: string,
   email: string,
   password: string,
   ip: string,
 ): Promise<IMongooseUserSchema> {
-  return new Promise(async (resolve, rejects) => {
-    let hashedPassword: string;
-    try {
-      hashedPassword = await hashPassword(password);
-      const schema = new MongoUser({
-        username: username.toLowerCase().replace(/\s/g, ''),
-        displayedName: username,
-        password: hashedPassword,
-        createdAt: Date.now(),
-        lastOnlineAt: Date.now(),
-        banned: false,
-        compromised: false,
-        note: '',
-        settings: '',
-        email,
-        flags: [],
-        roles: [],
-        verified: false,
-        ip: [ip],
-        permissions: [],
-      });
-      await schema.save();
-
-      resolve(schema);
-    } catch (error) {
-      return rejects(error);
-    }
+  const hashedPassword = await hashPassword(password);
+  const schema = new MongoUser({
+    username: username.toLowerCase().replace(/\s/g, ''),
+    displayedName: username,
+    password: hashedPassword,
+    createdAt: Date.now(),
+    lastOnlineAt: Date.now(),
+    banned: false,
+    compromised: false,
+    note: '',
+    settings: '',
+    email,
+    flags: [],
+    roles: [],
+    verified: false,
+    ip: [ip],
   });
+
+  await schema.save();
+  return schema;
 }
 
-export function getUserByAccountOrEmail(username: string, email?: string): Promise<IMongooseUserSchema | null> {
-  return new Promise(async resolve => {
-    if (!email) email = username;
-
-    const userUserName = await findUserByName(username);
-    if (userUserName) {
-      resolve(userUserName);
-      return;
-    }
-    const userEmail = await findUserByEmail(email);
-    if (userEmail) {
-      resolve(userEmail);
-      return;
-    }
-    return resolve(null);
-  });
+export async function getUserByAccountOrEmail(username: string, email?: string): Promise<IMongooseUserSchema | null> {
+  if (!email) email = username;
+  const userUserName = await findUserByName(username);
+  if (userUserName) {
+    return userUserName;
+  }
+  const userEmail = await findUserByEmail(email);
+  if (userEmail) {
+    return userEmail;
+  }
+  return null;
 }
 
-export function changePasswordOnAccount(
+export async function changePasswordOnAccount(
   user: IMongooseUserSchema,
   newPassword: string,
   shouldSave = true,
 ): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const hashedPassword = await hashPassword(newPassword);
-      user.password = hashedPassword;
-      user.lastOnlineAt = Date.now();
-      if (shouldSave) user.save();
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
+  const hashedPassword = await hashPassword(newPassword);
+  user.password = hashedPassword;
+  user.lastOnlineAt = Date.now();
+  if (shouldSave) user.save();
 }
 
-export function changeEmailOnAccount(user: IMongooseUserSchema, email: string, shouldSave = true): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      user.email = email;
-      user.lastOnlineAt = Date.now();
-      if (shouldSave) user.save();
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
+export async function changeEmailOnAccount(user: IMongooseUserSchema, email: string, shouldSave = true): Promise<void> {
+  user.email = email;
+  user.lastOnlineAt = Date.now();
+  if (shouldSave) user.save();
 }
 
-export function changeAvatar(user: IMongooseUserSchema, data: Buffer): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      await removeAvatarIfExist(user);
-      const clearedName = user.username.replace(/[^a-zA-Z ]/g, '');
-      const ImageName = `${clearedName}${Date.now()}.png`;
-      const imagePath = join(dataImages, `${ImageName}`);
-      await storeImage(data, imagePath);
-      user.avatar = ImageName;
-      await user.save();
-      resolve();
-    } catch (error) {
-      reject(error);
-    }
-  });
+export async function changeAvatar(user: IMongooseUserSchema, data: Buffer): Promise<void> {
+  await removeAvatarIfExist(user);
+  const clearedName = user.username.replace(/[^a-zA-Z ]/g, '');
+  const ImageName = `${clearedName}${Date.now()}.png`;
+  const imagePath = join(dataImages, `${ImageName}`);
+  await storeImage(data, imagePath);
+  user.avatar = ImageName;
+  await user.save();
 }
 
 export function storeImage(data: Buffer, path: string): Promise<void> {
@@ -262,6 +196,13 @@ function removeAvatarIfExist(user: IMongooseUserSchema): Promise<void> {
       });
     } else resolve();
   });
+}
+
+export async function findSimilarUser(query: string) {
+  query = query.toLowerCase();
+  // @ts-ignore
+  const result = await MongoUser.find({ $text: { $search: query, $caseSensitive: false, $diacriticSensitive: true } });
+  return result;
 }
 
 export function getUserImage(user: IMongooseUserSchema): string | null {

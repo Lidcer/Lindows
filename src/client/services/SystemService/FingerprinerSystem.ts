@@ -2,26 +2,37 @@ import { EventEmitter } from 'events';
 import fingerprintjs from 'fingerprintjs2';
 import { UAParser } from 'ua-parser-js';
 import MobileDetect from 'mobile-detect';
+import { BaseSystemService } from './BaseSystemService';
+import { SECOND } from '../../../shared/constants';
 
-export declare interface IFingerpriner {
-  on(event: 'ready', listener: (object: this) => void): this;
-}
-
-export class IFingerpriner extends EventEmitter {
-  private result: any[] = [];
-  private ready = false;
-
+export class Fingerpriner extends BaseSystemService {
+  private result: fingerprintjs.Component[] = [];
   constructor() {
     super();
-    fingerprintjs.get(result => {
-      this.result = result;
-      this.ready = true;
-      this.emit('ready', this);
+  }
+
+  start() {
+    return new Promise<void>((resolve, reject) => {
+      let done = false;
+      fingerprintjs.get(result => {
+        this.result = result;
+        if (!done) {
+          resolve();
+        }
+        done = true;
+      });
+      setTimeout(() => {
+        if (!done) {
+          reject();
+        }
+      }, SECOND * 10);
     });
   }
 
-  get isReady() {
-    return this.ready;
+  destroy() {}
+
+  get ok() {
+    return !!this.result.length;
   }
 
   get mobile() {
@@ -174,5 +185,9 @@ export class IFingerpriner extends EventEmitter {
   get audio(): string {
     const info = this.result.find(e => e.key === 'audio');
     return info ? info.value : null;
+  }
+
+  get allResults() {
+    return this.result;
   }
 }

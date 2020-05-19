@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faChevronRight, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 import './ContextMenu.scss';
 
@@ -8,12 +8,13 @@ export interface IElements {
   elements: IElement[];
   x: number;
   y: number;
+  onAnyClick?: (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
 }
 
 export interface IElement {
-  content?: string;
-  disabled?: boolean;
-  picture?: string;
+  content?: string | JSX.Element;
+  onClick?: (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  iconOrPicture?: string | IconDefinition;
   elements?: IElement[];
 }
 
@@ -59,16 +60,22 @@ export class ContextMenu extends React.Component<IElements, IState> {
     );
   };
 
+  handleClick = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>, element: IElement) => {
+    if (this.props.onAnyClick) this.props.onAnyClick(ev);
+    if (element.onClick) element.onClick(ev);
+  };
+
   item(element: IElement) {
     if (!element.content) {
       return <div className='context-separator'></div>;
     }
     return (
       <div
-        className={`context-menu-item${element.disabled ? ' context-disabled' : ''}`}
+        className={`context-menu-item${!element.onClick && !element.elements ? ' context-disabled' : ''}`}
         onMouseEnter={() => this.showInnerContext(element)}
+        onClick={ev => this.handleClick(ev, element)}
       >
-        {this.picture(element.picture)}
+        {this.icon(element.iconOrPicture)}
         <div className='context-column'>
           <span className='context-content'> {element.content} </span>
         </div>
@@ -119,13 +126,24 @@ export class ContextMenu extends React.Component<IElements, IState> {
     return <div className='context-menu'>{this.elementMap(element.elements)}</div>;
   };
 
-  picture = (srcImage?: string) => {
-    if (!srcImage) return <div className='context-empty-space'></div>;
-    return <img src={srcImage} />;
+  icon = (icon?: string | IconDefinition) => {
+    if (!icon) return null;
+    if (typeof icon === 'string') {
+      return (
+        <span className='context-icon'>
+          <img src={icon} />
+        </span>
+      );
+    }
+    return (
+      <span className='context-icon'>
+        <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
+      </span>
+    );
   };
 
   renderArrow = (elements?: IElement[]) => {
-    if (!elements) return <div className='context-empty-space'></div>;
+    if (!elements) return null;
     return <FontAwesomeIcon icon={faChevronRight}></FontAwesomeIcon>;
   };
 

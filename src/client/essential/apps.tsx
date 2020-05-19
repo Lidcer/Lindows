@@ -4,7 +4,8 @@ import { AccountManager, manifest as accountManagerManifest } from '../apps/Acco
 import { Lype, manifest as lypeManifest } from '../apps/Lype/Lype';
 import React from 'react';
 import { IManifest } from '../apps/BaseWindow/BaseWindow';
-import { services } from '../services/services';
+import { services } from '../services/SystemService/ServiceHandler';
+import { attachDebugMethod } from './requests';
 
 export declare type reactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -38,6 +39,7 @@ export function launchApp(appName: string) {
   }
   return false;
 }
+attachDebugMethod('launchApp', launchApp);
 
 export function appConstructorGenerator(appName: string) {
   const object = allApps.find(a => a.manifest.launchName.toLowerCase() === appName.toLowerCase());

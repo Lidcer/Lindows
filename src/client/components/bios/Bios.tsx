@@ -1,11 +1,11 @@
 import React from 'react';
 import './Bios.scss';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 import { UAParser } from 'ua-parser-js';
 import { Keypress } from '../../essential/constants/Keypress';
 import { stat } from 'fs';
-import { IIPResponse, IP } from '../../../shared/ApiRequestsResponds';
 import Axios from 'axios';
+import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
 
 interface IBIOSProps {
   next: (type: WebpageType) => void;

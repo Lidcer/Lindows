@@ -5,6 +5,7 @@ import { join } from 'path';
 import { readFile } from 'fs';
 import { logError } from './Error';
 import { stringify } from 'querystring';
+import { logger } from '../database/EventLog';
 
 const SUPPORT_EMAIL = 'somethingsometing';
 
@@ -45,8 +46,8 @@ export class MailService {
       this.sendMail(email, 'Verification code', text, html)
         .then(() => {
           this.addCoolDownToMail(email);
-          console.log(`Mail has been sent ${email}`);
-          console.log(JSON.stringify(accountInfo, undefined, 1));
+          logger.log(`Mail has been sent ${email}`);
+          logger.log(JSON.stringify(accountInfo, undefined, 1));
           resolve();
         })
         .catch(err => reject(err));

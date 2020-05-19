@@ -6,11 +6,11 @@ import {
   removeLypeFriend,
   unblockLypeUser,
   blockLypeUser,
-  findLypeFriend,
+  findLypeUsers,
 } from './lype-response';
 
 export function setupLypeUsersApi(router: Router) {
-  router.get('/api/v1/lype/check-lype-user', (req, res) => {
+  router.post('/api/v1/lype/check-lype-user', (req, res) => {
     checkLypeUser(req, res);
   });
 
@@ -18,8 +18,8 @@ export function setupLypeUsersApi(router: Router) {
     createLypeUser(req, res);
   });
 
-  router.get('/api/v1/lype/find-friend', (req, res) => {
-    findLypeFriend(req, res);
+  router.post('/api/v1/lype/find-users', (req, res) => {
+    findLypeUsers(req, res);
   });
 
   router.put('/api/v1/lype/add-friend', (req, res) => {

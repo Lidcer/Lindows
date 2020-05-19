@@ -4,7 +4,7 @@ import React from 'react';
 import './Terminal.scss';
 import { onTerminalCommand, onTab } from './commands';
 import { TerminalCommand } from './TerminalCommand';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 //TODO: add html parser
 
 interface ITerminal {

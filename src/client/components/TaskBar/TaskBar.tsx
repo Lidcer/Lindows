@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
 import { StartMenu } from '../StartMenu/StartMenu';
-import { services } from '../../services/services';
+import { services } from '../../services/SystemService/ServiceHandler';
 
 interface IState {
   time: string;
