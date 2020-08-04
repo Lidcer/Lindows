@@ -1,5 +1,5 @@
 import React from 'react';
-import './SelectBox.scss';
+import { BoxSelection } from './SelectBoxStyled';
 
 export interface IPos {
   pos: {
@@ -39,7 +39,7 @@ export class SelectBox extends React.Component<IPos, IState> {
   };
 
   render() {
-    return <div className='box-selection' style={this.style}></div>;
+    return <BoxSelection style={this.style}></BoxSelection>;
   }
 
   get style() {

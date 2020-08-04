@@ -5,6 +5,7 @@ import { ObjectSchema } from '@hapi/joi';
 import { TOKEN_HEADER } from '../../shared/constants';
 import * as jwt from 'jsonwebtoken';
 import { logger } from '../database/EventLog';
+import { PRIVATE_KEY } from '../config';
 
 export interface IJWTAccount {
   id: string;
@@ -67,12 +68,16 @@ export function getClientAccount(user: IMongooseUserSchema): IAccount {
   };
 }
 
-export function rGetTokenData(
+export function getToken(req: Request) {
+  return req.headers[TOKEN_HEADER];
+}
+
+export async function rGetTokenData(
   req: Request,
   res: Response,
   verificaiton = false,
-): IJWTAccount | IJWVerificationCode | null {
-  const token = req.headers[TOKEN_HEADER];
+): Promise<IJWTAccount | IJWVerificationCode | null> {
+  const token = getToken(req);
   if (!token) {
     respondWithError(res, 400, 'Missing token');
     return null;
@@ -81,7 +86,7 @@ export function rGetTokenData(
     respondWithError(res, 400, 'Invalid token provided');
     return null;
   }
-  const data = jwt.decode(token) as IJWVerificationCode;
+  const data = await jwt.verify(token, PRIVATE_KEY) as IJWVerificationCode;
   if (!data) {
     respondWithError(res, 400, 'Invalid token');
     return null;
@@ -105,7 +110,7 @@ export function rGetTokenData(
   return null;
 }
 
-export function getTokenData(req?: Request, token?: string): IJWTAccount | null {
+export async function getTokenData(req?: Request, token?: string): Promise<IJWTAccount | null> {
   if (!req && !token) return null;
   if (!token && req) {
     const t = req.headers[TOKEN_HEADER];
@@ -114,7 +119,7 @@ export function getTokenData(req?: Request, token?: string): IJWTAccount | null 
   }
   if (!token) return null;
   if (typeof token !== 'string') return null;
-  const data = jwt.decode(token) as IJWVerificationCode;
+  const data = await jwt.verify(token, PRIVATE_KEY) as IJWVerificationCode;
   if (!data) return null;
 
   if (data.id && data.exp) {

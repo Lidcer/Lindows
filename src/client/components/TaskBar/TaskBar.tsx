@@ -1,11 +1,14 @@
 import React from 'react';
 import moment from 'moment';
-import './TaskBar.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
 import { StartMenu } from '../StartMenu/StartMenu';
 import { services } from '../../services/SystemService/ServiceHandler';
+import { TaskBarNotificationHor, TaskBarNotificationVer, TaskBarExtended, TaskBarIcon, TaskBarOpenIcons,
+   TaskBarClockHor, TaskBarClockVer, TaskBarShowDesktopHor, TaskBarShowDesktopVer, TaskBarStartBtnHor,
+    TaskBarStartBtnVer, TaskBarGridHor, TaskBarGridVer, TaskBarBackground, Aero, TaskBarBottom, TaskBarTop,
+     TaskBarLeft, TaskBarRight } from './TaskBarStyled';
 
 interface IState {
   time: string;
@@ -62,37 +65,42 @@ export class TaskBar extends React.Component<{}, IState> {
   };
 
   render() {
+    const TaskBarClock = this.isHorizontal ? TaskBarClockHor : TaskBarClockVer;
+    const TaskBarShowDesktop = this.isHorizontal ? TaskBarShowDesktopHor : TaskBarShowDesktopVer;
+    const TaskBarStartBtn = this.isHorizontal ? TaskBarStartBtnHor : TaskBarStartBtnVer;
+    const TaskBarGrid = this.isHorizontal ? TaskBarGridHor : TaskBarGridVer;
+    const NavBar = this.navBar;
     return (
       <>
-        {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu}></StartMenu> : null}
-        <div className={this.getNavBarPosition('aero')}></div>
-        <div className={this.getNavBarPosition('task-bar-background')}></div>
-        <div className={this.getNavBarPosition(`task-bar-grid-${this.orientation} task-bar`)}>
-          <div className={`task-bar-start-btn-${this.orientation}`}>
+        {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu} /> : null}
+        <NavBar> <Aero /></NavBar>
+        <NavBar> <TaskBarBackground  style={{color:'blue'}}/> </NavBar>
+        <NavBar> <TaskBarGrid>
+          <TaskBarStartBtn>
             <img
               src='./assets/images/lidcer-logo.svg'
               alt='StartMenu'
               onClick={() => this.setState({ startMenu: !this.state.startMenu })}
             />
-          </div>
+          </TaskBarStartBtn>
 
           <p></p>
           {this.openApps}
           <p></p>
 
-          <div className={`task-bar-clock-${this.orientation}`}>
+
+          <TaskBarClock>
             <div>{this.state.time}</div>
             <div>{this.state.date}</div>
-          </div>
+          </TaskBarClock>
           {this.getIcon()}
-          <div className={`task-bar-show-desktop-${this.orientation}`} onClick={this.showDesktop}></div>
-        </div>
+          <TaskBarShowDesktop onClick={this.showDesktop}/>
+        </TaskBarGrid></NavBar>
       </>
     );
   }
 
   appClickStartMenu = (name: string) => {
-    console.log('working');
     this.setState({
       startMenu: false,
     });
@@ -140,30 +148,29 @@ export class TaskBar extends React.Component<{}, IState> {
     const active = window.active ? window.active : !!sameInstance.find(a => a.active);
     const multipleInstance = sameInstance.length > 1;
     return (
-      <div
+      <TaskBarOpenIcons
         key={index}
         //  onClick={() => this.openAppClick(app)}
-        className={`task-bar-open-icons`}
       >
-        <img className='task-bar-icon' src={window.state.options.image} alt={window.state.options.title} />
+        <TaskBarIcon src={window.state.options.image} alt={window.state.options.title} />
         {multipleInstance ? this.multipleInstances() : null}
-      </div>
+      </TaskBarOpenIcons>
     );
   };
 
   multipleInstances() {
-    return <div className='task-bar-extended'></div>;
+    return <TaskBarExtended />;
   }
 
   generateIcons = (app: BaseWindow, index: number) => {
     return (
-      <div
+      <TaskBarIcon
         key={index}
         onClick={() => this.openAppClick(app)}
-        className={`task-bar-open-icons ${app.active ? 'task-bar-open-icon-active' : ''}`}
+        className={`${app.active ? 'task-bar-open-icon-active' : ''}`}
       >
-        <img className='task-bar-icon' src={app.state.options.image} alt={app.state.options.title} />
-      </div>
+        <TaskBarIcon src={app.state.options.image} alt={app.state.options.title} />
+      </TaskBarIcon>
     );
   };
 
@@ -176,22 +183,19 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   getIcon() {
+     const TaskBarAlert = this.isHorizontal ? TaskBarNotificationHor : TaskBarNotificationVer; 
     if (notifications)
       return (
-        <div className={`task-bar-notification-${this.orientation}`}>
+        <TaskBarAlert>
           <FontAwesomeIcon icon={faCommentAlt} />
-        </div>
+        </TaskBarAlert>
       );
     else
       return (
-        <div className={`task-bar-notification-${this.orientation}`}>
+        <TaskBarAlert>
           <FontAwesomeIcon icon={faCommentAlt} />
-        </div>
+        </TaskBarAlert>
       );
-  }
-
-  get orientation() {
-    return this.isHorizontal ? 'hor' : 'ver';
   }
 
   get isHorizontal() {
@@ -206,10 +210,21 @@ export class TaskBar extends React.Component<{}, IState> {
 
   private showDesktop(event: React.MouseEvent) {
     const pross = services.processor.processes.filter(a => !a.minimized);
-    console.log(pross.length);
   }
 
-  getNavBarPosition(classes: string) {
-    return `${classes} task-bar-${navBarPos}`;
+  get navBar() {
+    switch (navBarPos) {
+      case 'bottom':
+        return TaskBarBottom;
+      case 'top':
+        return TaskBarTop;
+      case 'left':
+          return TaskBarLeft;
+      case 'right':
+          return TaskBarRight;
+      default:
+        break;
+    }
+
   }
 }

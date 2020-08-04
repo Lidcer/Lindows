@@ -1,11 +1,12 @@
 import React from 'react';
-import './Bios.scss';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { UAParser } from 'ua-parser-js';
 import { Keypress } from '../../essential/constants/Keypress';
 import { stat } from 'fs';
 import Axios from 'axios';
 import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
+import { BiosStyled, BiosTop, BiosTitle, BiosGradient, BiosNavBar, BiosButton, BiosMiddle, BiosSettings, BiosSystemInfo, BiosPopup,
+  BiosPopupInner, BiosPopupTitle, BiosPopupInnerContent, BiosPopupButtons, BiosInfo, BiosTopInfo, BiosBottomInfo, BiosBottom } from './BiosStyled';
 
 interface IBIOSProps {
   next: (type: WebpageType) => void;
@@ -29,12 +30,12 @@ interface IBIOSState {
   popup?: {
     title: string;
     content: string;
-    firstButton: IBIOSButton;
-    secondButton?: IBIOSButton;
-    thirdButton?: IBIOSButton;
+    firstButton: IBiosButton;
+    secondButton?: IBiosButton;
+    thirdButton?: IBiosButton;
   };
 }
-interface IBIOSButton {
+interface IBiosButton {
   content: string;
   selected: boolean;
   fun: () => void;
@@ -95,32 +96,32 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
   render() {
     return (
-      <div className='bios'>
+      <BiosStyled>
         {this.popup}
-        <div className='bios-top'>
-          <div className='bios-title'> BIOS SETUP UTILITY</div>
-          <div className='bios-gradient'> {this.renderGradient}</div>
-        </div>
-        <div className='bios-nav-bar'>
-          <span className={this.state.tab === 'main' ? 'bios-tab-active' : null} onClick={() => this.changeTab('main')}>
+        <BiosTop>
+          <BiosTitle> BIOS SETUP UTILITY</BiosTitle>
+          <BiosGradient> {this.renderGradient}</BiosGradient>
+        </BiosTop>
+        <BiosNavBar>
+          <span className={this.state.tab === 'main' ? 'active' : null} onClick={() => this.changeTab('main')}>
             Main
           </span>
           <span
-            className={this.state.tab === 'network' ? 'bios-tab-active' : null}
+            className={this.state.tab === 'network' ? 'active' : null}
             onClick={() => this.changeTab('network')}
           >
             Network
           </span>
-          <span className={this.state.tab === 'exit' ? 'bios-tab-active' : null} onClick={() => this.changeTab('exit')}>
+          <span className={this.state.tab === 'exit' ? 'active' : null} onClick={() => this.changeTab('exit')}>
             Exit
           </span>
-        </div>
-        <div className='bios-middle'>
+        </BiosNavBar>
+        <BiosMiddle>
           {this.renderTab}
           {this.info}
-        </div>
-        <div className='bios-bottom'>V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Icn</div>
-      </div>
+        </BiosMiddle>
+        <BiosBottom>V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Inc</BiosBottom>
+      </BiosStyled>
     );
   }
 
@@ -137,24 +138,26 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   get renderTab() {
     if (this.state.tab === 'main')
       return (
-        <div className='bios-settings'>
+        <BiosSettings>
           {this.systemInfo}
 
           <table>
-            <tr>
-              <td>Reset storage:</td>
-              <td>
-                <button onClick={this.resetStorage}>[ACTION]</button>
-              </td>
-            </tr>
-            <tr>
-              <td>Boot options</td>
-              <td>
-                <button onClick={this.bootOptionPopup}>[{this.bootOption}]</button>
-              </td>
-            </tr>
+            <tbody>
+              <tr>
+                <td>Reset storage:</td>
+                <td>
+                  <button onClick={this.resetStorage}>[ACTION]</button>
+                </td>
+              </tr>
+              <tr>
+                <td>Boot options:</td>
+                <td>
+                  <button onClick={this.bootOptionPopup}>[{this.bootOption}]</button>
+                </td>
+              </tr>
+            </tbody>
           </table>
-        </div>
+        </BiosSettings>
       );
     else if (this.state.tab === 'network') {
       if (this.networkStatus === 'unknown') {
@@ -178,8 +181,8 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
       } else {
         const netInfo = this.state.networkInfo;
         return (
-          <div className='bios-settings'>
-            <div className='bios-system-info'>
+          <BiosSettings>
+            <BiosSystemInfo>
               <span>IP: {netInfo.ip}</span>
               {netInfo.city ? <span>City: {netInfo.city}</span> : null}
               {netInfo.loc ? <span>Location: {netInfo.loc}</span> : null}
@@ -188,36 +191,36 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
               {netInfo.timezone ? <span>Timezone: {netInfo.timezone}</span> : null}
               {netInfo.region ? <span>Region: {netInfo.region}</span> : null}
               {netInfo.hostname ? <span>Hostname: {netInfo.hostname}</span> : null}
-            </div>
-          </div>
+            </BiosSystemInfo>
+          </BiosSettings>
         );
       }
     } else if (this.state.tab === 'exit') {
       return (
-        <div className='bios-settings'>
+        <BiosSettings>
           <table>
             <tr>
               <td>
-                <button className={true ? 'bios-button' : 'bios-button active'}>{'[Save changes & reboot]'}</button>
+                <BiosButton className={true ? '' : 'active'}>{'[Save changes & reboot]'}</BiosButton>
               </td>
             </tr>
             <tr>
               <td>
-                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Discard changes & reboot]'}</button>
+                <BiosButton className={false ? '' : 'active'}>{'[Discard changes & reboot]'}</BiosButton>
               </td>
             </tr>
             <tr>
               <td>
-                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Discard changes]'}</button>
+                <BiosButton className={false ? '' : 'active'}>{'[Discard changes]'}</BiosButton>
               </td>
             </tr>
             <tr>
               <td>
-                <button className={false ? 'bios-button' : 'bios-button active'}>{'[Load defaults]'}</button>
+                <BiosButton className={false ? '' : 'active'}>{'[Load defaults]'}</BiosButton>
               </td>
             </tr>
           </table>
-        </div>
+        </BiosSettings>
       );
     }
     return null;
@@ -237,7 +240,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     const os = userAgent.getOS();
     const engine = userAgent.getEngine();
     return (
-      <div className='bios-system-info'>
+      <BiosSystemInfo>
         <span>
           OS: {os.name} {os.version}
         </span>
@@ -250,7 +253,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         {cpu.architecture ? <span>CPU: {cpu.architecture}</span> : null}
         <span>Language: {systemInfo.language}</span>
         {this.getDevice(userAgent)}
-      </div>
+      </BiosSystemInfo>
     );
   }
 
@@ -259,14 +262,14 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     const popup = this.state.popup;
     return (
       <>
-        <div className='bios-popup'>
-          <div className='bios-popup-title'>
+        <BiosPopup>
+          <BiosPopupTitle>
             <span>{popup.title}</span>
-          </div>
-          <div className='bios-popup-inner'>
-            <div className='bios-popup-inner-content'>{popup.content}</div>
+          </BiosPopupTitle>
+          <BiosPopupInner>
+            <BiosPopupInnerContent>{popup.content}</BiosPopupInnerContent>
 
-            <div className='bios-popup-buttons'>
+            <BiosPopupButtons>
               <button
                 className={popup.firstButton.selected ? 'bios-active' : ''}
                 onMouseOver={() => this.selectHoverButtonPopup('first')}
@@ -292,9 +295,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
                   {popup.thirdButton.content}
                 </button>
               ) : null}
-            </div>
-          </div>
-        </div>
+            </BiosPopupButtons>
+          </BiosPopupInner>
+        </BiosPopup>
       </>
     );
   }
@@ -333,10 +336,10 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   get info() {
     if (window.innerWidth > window.innerHeight) {
       return (
-        <div className='bios-info'>
-          <div className='bios-top-info'>{this.state.rightSideInfo}</div>
-          <div className='bios-bottom-info'>test</div>
-        </div>
+        <BiosInfo>
+          <BiosTopInfo>{this.state.rightSideInfo}</BiosTopInfo>
+          <BiosBottomInfo>test</BiosBottomInfo>
+        </BiosInfo>
       );
     }
     return null;

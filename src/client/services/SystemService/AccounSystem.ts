@@ -13,7 +13,6 @@ import {
   IAccountDeleteAccountRequest,
   VerificationType,
 } from '../../../shared/ApiUsersRequestsResponds';
-import { services } from './ServiceHandler';
 import { disassembleError } from '../../essential/requests';
 import { fetchImage } from '../../essential/requests';
 import { BaseSystemService } from './BaseSystemService';
@@ -29,7 +28,8 @@ export interface IAccountInfo {
 }
 
 export class Account extends BaseSystemService {
-  private DEFAULT_AVATAR = '/assets/images/DefaultAvatar.svg';
+  private readonly SERVICE_NAME = '__accountManager__';
+  private readonly DEFAULT_AVATAR = '/assets/images/DefaultAvatar.svg';
   private _token = '';
   private accountId: string;
   private username: string;
@@ -39,7 +39,6 @@ export class Account extends BaseSystemService {
 
   private imageMap = new Map<string, string>();
   private avatar: string = null;
-  private readonly serviceName = 'accountManager';
 
   constructor(private broadcaster: Broadcaster, private network: Network) {
     super();
@@ -53,16 +52,21 @@ export class Account extends BaseSystemService {
     } catch (error) {
       /* ignored */
     }
-    this.broadcaster.on(`${this.serviceName}-login`, this.loginFromOtherSources);
-    this.broadcaster.on(`${this.serviceName}-logout`, this.logoutFromOtherSource);
+    this.broadcaster.on(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
+    this.broadcaster.on(`${this.SERVICE_NAME}-logout`, this.logoutFromOtherSource);
   };
 
-  on(event: 'ready', listener: (accountInfo: IAccountInfo | null) => void): void;
   on(event: 'imageReady', listener: (accountInfo: IAccountInfo | null) => void): void;
   on(event: 'login', listener: (accountInfo: IAccountInfo) => void): void;
-  on(value: 'logout', listener: () => void): void;
-  on(value: string | symbol, listener: (...args: any[]) => void): void {
-    this.eventEmitter.on(value, listener);
+  on(event: 'logout', listener: () => void): void;
+  on(event: string | symbol, listener: (...args: any[]) => void): void {
+    this.eventEmitter.on(event, listener);
+  }
+  private emit(event: 'imageReady', accountInfo: IAccountInfo | null): void;
+  private emit(event: 'login', accountInfo: IAccountInfo): void;
+  private emit(event: 'logout'): void;
+  private emit(event: string | symbol, ...args: any[]): void {
+    this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]);
   }
 
   removeListener(event: string | symbol, listener: (...args: any[]) => void){
@@ -75,7 +79,7 @@ export class Account extends BaseSystemService {
     this.accountId = account.accountId;
     this.avatar = account.avatar;
     this.fetchImage();
-    this.broadcaster.emit('login', this.account);
+    this.emit('logout');
     this.network.authenticate(this.token);
   };
 
@@ -83,8 +87,9 @@ export class Account extends BaseSystemService {
     this.username = undefined;
     this.displayedName = undefined;
     this.accountId = undefined;
+    this.emit('login', this.account);
+    this.network.unauthenticate();
     this.avatar = this.DEFAULT_AVATAR;
-    this.broadcaster.emit('logout');
   };
 
   public async register(username: string, email: string, password: string, repeatPassword: string) {
@@ -390,9 +395,9 @@ export class Account extends BaseSystemService {
       this.accountId = response.data.success.id;
       if (token && typeof token === 'string') {
         this.setToken(token);
-        this.eventEmitter.emit('login', this.account);
+        this.emit('login', this.account);
         this.network.authenticate(token);
-        services.broadcaster.emit(`${this.serviceName}-login`, this.account);
+        this.broadcaster.emit(`${this.SERVICE_NAME}-login`, this.account);
       }
     } else return false;
     return true;
@@ -403,8 +408,8 @@ export class Account extends BaseSystemService {
     this.accountId = undefined;
     this.avatar = undefined;
     localStorage.removeItem('auth');
-    this.eventEmitter.emit('logout');
-    services.broadcaster.emit(`${this.serviceName}-logout`);
+    this.emit('logout');
+    this.broadcaster.emit(`${this.SERVICE_NAME}-logout`);
   }
 
   private fetchImage() {
@@ -427,8 +432,8 @@ export class Account extends BaseSystemService {
     return accountInfo;
   }
   public destroy() {
-    this.broadcaster.removeListener(`${this.serviceName}-login`, this.loginFromOtherSources);
-    this.broadcaster.removeListener(`${this.serviceName}-logout`, this.logout);
+    this.broadcaster.removeListener(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
+    this.broadcaster.removeListener(`${this.SERVICE_NAME}-logout`, this.logout);
   }
 
   get ready() {

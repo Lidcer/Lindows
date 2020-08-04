@@ -4,11 +4,13 @@ import { UAParser } from 'ua-parser-js';
 import MobileDetect from 'mobile-detect';
 import { BaseSystemService } from './BaseSystemService';
 import { SECOND } from '../../../shared/constants';
+import { attachDebugMethod } from '../../essential/requests';
 
 export class Fingerpriner extends BaseSystemService {
   private result: fingerprintjs.Component[] = [];
   constructor() {
     super();
+    attachDebugMethod('fingerprinter', this);
   }
 
   start() {
@@ -16,6 +18,7 @@ export class Fingerpriner extends BaseSystemService {
       let done = false;
       fingerprintjs.get(result => {
         this.result = result;
+        this.injectPlugin();
         if (!done) {
           resolve();
         }
@@ -29,10 +32,68 @@ export class Fingerpriner extends BaseSystemService {
     });
   }
 
-  destroy() {}
+  destroy() {
+    window.removeEventListener('focus', this.setFocused);
+    window.removeEventListener('blur', this.setUnFocused);
+    if (!/windows/i.test(navigator.userAgent)) {
+      window.removeEventListener('touchstart', this.setTouch);
+    }
+  }
 
   get ok() {
     return !!this.result.length;
+  }
+
+  private injectPlugin() {
+    this.result.push({ key: 'usesTouch', value: false });
+    this.result.push({ key: 'focused', value: undefined });
+    this.result.push({ key: 'isStandalone', value: this.isStandalone });
+    this.result.push({ key: 'supportsLetAndConst', value: this.supportsLetAndConst });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', this.setFocused);
+      window.addEventListener('blur', this.setUnFocused);
+      if (!/windows/i.test(navigator.userAgent)) {
+        window.addEventListener('touchstart', this.setTouch);
+      }
+    }
+  }
+  private setFocused = () => {
+    const focused = this.result.find(f => f.key === 'focused');
+    if (!focused) this.result.push({ key: 'focused', value: true });
+    else focused.value = true;
+  };
+  private setUnFocused = () => {
+    const focused = this.result.find(f => f.key === 'focused');
+    if (!focused) this.result.push({ key: 'focused', value: false });
+    else focused.value = false;
+  };
+
+  setTouch() {
+    if (this.result) return;
+    const usesTouch = this.result.find(f => f.key === 'usesTouch');
+    if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
+    else usesTouch.value = true;
+  }
+
+  get supportsLetAndConst() {
+    try {
+      return new Function('let x = true; return x;')();
+    } catch {
+      return false;
+    }
+  }
+
+  get isStandalone() {
+    return !!window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true; // safari
+  }
+  get focused() {
+    const info = this.result.find(e => e.key === 'focused');
+    return info ? info.value : null;
+  }
+
+  get usesTouch() {
+    const info = this.result.find(e => e.key === 'usesTouch');
+    return info ? info.value : null;
   }
 
   get mobile() {

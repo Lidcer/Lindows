@@ -1,6 +1,6 @@
 import React from 'react';
-import './BlueScreen.scss';
 import { random } from 'lodash';
+import { BlueScreenStyle, BSODTitle, BSODContent, BSODwaiting, BSODStopCode } from './BlueScreenStyle';
 
 export interface IBlueScreenProps {
   errorCode?: string;
@@ -37,18 +37,18 @@ export class BlueScreen extends React.Component<IBlueScreenProps, IState> {
 
   render() {
     return (
-      <div className='blue-screen'>
-        <p className='bsod bsod-title'>:(</p>
-        <p className='bsod bsod-content'>
-          Your browser ran in to a problem and it needs to be redirected. We&apos;re are not collecting any data because
+      <BlueScreenStyle>
+        <BSODTitle>:(</BSODTitle>
+        <BSODContent>
+          Your browser ran in to a problem and it needs to be redirected. We&apos;re not collecting any data because
           we don&apos;t really care. We&apos;ll redirect you shortly.
-        </p>
+        </BSODContent>
 
-        <p className='bsod bsod-waiting'> {this.state.time}% waiting</p>
-        <p className='bsod bsod-stop-code'>
+        <BSODwaiting> {this.state.time}% waiting</BSODwaiting>
+        <BSODStopCode>
           Stop code: {this.props.errorCode ? this.props.errorCode : 'ERROR_404_PAGE_NOT_FOUND'}
-        </p>
-      </div>
+        </BSODStopCode>
+      </BlueScreenStyle>
     );
   }
 }

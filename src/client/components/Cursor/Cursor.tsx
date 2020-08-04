@@ -1,8 +1,10 @@
 import React from 'react';
-import './Cursor.scss';
 import { EventEmitter } from 'events';
+import { services } from '../../services/SystemService/ServiceHandler';
+import { CursorStyle } from './CursorStyled';
 interface IState {
   cursorType: CursorType;
+  enabled: boolean
   cursor: {
     x: number;
     y: number;
@@ -23,13 +25,31 @@ export declare type CursorType =
 
 const dynamicMouse = true;
 
+const storageProperties = {
+  enabled: 'lindow-mouse-enabled'
+}
+
 declare interface IMousePointer {
   on(event: 'change', listener: (type: CursorType) => void): this;
+  on(event: 'enableDisable', listener: (bool: Boolean, callback: (result:boolean) => void) => void): this;
 }
 
 class IMousePointer extends EventEmitter {
   changeMouse(type: CursorType) {
     this.emit('change', type);
+  }
+
+  async enableDisableMouse(bool: Boolean) {
+    return new Promise<boolean>(resolve => {
+      this.emit('enableDisable', bool, (result: boolean) => {
+        resolve(result);
+      });
+
+    })
+  }
+
+  get enabled() {
+    return services.browserStorage.getItem(storageProperties.enabled);
   }
 }
 export const mousePointer = new IMousePointer();
@@ -47,6 +67,7 @@ export class Cursor extends React.Component<{}, IState> {
 
     this.state = {
       cursorType: 'normal',
+      enabled : false,
       cursor: {
         rotate: 5,
         x: -50,
@@ -57,13 +78,31 @@ export class Cursor extends React.Component<{}, IState> {
 
   componentDidMount() {
     window.addEventListener('mousemove', this.mouseMove, false);
-    mousePointer.on('change', this.onMouseChangeFixPos);
-    document.getElementsByTagName('body')[0].style.cursor = 'none';
+    mousePointer.on('change', this.onMouseChangeFixPos);   
+    mousePointer.on('enableDisable', this.enableDisable);
+    const enabled = !!services.browserStorage.getItem(storageProperties.enabled);
+    this.setState({enabled});
+    if(enabled) {
+      document.body.style.cursor = 'none';
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener('mousemove', this.mouseMove, false);
-    document.getElementsByTagName('body')[0].style.cursor = '';
+    mousePointer.removeListener('change', this.onMouseChangeFixPos);   
+    mousePointer.removeListener('enableDisable', this.enableDisable);
+    document.body.style.cursor = '';
+  }
+
+  enableDisable = async (bool:Boolean, callback: (result:boolean) => void) => {
+      await services.browserStorage.setItem(storageProperties.enabled, !!bool);
+      this.setState({enabled:!!bool});
+      if (bool) {
+        document.body.style.cursor = 'none';
+      } else {
+        document.body.style.cursor = '';
+      }
+      callback(!!bool);
   }
 
   remoteMouseMove = (mouse: any) => {
@@ -71,6 +110,8 @@ export class Cursor extends React.Component<{}, IState> {
   };
 
   onMouseChangeFixPos = (cursorType: CursorType) => {
+    if(!this.state.enabled) return;
+
     switch (cursorType) {
       case 'diagonalResize1':
       case 'diagonalResize2':
@@ -89,6 +130,7 @@ export class Cursor extends React.Component<{}, IState> {
   };
 
   mouseMove = (event: MouseEvent) => {
+    if (!this.state.enabled) return;
     if (this.state.cursorType !== 'normal' || !dynamicMouse) {
       this.setState({
         //        cursorType,
@@ -114,6 +156,7 @@ export class Cursor extends React.Component<{}, IState> {
     this.mouseHistory.forEach(e => {
       avgX += e.x;
       avgY += e.y;
+
     });
 
     avgX = avgX / this.MAX_MOUSE_HISTORY;
@@ -186,7 +229,10 @@ export class Cursor extends React.Component<{}, IState> {
   }
 
   render() {
-    return <img className='cursor' style={this.mousePos} src={this.mouseSrc}></img>;
+    if (this.state.enabled) {
+      return <CursorStyle style={this.mousePos} src={this.mouseSrc}></CursorStyle>;
+    }
+    return null
   }
 
   get mouseSrc() {

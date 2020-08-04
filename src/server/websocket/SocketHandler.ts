@@ -40,7 +40,7 @@ export class WebSocket {
 
       client.on('authenticate', async (token: string) => {
         if (!this.socketValidator.validateString(client, token)) return;
-        const decode = getTokenData(undefined, token);
+        const decode = await getTokenData(undefined, token);
         if (!decode) {
           return client.emit('authenticate-failed', 'Invalid token');
         }

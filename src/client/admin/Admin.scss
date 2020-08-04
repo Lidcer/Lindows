@@ -69,9 +69,14 @@ ul {
 .toast{
     margin: 10px;
     min-width: 250px;
+    opacity: 1 !important;
+    border-radius: 0;
    background-color: #222;
 }
 
+.toast-header{
+    background-color: transparent;
+}
 .input-terminal{
     background-color:  #222;
     color: lime;

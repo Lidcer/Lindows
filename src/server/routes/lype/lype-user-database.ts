@@ -1,7 +1,6 @@
 import { Document, Schema } from 'mongoose';
 import { mongoose } from '../../database/database';
 import { IMongooseUserSchema, getUserById, getUserImage, findSimilarUser } from '../users/users-database';
-import { logError } from '../Error';
 import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsResponds';
 import { logger } from '../../database/EventLog';
 

@@ -1,7 +1,8 @@
-import { ILypeService } from './LypeServices';
+import { LypeService } from './LypeServices';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
 import { attachDebugMethod } from '../../essential/requests';
+import { services } from '../SystemService/ServiceHandler';
 
 interface IBackgroundServices {
   name: string;
@@ -12,7 +13,7 @@ interface IBackgroundServices {
 export type constructorGenerator = () => BaseService;
 
 const INSTALLED_SERVICES: IBackgroundServices[] = [
-  { name: 'lype', Service: () => new ILypeService(), origin: ILypeService },
+  { name: 'lype', Service: () => new LypeService(), origin: LypeService },
 ];
 
 const startUp: string[] = ['lype'];
@@ -93,7 +94,9 @@ class BackgroundServices extends EventEmitter {
 
   private findService(name: string) {
     for (const installedService of INSTALLED_SERVICES) {
-      if (installedService.name === name) return installedService.origin;
+      if (installedService.name === name) {
+        return installedService.origin;
+      }
     }
     return null;
   }
@@ -121,11 +124,11 @@ export function backgroundServices() {
   return startBackgroundServices(true);
 }
 
-export function bgService<T>(name: string): Promise<T> {
+export async function bgService<T>(name: string): Promise<T> {
   return new Promise(resolve => {
-    const justResolve = () => {
+    const justResolve = async () => {
       service.removeListener('ready', justResolve);
-      return resolve(service.startOrGetService<T>(name));
+      return resolve(await service.startOrGetService<T>(name));
     };
     if (service && service.ready) {
       return justResolve();

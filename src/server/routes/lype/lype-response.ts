@@ -10,7 +10,6 @@ import {
   ILypeUserID,
 } from '../../../shared/ApiLypeRequestsResponds';
 import { respondWithError, rGetTokenData, rIsUserForbidden, getClientAccount, verifyJoi } from '../common';
-import { logError } from '../Error';
 import {
   getLypeUserWithUserID,
   IMongooseLypeUserSchema,
@@ -31,7 +30,7 @@ import { TOKEN_HEADER } from '../../../shared/constants';
 
 export async function checkLypeUser(req: Request, res: Response) {
   logger.debug('checking user', req.headers[TOKEN_HEADER]);
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
 
   try {
@@ -64,7 +63,7 @@ export async function checkLypeUser(req: Request, res: Response) {
 
 export async function createLypeUser(req: Request, res: Response) {
   logger.debug('create lype user', req.headers[TOKEN_HEADER]);
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
 
   try {
@@ -88,7 +87,7 @@ export async function createLypeUser(req: Request, res: Response) {
 
 export async function findLypeUsers(req: Request, res: Response) {
   logger.debug('Find lype users', req.body);
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
   const request = verifyJoi<ILypeSearchQuery>(req, res, joi$LypeSearchQuery);
 
@@ -112,7 +111,7 @@ export async function findLypeUsers(req: Request, res: Response) {
 }
 
 export async function fetchLypeFriends(req: Request, res: Response) {
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
 
   try {
@@ -121,7 +120,7 @@ export async function fetchLypeFriends(req: Request, res: Response) {
 
     //    return res.status(200).json(response);
   } catch (error) {
-    logError(error, 'database');
+    logger.error(error, 'database');
   }
   respondWithError(res, 500, 'Checking out lype user');
 }
@@ -129,7 +128,7 @@ export async function fetchLypeFriends(req: Request, res: Response) {
 export async function addLypeFriend(req: Request, res: Response) {
   logger.debug('Find add friend', req.body);
 
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
   const request = verifyJoi<ILypeUserID>(req, res, joi$LypeUserID);
 
@@ -165,7 +164,7 @@ export async function addLypeFriend(req: Request, res: Response) {
 export async function removeLypeFriend(req: Request, res: Response) {
   logger.debug('Remove friend', req.body);
 
-  const result = rGetTokenData(req, res);
+  const result = await rGetTokenData(req, res);
   if (!result) return;
   const request = verifyJoi<ILypeUserID>(req, res, joi$LypeUserID);
 

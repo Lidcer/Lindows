@@ -10,11 +10,11 @@ export class BrowserStorage extends BaseSystemService {
 
   constructor() {
     super();
-    attachDebugMethod('broadcaster', this);
+    attachDebugMethod('BrowserStorage', this);
   }
 
   obsoleteBrowser() {
-    location.href = 'obsolete-browser';
+    location.href = 'unsupported-browser';
   }
 
   acceptTermsOfService() {
@@ -58,17 +58,10 @@ export class BrowserStorage extends BaseSystemService {
     }
   }
 
-  setItem(key: string, value: any): Promise<void> {
-    return new Promise(async (resolve, reject) => {
-      if (key.length < 3) return reject(new Error('key must have more than 3 characters'));
-      this.data[key] = value;
-      try {
-        await this.save();
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
-    });
+  async setItem(key: string, value: any): Promise<void> {
+    if (key.length < 3) throw new Error('key must have more than 3 characters');
+    this.data[key] = value;
+    await this.save();
   }
   getItem(key: string) {
     return this.data[key];

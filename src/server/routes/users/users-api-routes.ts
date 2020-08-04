@@ -11,6 +11,7 @@ import {
   changeDisplayedName,
   changeEmail,
   deleteAccount,
+  logOutUser,
 } from './users-responses';
 import { imagesPath } from './users-database';
 
@@ -21,6 +22,10 @@ export function setupUsersApi(router: Router) {
 
   router.post('/api/v1/users/login', (req, res) => {
     loginUser(req, res);
+  });
+
+  router.post('/api/v1/users/logout', (req, res) => {
+    logOutUser(req, res);
   });
 
   router.get('/api/v1/users/check-account', (req, res) => {

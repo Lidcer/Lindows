@@ -10,7 +10,7 @@ export class Broadcaster extends BaseSystemService {
 
   constructor() {
     super();
-    attachDebugMethod('broadcaster', this);
+    attachDebugMethod('BroadCaster', this);
   }
 
   start() {
@@ -53,6 +53,7 @@ export class Broadcaster extends BaseSystemService {
     if (!data) return;
     if (!Array.isArray(data)) return;
     if (!data[0]) return;
-    this.eventEmitter.emit.apply(this, data);
+    const ee = this.eventEmitter;
+    this.eventEmitter.emit.apply(ee, data);
   };
 }

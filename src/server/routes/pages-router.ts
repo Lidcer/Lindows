@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { getManifest } from './manifest-manager';
 import { IS_DEV } from '../config';
+import { isUserAdmin } from './admin/admin-api-routes';
 
 export function pagesRouter() {
   const router = Router();
@@ -11,14 +12,19 @@ export function pagesRouter() {
     });
   }
 
-  router.get(`/admin/**`, async (_, res) => {
+  router.get(`/admin/**`, async (req, res) => {
     const manifest = await getManifest();
-    res.render('admin.ejs', { manifest });
+    if (await isUserAdmin(req)) {
+      res.render('admin.ejs', { manifest });
+    }
+
+    return res.render('page.ejs', { manifest });
+
   });
 
-  router.get(`/obsolete-browser**`, async (_, res) => {
+  router.get(`/unsupported-browser**`, async (_, res) => {
     const manifest = await getManifest();
-    res.render('obsolete-browser.ejs', { manifest });
+    res.render('unsupported-browser.ejs', { manifest });
   });
 
   router.get(`/terms-of-service**`, async (_, res) => {
@@ -26,8 +32,12 @@ export function pagesRouter() {
     res.render('terms-of-service.ejs', { manifest });
   });
 
-  router.get(`/**`, async (_, res) => {
+  router.get(`/**`, async (req, res) => {
+    const userAgent = req.headers['user-agent']
     const manifest = await getManifest();
+    if (userAgent.match(/Trident.*rv[ :]*11\./)){
+      return res.render('unsupported-browser.ejs', { manifest });
+    }
     res.render('page.ejs', { manifest });
   });
 

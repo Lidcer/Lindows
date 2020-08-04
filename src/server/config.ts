@@ -9,6 +9,7 @@ interface IConfig {
   PRIVATE_KEY?: string;
   DATABASE_CONNECTION_STRING?: string;
   SENDGRIND_API_KEY?: string;
+  SECRET?: string,
 }
 
 const IS_DEV = process.env.NODE_ENV !== 'production';
@@ -20,6 +21,7 @@ if (IS_DEV) {
 let config: IConfig = {
   DATABASE_CONNECTION_STRING: '',
   PRIVATE_KEY: '',
+  SECRET: '',
   SENDGRIND_API_KEY: '',
   SERVER_PORT: 5050,
 };
@@ -37,19 +39,21 @@ try {
   /* ignored */
 }
 
-if (!process.env.PRIVATE_KEY && !config.PRIVATE_KEY) {
+if (!config.PRIVATE_KEY || !config.SECRET) {
   regenerateConfig();
 }
 
 // server
 const SERVER_PORT = process.env.PORT || config.SERVER_PORT || 5050;
 const WEBPACK_PORT = 8085; // For dev environment only
-const PRIVATE_KEY = process.env.PRIVATE_KEY || config.PRIVATE_KEY;
+const PRIVATE_KEY = config.PRIVATE_KEY;
 const DATABASE_CONNECTION_STRING = config.DATABASE_CONNECTION_STRING || 'mongodb://localhost:27017/lindows';
-const SENDGRIND_API_KEY = process.env.SENDGRID || config.SENDGRIND_API_KEY;
+const SENDGRIND_API_KEY = config.SENDGRIND_API_KEY;
+const SECRET = config.SECRET;
 
 export function regenerateConfig(shouldShutDownServer = false) {
   config.PRIVATE_KEY = randomBytes(64).toString('base64');
+  config.SECRET = randomBytes(64).toString('base64');
   updateConfig();
   if (shouldShutDownServer) {
     console.log('\n\n\n\n');
@@ -64,4 +68,4 @@ function updateConfig() {
   fs.writeFileSync(configJsonPath, JSON.stringify(config, undefined, 1));
 }
 
-export { IS_DEV, VERSION, SERVER_PORT, WEBPACK_PORT, DATABASE_CONNECTION_STRING, PRIVATE_KEY, SENDGRIND_API_KEY };
+export { IS_DEV, VERSION, SERVER_PORT, WEBPACK_PORT, DATABASE_CONNECTION_STRING, PRIVATE_KEY, SENDGRIND_API_KEY, SECRET };

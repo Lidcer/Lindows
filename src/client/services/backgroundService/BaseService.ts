@@ -1,6 +1,4 @@
-import { EventEmitter } from 'events';
-
-export abstract class BaseService extends EventEmitter {
+export abstract class BaseService {
   start(): void | Promise<void> {}
   destroy(): void | Promise<void> {}
 }

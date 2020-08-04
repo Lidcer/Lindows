@@ -10,7 +10,7 @@ export class TaskManager extends BaseCommand {
   }
 
   public onStart() {
-    launchApp('taskmanager');
+    launchApp('taskmgr');
 
     this.terminalCommand.finish();
   }

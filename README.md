@@ -9,7 +9,7 @@ npm run dev
 
 ### Usage
 
-- `npm run dev` - Client and server are in watch mode with source maps, opens [http://localhost:3000](http://localhost:3000)
+- `npm run dev` - Client and server are in watch mode with source maps, opens [http://localhost:5050](http://localhost:5050)
 - `npm run test` - Runs jest tests
 - `npm run link` - Runs es-lint
 - `npm run build` - `dist` folder will include all the needed files, both client (Bundle) and server.

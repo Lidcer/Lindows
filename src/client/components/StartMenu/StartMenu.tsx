@@ -1,7 +1,7 @@
 import React from 'react';
-import './StartMenu.scss';
 import { navBarPos } from '../TaskBar/TaskBar';
 import { allApps, launchApp } from '../../essential/apps';
+import { StartMenuStyled, TaskBarItem } from './StartMenuStyled';
 
 export interface IStartMenuProps {
   appClick: (name: string) => void;
@@ -21,19 +21,19 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
 
   render() {
     return (
-      <div className={`start-menu start-menu-${navBarPos}`} style={this.style}>
+      <StartMenuStyled style={this.style}>
         <div>{this.renderApps()} </div>
-      </div>
+      </StartMenuStyled>
     );
   }
 
   renderApps() {
     return allApps.map((e, i) => (
       <div key={i}>
-        <div className='task-bar-item' key={i} onClick={() => this.runApp(e.manifest.launchName)}>
+        <TaskBarItem key={i} onClick={() => this.runApp(e.manifest.launchName)}>
           <img src={e.manifest.icon} alt={e.manifest.launchName} />
           <span>{e.manifest.fullAppName}</span>
-        </div>
+        </TaskBarItem>
       </div>
     ));
   }
@@ -52,8 +52,17 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
   }
 
   get style() {
-    return {
-      height: `${this.state.height}px`,
-    };
+    switch (navBarPos) {
+      case 'bottom':
+        return {
+          bottom: '30pt',
+          transition: 'width 0.2s, height 0.2s',
+          height: `${this.state.height}px`,
+        }
+    
+      default:
+        break;
+    }
+
   }
 }

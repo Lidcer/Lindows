@@ -1,14 +1,15 @@
-.context-menu {
+import styled from 'styled-components';
+
+export const ContextMenuStyled = styled.div`
     position: fixed;
     z-index: 999999;
     color: white;
     background-color: #2b2b2b;
     border: 1px solid #808080;
     padding: 5pt 2pt;
+`;
 
-}
-
-.context-menu-item {
+export const ContextMenuItem = styled.div`
     padding: 5pt;
     display: flex;
 
@@ -21,27 +22,27 @@
         width: 10pt;
         padding-right: 5pt;
     }
-}
+`;
 
-.context-column {
+export const ContextColumn = styled.div`
     width: 100%;
-}
+`;
 
-.context-separator {
+export const ContextSeparator = styled.div`
     width: 100%;
     height: 1px;
     margin: 2pt 0pt;
     background-color: #808080;
     border-bottom: 1 solid #808080;
-}
+`;
 
-.context-empty-space {
+export const ContextEmptySpace = styled.div`
     height: 10pt;
     width: 10pt;
     padding-right: 5pt;
-}
+`;
 
-.context-disabled {
+export const ContextDisabled = styled.div`
     color: #616161;
     padding: 5pt;
 
@@ -58,13 +59,13 @@
     svg {
         filter: grayscale(100%);
     }
-}
+`;
 
-.context-icon{
+export const ContextIcon = styled.span`
     padding-right: 10px;
     font-size: 15px;
     img{
         width: 25px;
         height: 25px;
     }
-}
+`;

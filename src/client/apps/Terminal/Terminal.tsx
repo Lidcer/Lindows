@@ -39,7 +39,7 @@ export class Terminal extends BaseWindow<ITerminal> {
     super(
       props,
       manifest,
-      { width: 500, showIcon: true, title: 'Terminal', image: manifest.icon },
+      { width: 500, showIcon: true},
       {
         afterCursor: '',
         beforeCursor: '',
@@ -49,14 +49,6 @@ export class Terminal extends BaseWindow<ITerminal> {
         history: [],
       },
     );
-  }
-
-  onStartUp() {
-    this.changeOptions({
-      showIcon: true,
-      title: 'Terminal',
-      image: manifest.icon,
-    });
   }
 
   renderInside() {
@@ -83,7 +75,7 @@ export class Terminal extends BaseWindow<ITerminal> {
     return (
       <>
         <span className='terminal-name'>
-          {this.variables.deviceInfo}@{this.variables.userName}
+        {this.variables.userName}@{this.variables.deviceInfo}
         </span>
         <span>:</span>
         <span className='terminal-input'>{this.variables.beforeCursor}</span>
@@ -120,7 +112,6 @@ export class Terminal extends BaseWindow<ITerminal> {
   };
 
   onKeyDown = (event: KeyboardEvent) => {
-    if (this.variables.active) return;
     const variables = { ...this.variables };
     if (event.key.length <= 1) {
       if (event.key === ' ') this.currentTabSuggestion = [];
@@ -129,6 +120,7 @@ export class Terminal extends BaseWindow<ITerminal> {
       switch (event.key) {
         case 'Enter':
           const entry = `${variables.beforeCursor}${variables.afterCursor}`;
+          if(!entry) return;
           if (entry === 'clear' || entry === 'cls') {
             variables.beforeCursor = '';
             variables.afterCursor = '';
@@ -223,15 +215,5 @@ export class Terminal extends BaseWindow<ITerminal> {
     if (this.variables.active) {
       this.variables.active._bounds = this.bounds;
     }
-  }
-
-  onFocus() {
-    window.addEventListener('keydown', this.onKeyDown, false);
-  }
-  onBlur() {
-    window.removeEventListener('keydown', this.onKeyDown, false);
-  }
-  onClose() {
-    window.removeEventListener('keydown', this.onKeyDown, false);
   }
 }

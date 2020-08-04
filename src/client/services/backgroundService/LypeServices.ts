@@ -12,6 +12,7 @@ import {
   LypeStatus,
   ILypeFriendsUserResponse,
 } from '../../../shared/ApiLypeRequestsResponds';
+import { EventEmitter } from 'events';
 
 export interface ILypeAccountInfo extends IAccountInfo {
   customStatus?: string;
@@ -27,18 +28,12 @@ export enum LypeServiceState {
   Error = 'error',
 }
 
-export declare interface ILypeService extends BaseService {
-  on(event: 'destroy', listener: () => void): this;
-  on(event: 'stateChange', listener: (newState: LypeServiceState) => void): this;
-}
-
-export class ILypeService extends BaseService {
-  private browserStorageKey = '__lype__';
-  private serviceName = 'lype';
-  private DEFAULT_AVATAR = '/assets/images/DefaultAvatar.svg';
+export class LypeService extends BaseService {
+  private readonly SERVICE_NAME = 'lype';
+  private readonly DEFAULT_AVATAR = '/assets/images/DefaultAvatar.svg';
+  private readonly BROWSER_STORAGE_KEY = '__lype__';
   private _state: LypeServiceState = LypeServiceState.NotReady;
   private errMessage = '';
-
   private id = '';
   private username = '';
   private displayedName = '';
@@ -49,6 +44,9 @@ export class ILypeService extends BaseService {
   private _friendRequest: ILypeAccount[] = [];
   private _pendingRequest: ILypeAccount[] = [];
   private _blocked: ILypeAccount[] = [];
+  private eventEmitter = new EventEmitter();
+  private notificationService: NotificationService;
+
   constructor() {
     super();
     this.avatar = this.DEFAULT_AVATAR;
@@ -58,17 +56,70 @@ export class ILypeService extends BaseService {
     this.actualStart();
   };
 
+  destroy() {
+    services.account.removeListener('login', this.login);
+    services.account.removeListener('logout', this.logout);
+
+    services.network.socket.removeListener('lype-friend-request', this.socketFriendRequestAdd);
+    services.network.socket.removeListener('lype-friend-remove', this.socketFriendRemove);
+    services.network.socket.removeListener('lype-friend-add', this.socketFriendAdd);
+
+    for (const thing in LypeServiceState) {
+      services.broadcaster.removeListener(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
+    }
+    this.emit('destroy');
+    this.eventEmitter.removeAllListeners();
+  }
+
+  socketFriendRequestAdd = (account: ILypeAccount) => {
+    const friend = this._friendRequest.find(f => f.id === account.id);
+    if (!friend) {
+      this._friendRequest.push(friend);
+      this.emit('update');
+    }
+  };
+
+  socketFriendAdd = (account: ILypeAccount) => {
+    const friend = this._friends.find(f => f.id === account.id);
+    if (!friend) {
+      this._friends.push(friend);
+      const friendRequest = this._friendRequest.find(f => f.id === account.id);
+      const indexOfFriendRequest = this._friendRequest.indexOf(friendRequest);
+      if (indexOfFriendRequest !== -1) this._friendRequest.splice(indexOfFriendRequest, 1);
+
+      const pendingRequest = this._pendingRequest.find(f => f.id === account.id);
+      const indexOfPendingRequest = this._pendingRequest.indexOf(pendingRequest);
+      if (indexOfPendingRequest !== -1) this._friendRequest.splice(indexOfPendingRequest, 1);
+
+      this.emit('update');
+    }
+  };
+
+  socketFriendRemove = (account: ILypeAccount) => {
+    const friend = this._friends.find(f => f.id === account.id);
+    if (friend) {
+      const indexOf = this._friends.indexOf(friend);
+      if (indexOf !== -1) this._friends.splice(indexOf, 1);
+      this.emit('update');
+    }
+  };
+
   actualStart = async () => {
     if (!services.ready) {
       services.on('allReady', this.actualStart);
       return;
     }
     services.removeListener('allReady', this.actualStart);
+
     services.account.on('login', this.login);
     services.account.on('logout', this.logout);
     for (const thing in LypeServiceState) {
-      services.broadcaster.on(`${this.serviceName}-${thing}`, this.broadcaster);
+      services.broadcaster.on(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
     }
+
+    services.network.socket.on('lype-friend-request', this.socketFriendRequestAdd);
+    services.network.socket.on('lype-friend-remove', this.socketFriendRemove);
+    services.network.socket.on('lype-friend-add', this.socketFriendAdd);
 
     const token = services.account.token;
     if (!token) {
@@ -81,16 +132,6 @@ export class ILypeService extends BaseService {
       /* ignored */
     }
   };
-
-  destroy() {
-    services.account.removeListener('login', this.login);
-    services.account.removeListener('logout', this.logout);
-    for (const thing in LypeServiceState) {
-      services.broadcaster.removeListiner(`${this.serviceName}-${thing}`, this.broadcaster);
-    }
-    this.emit('destroy');
-    this.removeAllListeners();
-  }
 
   broadcaster = () => {
     /* ee */
@@ -110,7 +151,6 @@ export class ILypeService extends BaseService {
         undefined,
         axiosRequestConfig,
       );
-      console.log(response);
       const ok = this.disassembleResponse(response);
       if (ok) {
         this.setState(LypeServiceState.Ready);
@@ -272,7 +312,7 @@ export class ILypeService extends BaseService {
       this._pendingRequest = response.data.success.pendingRequest;
       this._blocked = response.data.success.blocked;
 
-      services.broadcaster.emit(`${this.serviceName}-login`, this.account);
+      services.broadcaster.emit(`${this.SERVICE_NAME}-login`, this.account);
     } else return false;
     return true;
   }
@@ -281,8 +321,26 @@ export class ILypeService extends BaseService {
     if (this._state === state) return;
     if (this._state !== 'error') this.errMessage = '';
     this._state = state;
-    services.broadcaster.emit(`${this.serviceName}-${state}`);
+    services.broadcaster.emit(`${this.SERVICE_NAME}-${state}`);
     this.emit('stateChange', this._state);
+  }
+
+  on(event: 'friendRequest', listener: (lypeAccount: ILypeAccount) => void): void;
+  on(event: 'friendRemove', listener: (lypeAccount: ILypeAccount) => void): void;
+  on(event: 'friendAdd', listener: (lypeAccount: ILypeAccount) => void): void;
+  on(event: 'destroy', listener: (lypeAccount: ILypeAccount) => void): void;
+  on(event: 'stateChange', listener: (newState: LypeServiceState) => void): void;
+  on(event: string | symbol, listener: (...args: any[]) => void) {
+    this.eventEmitter.on(event, listener);
+  }
+  private emit(event: 'destroy'): void;
+  private emit(event: 'update'): void;
+  private emit(event: 'stateChange', newState: LypeServiceState): void;
+  private emit(event: string | symbol, ...args: any[]) {
+    this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]);
+  }
+  removeListener(event: string | symbol, listener: (...args: any[]) => void){
+    this.eventEmitter.removeListener(event, listener);
   }
 
   get errorMessage() {

@@ -1,5 +1,4 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
-import './AccountManager.scss';
 import React from 'react';
 import { AccountManagerWebpage } from './AccountManagerWebpage';
 

@@ -1,161 +1,171 @@
-.aero {
+import styled from 'styled-components';
+import { alwaysOnTop } from './../../Constants';
+export const zIndex = alwaysOnTop;
+
+export const Aero = styled.div`
+  width: 100%;
+  height: 100%;
   filter: blur(6px);
   backdrop-filter: blur(6px);
-  z-index: 20000 !important;
-}
+  z-index: ${zIndex - 20} !important;
 
-.hover {
+`;
+
+export const hover = `
   transition: background-color 0.05s ease-out;
-
+  
   &:hover {
-    background-color: rgba($color: #ffffff, $alpha: 0.15);
+    background-color: rgba(255, 255, 255, 0.15);
     transition: background-color 0.05s ease-out;
   }
-}
 
-.task-bar {
+`
+
+export const TaskbarStyled = styled.div`
   color: white;
   opacity: 100;
   user-select: none;
   overflow: hidden;
   position: absolute;
-  z-index: 20010 !important;
-}
+  z-index: ${zIndex - 10} !important;
+`;
 
-.task-bar-background {
+export const TaskBarBackground = styled.div`
+  width: 100%;
+  height: 100%;
   position: absolute;
-  z-index: 20005 !important;
+  z-index: ${zIndex - 10} !important;
   opacity: 0.9;
   background-color: black;
+  background-color: rgba(255, 255, 255, 0.5);
   background-image: url(/assets/images/noise.png);
-}
+  `;
 
-.task-bar-bottom {
+export const TaskBarBottom = styled.div`
   position: absolute;
-  z-index: 10;
+  color: white;
+  z-index: ${zIndex - 10} !important;
   bottom: 0;
   width: 100%;
   height: 30pt;
-}
+`;
 
-.task-bar-top {
+export const TaskBarTop = styled.div`
   position: absolute;
-  z-index: 10;
+  color: white;
+  z-index: ${zIndex - 10} !important;
   top: 0;
   width: 100%;
   height: 30pt;
-}
+  `;
 
-.task-bar-left {
+export const TaskBarLeft = styled.div`
   position: absolute;
-  z-index: 10;
+  color: white;
+  z-index: ${zIndex - 10} !important;
   height: 100%;
   width: 50pt;
-}
+  `;
 
-.task-bar-right {
+export const TaskBarRight = styled.div`
   position: absolute;
+  color: white;
   height: 100%;
   right: 0;
   width: 50pt;
-}
+`;
 
-.task-bar-grid-hor {
+export const TaskBarGridHor = styled.div`
   display: grid;
   grid-template-columns: repeat(2, min-content) auto repeat(5, min-content);
   grid-template-rows: 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
-}
+`;
 
-.task-bar-grid-ver {
+export const TaskBarGridVer = styled.div`
   display: grid;
   grid-template-rows: repeat(2, min-content) auto repeat(5, min-content);
   grid-template-columns: 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
-}
+`;
 
 
-.task-bar-clock-hor {
-  @extend .hover;
+export const TaskBarClockHor = styled.div`
+  ${hover}
 
   font-size: 10pt;
   text-align: center;
   width: auto;
   height: auto;
   padding: 0 4pt;
-  //padding-right: 1pt;
-}
+`;
 
-.task-bar-clock-ver {
-  @extend .hover;
+export const TaskBarClockVer = styled.div`
+  ${hover}
 
   font-size: 8pt;
 
   text-align: center;
   width: 100%;
   padding: 0;
-  //padding-right: 1pt;
+`;
 
-}
-
-.task-bar-show-desktop-hor {
-  @extend .hover;
+export const TaskBarShowDesktopHor = styled.div`
+  ${hover}
 
   width: 5pt;
   height: 100%;
   border-left: 1px solid rgba($color: #ffffff, $alpha: 0.25);
-}
+`;
 
-.task-bar-show-desktop-ver {
-  @extend .hover;
+export const TaskBarShowDesktopVer = styled.div`
+  ${hover}
 
   height: 5pt;
   width: 100%;
   border-top: 1px solid rgba($color: #ffffff, $alpha: 0.25);
-}
+`;
 
-.task-bar-start-btn-ver {
-  @extend .hover;
+export const TaskBarStartBtnVer = styled.div`
+  ${hover}
   padding: 5pt;
-  //padding-left: 13pt;
+
 
   text-align: center;
 
   img {
     height: 20pt;
   }
-}
+`;
 
-.task-bar-start-btn-hor {
-  @extend .hover;
+export const TaskBarStartBtnHor = styled.div`
+  ${hover}
   text-align: center;
   padding: 5pt;
 
   img {
     height: 20pt;
   }
-}
+`;
 
-.task-bar-notification-hor {
-  @extend .hover;
+export const TaskBarNotificationHor = styled.div`
   padding: 8pt;
   font-size: 15pt;
-}
+`;
 
-.task-bar-notification-ver {
-  @extend .hover;
-  //text-align: center;
+export const TaskBarNotificationVer = styled.div`
+  ${hover}
   padding: 5pt 0;
   align-items: center;
   align-content: center;
   text-align: center;
   width: 100%;
   font-size: 12pt;
-}
+`;
 
-.task-bar-open-icons {
+export const TaskBarOpenIcons = styled.div`
   height: 28pt;
   width: 30pt;
   padding-left: 7pt;
@@ -168,22 +178,22 @@
   border-bottom: 1pt solid #76b9ed;
 
   &:hover {
-    background-color: transparentize($color: #ffffff, $amount: 0.75);
+    background-color: rgba(255, 255, 255, 0.75);
   }
-}
+`;
 
-.task-bar-open-icon-active {
-  background-color: transparentize($color: #ffffff, $amount: 0.75);
-}
+export const TaskBarOpenIconActive = styled.div`
+  background-color: rgba(255, 255, 255, 0.75);
+`;
 
-.task-bar-icon {
+export const TaskBarIcon = styled.img`
   height: 20pt;
   width: 20pt;
   padding: 0;
   margin: 0;
-}
+`;
 
-.task-bar-extended {
+export const TaskBarExtended = styled.div`
   position: relative;
   height: 100%;
   width: 2pt;
@@ -192,7 +202,4 @@
   &:hover {
     border-left: 1px solid #202123;
   }
-
-  // border-left: 1px solid black;
-  // background-color: orange;
-}
+`;

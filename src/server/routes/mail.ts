@@ -3,8 +3,6 @@ import request from 'request';
 import { MINUTE } from '../../shared/constants';
 import { join } from 'path';
 import { readFile } from 'fs';
-import { logError } from './Error';
-import { stringify } from 'querystring';
 import { logger } from '../database/EventLog';
 
 const SUPPORT_EMAIL = 'somethingsometing';
@@ -41,7 +39,7 @@ export class MailService {
       try {
         html = await readHTML('emailVerification', accountInfo);
       } catch (error) {
-        logError(error, 'Unable to read template file');
+        logger.error(error, 'Unable to read template file');
       }
       this.sendMail(email, 'Verification code', text, html)
         .then(() => {
@@ -64,7 +62,7 @@ export class MailService {
       try {
         html = await readHTML('newEmailVerification', accountInfo);
       } catch (error) {
-        logError(error, 'Unable to read template file');
+        logger.error(error, 'Unable to read template file');
       }
 
       this.sendMail(email, 'Verification code', text, html)
@@ -86,7 +84,7 @@ export class MailService {
       try {
         html = await readHTML('passwordReset', accountInfo);
       } catch (error) {
-        logError(error, 'Unable to read template file');
+        logger.error(error, 'Unable to read template file');
       }
 
       this.sendMail(email, 'Verification code', text, html)
@@ -105,7 +103,7 @@ export class MailService {
       try {
         html = await readHTML('deletedAccount', accountInfo);
       } catch (error) {
-        logError(error, 'Unable to read template file');
+        logger.error(error, 'Unable to read template file');
       }
 
       this.sendMail(email, 'Verification code', text, html)
@@ -127,7 +125,7 @@ export class MailService {
       try {
         html = await readHTML('accountBanned', accountInfo);
       } catch (error) {
-        logError(error, 'Unable to read template file');
+        logger.error(error, 'Unable to read template file');
       }
 
       this.sendMail(email, 'Verification code', text, html)

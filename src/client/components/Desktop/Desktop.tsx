@@ -3,7 +3,6 @@ import { TaskBar } from '../TaskBar/TaskBar';
 import { Cursor } from '../Cursor/Cursor';
 import { ContextMenu, IElement } from '../ContextMenu/ContextMenu';
 import { SelectBox } from '../SelectBox/SelectBox';
-import './Desktop.scss';
 import Axios from 'axios';
 import { launchApp } from '../../essential/apps';
 import { HotKeyHandler } from '../../essential/apphotkeys';
@@ -13,6 +12,8 @@ import { Keypress } from '../../essential/constants/Keypress';
 import { startBackgroundServices, backgroundServices } from '../../services/BackgroundService/ServicesHandler';
 import { ActivationWatermark } from '../activationWatermark/activationWatermark';
 import { popup } from '../Popup/popupRenderer';
+import { NotificationsDisplay } from '../Notifications.tsx/NotificationsDisplay';
+import { ScreenStyled, Wallpaper } from './DesktopStyled';
 
 interface IState {
   ready: boolean;
@@ -184,9 +185,10 @@ export class Desktop extends React.Component<{}, IState> {
         {this.processApps}
         {this.shouldShowSelectionBox()}
         <div></div>
-        <div className='screen'>{this.wallpaper()}</div>
-        <TaskBar></TaskBar>
-        <ActivationWatermark></ActivationWatermark>
+        <ScreenStyled>{this.wallpaper()}</ScreenStyled>
+        <TaskBar />
+        <NotificationsDisplay />
+        <ActivationWatermark />
       </div>
     );
   }
@@ -206,8 +208,8 @@ export class Desktop extends React.Component<{}, IState> {
   wallpaper() {
     if (!this.state.wallpaper || !this.state.wallpaper.base64) {
       return (
-        <img
-          className={this.wallpaperClass}
+        <Wallpaper
+          style={this.wallpaperStyle}
           onMouseDown={this.onWallpaperMouseDown}
           onMouseUp={this.onWallpaperMouseUp}
           onContextMenu={this.wallpaperClick}
@@ -218,8 +220,8 @@ export class Desktop extends React.Component<{}, IState> {
       );
     }
     return (
-      <img
-        className={this.wallpaperClass}
+      <Wallpaper
+        style={this.wallpaperStyle}
         onContextMenu={this.wallpaperClick}
         src={this.state.wallpaper.base64}
         alt='bliss'
@@ -257,7 +259,7 @@ export class Desktop extends React.Component<{}, IState> {
     );
   };
 
-  get wallpaperClass() {
-    return this.state.landscape ? 'wallpaper wallpaper-landscape' : 'wallpaper wallpaper-portrait';
+  get wallpaperStyle() {
+    return this.state.landscape ? {width: '100%', height: 'auto' } : {width: 'auto', height: '100%' };
   }
 }

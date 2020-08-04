@@ -45,7 +45,6 @@ import {
 import { verifyPassword } from '../../database/passwordHasher';
 import { SpamProtector } from '../SpamProtector';
 import fileUpload = require('express-fileupload');
-import { logError } from '../Error';
 import { randomBytes } from 'crypto';
 import { mailService } from '../../main';
 import { isTokenBlackListed, addTokenToBlackList } from '../../database/tokensBlacklist';
@@ -58,8 +57,10 @@ import {
   rGetTokenData,
   IJWTAccount,
   IJWVerificationCode,
+  getToken,
 } from '../common';
 import { logger } from '../../database/EventLog';
+import { EDESTADDRREQ } from 'constants';
 
 const temporaryToken = randomBytes(64).toString('base64');
 
@@ -139,7 +140,7 @@ export async function loginUser(req: Request, res: Response) {
     const verified = await verifyPassword(request.password, user.password);
     if (!verified) return respondWithError(res, 400, 'Incorrect password');
   } catch (error) {
-    logError(error, 'Verifying Password');
+    logger.error(error, 'Verifying Password');
     return respondWithError(res, 500, 'Internal server error');
   }
 
@@ -155,12 +156,13 @@ export async function loginUser(req: Request, res: Response) {
   logger.debug(`User loggined`, response);
   res.header(TOKEN_HEADER, jwtToken);
   res.status(200).json(response);
+  req.session.token = jwtTokenData;
 }
 
 //Check user
 export async function checkUser(req: Request, res: Response) {
   logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
-  const decoded: IJWTAccount = rGetTokenData(req, res);
+  const decoded: IJWTAccount = await rGetTokenData(req, res);
   if (!decoded) return;
 
   let user: IMongooseUserSchema;
@@ -176,17 +178,20 @@ export async function checkUser(req: Request, res: Response) {
     success: getClientAccount(user),
   };
   logger.debug(`User checked`, response);
+  const usedToken = getToken(req);
+  if (usedToken) {
+    req.session.token = usedToken;
+  }
   res.status(200).json(response);
   user.lastOnlineAt = Date.now();
   user.save().catch(err => logger.error(err, 'Unable to save last online at'));
-  return;
 }
 
 export async function changeDisplayedName(req: Request, res: Response) {
   logger.debug('Change displayed name', req.body);
   const request = verifyJoi<IAccountDisplayedNameRequest>(req, res, joi$displayedName);
   if (!request) return;
-  const decoded: IJWTAccount = rGetTokenData(req, res);
+  const decoded: IJWTAccount = await rGetTokenData(req, res);
   if (!decoded) return;
 
   const user = await getUserById(decoded.id);
@@ -224,7 +229,7 @@ export async function changePassword(req: Request, res: Response) {
 
   const request = verifyJoi<IAccountChangePasswordRequest>(req, res, joi$changePassword);
   if (!request) return;
-  const decoded = rGetTokenData(req, res) as IJWVerificationCode;
+  const decoded = await rGetTokenData(req, res) as IJWVerificationCode;
   if (!decoded) return;
   const response: IAccountResponse = {};
 
@@ -254,7 +259,7 @@ export async function changeEmail(req: Request, res: Response) {
   if (!req.headers.origin) respondWithError(res, 400, 'Something went wrong with your request');
   const request = verifyJoi<IAccountChangeEmailRequest>(req, res, joi$changeEmail);
   if (!request) return;
-  const decoded: IJWTAccount = rGetTokenData(req, res);
+  const decoded: IJWTAccount = await rGetTokenData(req, res);
   if (!decoded) return;
 
   const user = await getUserById(decoded.id);
@@ -342,7 +347,7 @@ export async function uploadImage(req: Request, res: Response) {
   logger.debug('User found', req.body);
   const request = verifyJoi<IAccountVerificationRequest>(req, res, joi$verification);
   if (!request) return;
-  const decoded = rGetTokenData(req, res);
+  const decoded = await rGetTokenData(req, res);
   if (!decoded) return;
 
   if (req.files === null) return respondWithError(res, 400, 'No files');
@@ -378,7 +383,7 @@ export async function deleteAccount(req: Request, res: Response) {
   logger.debug('delete account', req.body);
   const request = verifyJoi<IAccountDeleteAccountRequest>(req, res, joi$deleteAccount);
   if (!request) return;
-  const decoded = rGetTokenData(req, res);
+  const decoded = await rGetTokenData(req, res);
   if (!decoded) return;
 
   const user = await getUserById(decoded.id);
@@ -403,7 +408,7 @@ export async function deleteAccount(req: Request, res: Response) {
   };
 
   user.remove();
-  mailService.informAboutAccountDeletion(email, emailData).catch(err => logError(err, 'Unable to send email'));
+  mailService.informAboutAccountDeletion(email, emailData).catch(err => logger.error(err, 'Unable to send email'));
   const response: IResponse<string> = {
     success: 'Account successfully deleted',
   };
@@ -416,7 +421,7 @@ export async function checkOutTemporarilyToken(req: Request, res: Response) {
   logger.debug('Checking token', token);
   const isTokenBlackListedResult = await isTokenBlackListed(token as string);
   if (isTokenBlackListedResult) return respondWithError(res, 400, 'This token has already been used');
-  const decoded = rGetTokenData(req, res, true) as IJWVerificationCode;
+  const decoded = await rGetTokenData(req, res, true) as IJWVerificationCode;
   if (!decoded) return;
   const response: IResponse<VerificationType> = {
     success: decoded.type,
@@ -428,7 +433,7 @@ export async function checkOutTemporarilyToken(req: Request, res: Response) {
 export async function temporarilyTokenAccountAltering(req: Request, res: Response) {
   logger.debug('Checking temporary token', req.headers[TOKEN_HEADER]);
   const response: IResponse<string> = {};
-  const decoded = rGetTokenData(req, res, true) as IJWVerificationCode;
+  const decoded = await rGetTokenData(req, res, true) as IJWVerificationCode;
   if (!decoded) return;
   const token = req.headers[TOKEN_HEADER];
   try {
@@ -474,4 +479,19 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
     logger.error('Verification code failed', error);
     return respondWithError(res, 500, 'Internal server error');
   }
+}
+
+
+//TODO implement better?
+export async function logOutUser(req: Request, res: Response) {
+  logger.debug(`Logout`, req.body);
+  req.session.destroy(err => {
+    logger.error('Cannot destroy session', err)
+  });
+
+  const response:  IResponse<string> = {};
+  response.success = 'Info';
+  response.message = 'User logged Out';
+  logger.debug(`User logged Out`, response);
+  res.status(200).json(response);
 }

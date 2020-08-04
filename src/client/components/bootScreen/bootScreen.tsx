@@ -1,8 +1,8 @@
 import React from 'react';
-import './bootScreen.scss';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { SECOND } from '../../../shared/constants';
 import { launchApp } from '../../essential/apps';
+import { BootScreenStyled, BootScreenMiddle, BootScreenTop, BootScreenBottom, BootScreenInfo } from './bootScreenStyled';
 
 interface IBootScreenProps {
   next: (bios?: 'bios') => void;
@@ -24,22 +24,22 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   }
   render() {
     return (
-      <div className='boot-screen'>
-        <div className='top'>
-          <div className='info'>
+      <BootScreenStyled>
+        <BootScreenTop>
+          <BootScreenInfo>
             <span>Lidcer BIOS v1.0, in browser bios</span>
-            <span>Copyright (C) 2020-2020, Lidcer Software, Icn </span>
-          </div>
+            <span>Copyright (C) 2020-2020, Lidcer Software, Inc </span>
+          </BootScreenInfo>
           <img src='./assets/images/LidcerBiosLogo.svg' alt='biosLogo' />
-        </div>
-        <div className='middle'>
+        </BootScreenTop>
+        <BootScreenMiddle>
           <ul>{this.messages}</ul>
-        </div>
-        <div className='bottom'>
+        </BootScreenMiddle>
+        <BootScreenBottom>
           <span>08/3/2020-489/Id2/WSD6</span>
           {this.biosMessage}
-        </div>
-      </div>
+        </BootScreenBottom>
+      </BootScreenStyled>
     );
   }
 
@@ -105,8 +105,11 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   };
 
   allReady = () => {
-    this.props.next(this.state.goToBios ? 'bios' : undefined);
-    launchApp('lype');
+    setTimeout(() => {
+      this.props.next(this.state.goToBios ? 'bios' : undefined);
+      
+    }, 5000);
+    //launchApp('lype');
     // setTimeout(() => {
     //   this.props.next(this.state.goToBios ? 'bios' : undefined);
     // }, SECOND * 3);

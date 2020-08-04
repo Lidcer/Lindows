@@ -1,6 +1,6 @@
 import { Schema, Document } from 'mongoose';
 import { mongoose } from './database';
-import { logError } from '../routes/Error';
+import { logger } from './EventLog';
 
 export interface IMongooseTokenBlackList extends Document {
   token: string;
@@ -57,7 +57,7 @@ export function setUpAutoDelete(token: string, time: number) {
           await e.remove();
         }
       })
-      .catch(err => logError(err, `Auto delete token ${token} failed`));
+      .catch(err => logger.error(err, `Auto delete token ${token} failed`));
   }, time - Date.now());
 }
 
@@ -74,7 +74,7 @@ export function rubbishCollectTokens(): Promise<void> {
         }
       })
       .catch(err => {
-        logError(err, 'Problem fetching data from database');
+        logger.error(err, 'Problem fetching data from database');
         reject(err);
       });
   });

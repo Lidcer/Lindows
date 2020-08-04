@@ -1,10 +1,10 @@
-import './AccountManager.scss';
 import React from 'react';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { IAccountInfo } from '../../services/SystemService/AccounSystem';
 import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
 import { OpenFileDialog } from '../../essential/FileDialog';
 import { SECOND } from '../../../shared/constants';
+import { AccountManagerPage, AccountManager, AccountManagerAvatar, AccountManagerScrollabled, AccountManagerCard, AccountManagerInfo, AccountManagerCardAlt, InputDisabled } from './AccountManagerStyled';
 
 interface IAccountProps {
   window?: boolean;
@@ -107,16 +107,16 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   render() {
     if (this.props.window)
       return (
-        <div className='account-manager'>
+        <AccountManager>
           {this.renderWarn}
           {this.renderContent}
-        </div>
+        </AccountManager>
       );
     return (
-      <div className='account-manager-page account-manager'>
+      <AccountManagerPage className='account-manager'>
         {this.renderWarn}
         {this.renderContent}
-      </div>
+      </AccountManagerPage>
     );
   }
 
@@ -284,9 +284,9 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     return (
       <form onSubmit={this.changeProfile}>
         <h1>User profile</h1>
-        <div className='account-manager-scrollabled'>
-          <div className='account-manager-card account-manager-settings-header'>
-            <div className='account-manager-avatar'>
+        <AccountManagerScrollabled>
+          <AccountManagerCardAlt>
+            <AccountManagerAvatar>
               <img src={avatar} alt={ac.username} onClick={this.openFile} />
 
               <input
@@ -296,12 +296,12 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 onChange={this.filesSelected}
                 hidden
               ></input>
-            </div>
-            <div className='account-manager-info'>
+            </AccountManagerAvatar>
+            <AccountManagerInfo>
               <span>Account ID:</span>
-              <input type='text' value={ac.accountId} disabled />
+              <InputDisabled type='text' value={ac.accountId} disabled />
               <span>Username:</span>
-              <input type='text' value={ac.username} disabled />
+              <InputDisabled type='text' value={ac.username} disabled />
 
               <div hidden={this.qt}>
                 <span>Displayed name:</span>
@@ -312,10 +312,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                   onChange={ev => this.onChange(ev, 'settings', 'displayedName')}
                 />
               </div>
-            </div>
-          </div>
+            </AccountManagerInfo>
+          </AccountManagerCardAlt>
           <div hidden={this.qt}>
-            <div className='account-manager-card'>
+            <AccountManagerCard>
               <span>Change password:</span>
               <input
                 type='password'
@@ -335,9 +335,9 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 value={this.state.settings.repeatPassword}
                 onChange={ev => this.onChange(ev, 'settings', 'repeatPassword')}
               />
-            </div>
+            </AccountManagerCard>
 
-            <div className='account-manager-card'>
+            <AccountManagerCard>
               <span>Change email:</span>
               <input
                 type='text'
@@ -346,10 +346,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 value={this.state.settings.newEmail}
                 onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
               />
-            </div>
+            </AccountManagerCard>
           </div>
           <div hidden={this.qt}>
-            <div className='account-manager-card'>
+            <AccountManagerCard>
               <span>Current Password</span>
               <input
                 type='password'
@@ -373,10 +373,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                   Log out
                 </button>
               </div>
-            </div>
+            </AccountManagerCard>
           </div>
           {this.alteringChanges}
-        </div>
+        </AccountManagerScrollabled>
       </form>
     );
   }
@@ -384,14 +384,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   get alteringChanges() {
     if (!this.state.settings.alteringProfile.length) return null;
     return (
-      <div className='account-manager-card'>
+      <AccountManagerCard>
         <span>Altering</span>
         <ul>
           {this.state.settings.alteringProfile.map((e, i) => (
             <li key={i}>{e}</li>
           ))}
         </ul>
-      </div>
+      </AccountManagerCard>
     );
   }
 
@@ -490,14 +490,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     if (st.file) changes.push(`Avatar: ${st.file.name}`);
     if (!changes.length) return null;
     return (
-      <div className='account-manager-card'>
+      <AccountManagerCard>
         <span>This will alter</span>
         <ul>
           {changes.map((e, i) => (
             <li key={i}>{e}</li>
           ))}
         </ul>
-      </div>
+      </AccountManagerCard>
     );
   }
 

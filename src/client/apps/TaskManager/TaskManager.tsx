@@ -1,7 +1,7 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
-import './taskManager.scss';
 import { services } from '../../services/SystemService/ServiceHandler';
+import { TaskManagerStyle } from './taskManagerStyled';
 
 export const manifest: IManifest = {
   fullAppName: 'TaskManager',
@@ -12,7 +12,9 @@ export const manifest: IManifest = {
 export class TaskManager extends BaseWindow {
   private selected: BaseWindow;
   constructor(props: IBaseWindowProps) {
-    super(props, manifest);
+    super(props, manifest, {
+      alwaysOnTop:true
+    });
   }
   onStartUp() {
     this.changeOptions({
@@ -33,7 +35,7 @@ export class TaskManager extends BaseWindow {
 
   renderInside() {
     return (
-      <div className='task-manager'>
+      <TaskManagerStyle>
         <span>
           {services.processor.processes.length} | {services.processor.processes.filter(e => e.minimized).length}
         </span>
@@ -50,7 +52,7 @@ export class TaskManager extends BaseWindow {
           Kill all
         </button>
         <button onClick={this.kill}>End Task</button>
-      </div>
+      </TaskManagerStyle>
     );
   }
 
@@ -77,7 +79,7 @@ export class TaskManager extends BaseWindow {
 
   getItem = (window: BaseWindow, index: number) => {
     const entries = Object.entries(window);
-    const className = this.selected === window ? 'task-manager-selected' : '';
+    const style = this.selected === window ? {backgroundColor: 'rgba(125, 125, 125, 0.25)'} : {};
     let size = 0;
     entries.forEach(element => {
       const object = element[1];
@@ -86,7 +88,7 @@ export class TaskManager extends BaseWindow {
     });
     // const size = JSON.stringify(window).length;
     return (
-      <tr key={index} className={className} onClick={() => this.select(window)}>
+      <tr key={index} style={style} onClick={() => this.select(window)}>
         <td>{window.state.options.title}</td>
         <td>{size}</td>
       </tr>

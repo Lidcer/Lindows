@@ -1,8 +1,17 @@
-import './Lype.scss';
 import React from 'react';
 import { ILypeAccount } from '../../../shared/ApiLypeRequestsResponds';
 import { DEFAULT_AVATAR } from '../AccountManager/AccountManagerWebpage';
 import { getStatusColour } from '../../services/BackgroundService/LypeServices';
+import { LypeAccountInfoBTN,
+  LypeAccountInfoButtons,
+  LypeAccountInfoDetails,
+  LypeAccountInfoName,
+  LypeAccountInfoCustom,
+  LypeAccountInfoProfilePic,
+  LypeAccountStatusBadge,
+  LypeAccountInfoStyle,
+  LypeAccountStatusBadgeBig
+} from './LypeStyled';
 
 interface ILypeAccountInfo {
   account: ILypeAccount;
@@ -32,13 +41,13 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
   get buttons() {
     if (!this.props.buttons) return null;
     return (
-      <div className='lype-account-info-buttons'>
+      <LypeAccountInfoButtons>
         {this.props.buttons.map((b, i) => {
           if (typeof b.content === 'string') {
             return (
-              <button key={i} className='lype-account-info-btn' onClick={e => b.onClick(e)}>
+              <LypeAccountInfoBTN key={i} onClick={e => b.onClick(e)}>
                 {b.content}
-              </button>
+              </LypeAccountInfoBTN>
             );
           }
           return (
@@ -47,7 +56,7 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
             </div>
           );
         })}
-      </div>
+      </LypeAccountInfoButtons>
     );
   }
 
@@ -60,18 +69,18 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
   get name() {
     if (this.props.account.customStatus || this.props.buttons) {
       return (
-        <div className='lype-account-info-details'>
-          <div className='lype-account-info-name'>{this.props.account.displayedName}</div>
-          <div className='lype-account-info-custom'>
+        <LypeAccountInfoDetails>
+          <LypeAccountInfoName>{this.props.account.displayedName}</LypeAccountInfoName>
+          <LypeAccountInfoCustom>
             {this.customStatus} {this.buttons}
-          </div>
-        </div>
+          </LypeAccountInfoCustom>
+        </LypeAccountInfoDetails>
       );
     }
     return (
-      <div className='lype-account-info-details'>
-        <div className='lype-account-info-name'>{this.props.account.displayedName}</div>
-      </div>
+      <LypeAccountInfoDetails>
+        <LypeAccountInfoName>{this.props.account.displayedName}</LypeAccountInfoName>
+      </LypeAccountInfoDetails>
     );
   }
 
@@ -85,20 +94,19 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
 
   render() {
     return (
-      <div
-        className={`lype-account-info${this.props.onClick ? ' clickable' : ''}`}
+      <LypeAccountInfoStyle
+        className={`${this.props.onClick ? ' clickable' : ''}`}
         onContextMenu={this.handleContentMenu}
         onClick={this.handleClick}
       >
-        <div className='lype-account-info-profile-pic'>
-          <img src={this.image} />
-          <div
-            className='lype-account-status-badge'
+        <LypeAccountInfoProfilePic>
+          <LypeAccountStatusBadgeBig
             style={{ backgroundColor: getStatusColour(this.props.account.status) }}
-          ></div>
-        </div>
+          />
+          <img src={this.image} />
+        </LypeAccountInfoProfilePic>
         {this.name}
-      </div>
+      </LypeAccountInfoStyle>
     );
   }
 }

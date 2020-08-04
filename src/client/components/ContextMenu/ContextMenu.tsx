@@ -2,7 +2,7 @@ import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
-import './ContextMenu.scss';
+import { ContextMenuStyled, ContextIcon, ContextSeparator, ContextMenuItem, ContextColumn } from './ContextMenuStyled';
 
 export interface IElements {
   elements: IElement[];
@@ -67,20 +67,20 @@ export class ContextMenu extends React.Component<IElements, IState> {
 
   item(element: IElement) {
     if (!element.content) {
-      return <div className='context-separator'></div>;
+      return <ContextSeparator></ContextSeparator>;
     }
     return (
-      <div
-        className={`context-menu-item${!element.onClick && !element.elements ? ' context-disabled' : ''}`}
+      <ContextMenuItem
+        className={`${!element.onClick && !element.elements ? ' context-disabled' : ''}`}
         onMouseEnter={() => this.showInnerContext(element)}
         onClick={ev => this.handleClick(ev, element)}
       >
         {this.icon(element.iconOrPicture)}
-        <div className='context-column'>
-          <span className='context-content'> {element.content} </span>
-        </div>
+        <ContextColumn>
+          <span> {element.content} </span>
+        </ContextColumn>
         {this.renderArrow(element.elements)}
-      </div>
+      </ContextMenuItem>
     );
   }
 
@@ -118,27 +118,27 @@ export class ContextMenu extends React.Component<IElements, IState> {
     if (!element) return null;
     if (element.hidden) {
       return (
-        <div className='context-menu' hidden>
+        <ContextMenuStyled hidden>
           {this.elementMap(element.elements)}
-        </div>
+        </ContextMenuStyled>
       );
     }
-    return <div className='context-menu'>{this.elementMap(element.elements)}</div>;
+    return <ContextMenuStyled>{this.elementMap(element.elements)}</ContextMenuStyled>;
   };
 
   icon = (icon?: string | IconDefinition) => {
     if (!icon) return null;
     if (typeof icon === 'string') {
       return (
-        <span className='context-icon'>
+        <ContextIcon>
           <img src={icon} />
-        </span>
+        </ContextIcon>
       );
     }
     return (
-      <span className='context-icon'>
+      <ContextIcon>
         <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
-      </span>
+      </ContextIcon>
     );
   };
 
@@ -149,9 +149,9 @@ export class ContextMenu extends React.Component<IElements, IState> {
 
   render() {
     return (
-      <div style={this.style()} className='animated jackInTheBox faster context-menu'>
+      <ContextMenuStyled style={this.style()} className='animated jackInTheBox faster'>
         {this.elementMap(this.state.elements)}
-      </div>
+      </ContextMenuStyled>
     );
   }
 

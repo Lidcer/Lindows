@@ -139,7 +139,7 @@ export default class AdminNotification extends Component<IAdminNotificationProps
     return (
       <>
         <div aria-live='polite' aria-atomic='true' style={{ position: 'relative' }}>
-          <div style={{ position: 'fixed', top: '0', right: '0' }}>{this.notification}</div>
+          <div style={{ position: 'fixed', top: '20', right: '0' }}>{this.notification}</div>
         </div>
       </>
     );

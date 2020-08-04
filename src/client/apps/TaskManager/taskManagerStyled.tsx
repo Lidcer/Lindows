@@ -1,4 +1,6 @@
-.task-manager {
+import styled from 'styled-components';
+
+export const TaskManagerStyle = styled.div`
     background-color: white;
     color: black;
     height: 100%;
@@ -29,8 +31,8 @@
         right: 0;
         bottom: 0;
     }
-}
+`;
 
-.task-manager-selected {
-    background-color: transparentize($color: #0084ff, $amount: 0.85);
-}
+export const TaskManagerSelected = styled.div`
+    background-color: rgba(255,255,225,0.85)
+`;

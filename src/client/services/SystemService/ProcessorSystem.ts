@@ -1,11 +1,12 @@
 import { BaseWindow, IManifest } from '../../apps/BaseWindow/BaseWindow';
 import { EventEmitter } from 'events';
 import { random } from 'lodash';
-import { reactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
+import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
 import { Broadcaster } from './BroadcasterSystem';
 import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { BaseSystemService } from './BaseSystemService';
+import { attachDebugMethod } from '../../essential/requests';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -13,9 +14,10 @@ interface IStringifiedProcess {
   state: any;
 }
 
-interface IDisplayingApp {
+interface IDisplayingApp<T = unknown> {
   processID: number;
   app: JSX.Element;
+  object?: T;
   state?: any;
 }
 
@@ -25,7 +27,7 @@ export class Processor extends BaseSystemService {
   private readonly processorId = random(1000, 9999);
   private readonly _uptime = Date.now();
   private lindowsProcesses: BaseWindow[] = [];
-  private displaying: IDisplayingApp[] = [];
+  private displaying: IDisplayingApp<any>[] = [];
   private user = `Guest${random(1000, 9999)}`;
   private _mobileDetect: MobileDetect;
   private _frontend = 'Lindows 1.0 Alpha';
@@ -40,6 +42,7 @@ export class Processor extends BaseSystemService {
 
   constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
     super();
+    attachDebugMethod('processor', this);
   }
 
   start() {
@@ -104,7 +107,7 @@ export class Processor extends BaseSystemService {
 
   private emit(value: 'appAdd', object: BaseWindow): void;
   private emit(value: 'appRemove', object: BaseWindow): void;
-  private emit(value: 'appDisplayingAdd', object: IDisplayingApp): void;
+  private emit(value: 'appDisplayingAdd', object: IDisplayingApp<any>): void;
   private emit(value: 'slowSystem', performance: number): void;
   private emit(value: string | symbol, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [value, ...args]);
@@ -211,6 +214,9 @@ export class Processor extends BaseSystemService {
     }
 
     const displayingObject = this.displaying.find(d => d.processID === object.id);
+    if (displayingObject) {
+      displayingObject.object = object;
+    }
     if (displayingObject && displayingObject.state) {
       object.on('ready', () => {
         object.setState(displayingObject.state);
@@ -245,16 +251,21 @@ export class Processor extends BaseSystemService {
     });
   }
 
-  addApp = (reactGeneratorFunction: reactGeneratorFunction, appName: string, id?: number) => {
+  addApp = <A = JSX.Element>(reactGeneratorFunction: ReactGeneratorFunction, appName: string, id?: number) => {
     if (id === undefined) {
       id = this.processID++;
       this.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
     } else if (id > this.processID) this.processID = id + 1;
 
     const jsxElement = reactGeneratorFunction(id);
-    const displayingApp: IDisplayingApp = { processID: id, app: jsxElement };
+    const displayingApp: IDisplayingApp<A> = { 
+      processID: id,
+      app: jsxElement, 
+
+    };
     this.displaying.push(displayingApp);
     this.emit('appDisplayingAdd', displayingApp);
+    return displayingApp;
   };
 
   saveState = (): Promise<void> => {
@@ -298,16 +309,16 @@ export class Processor extends BaseSystemService {
     return this._frontend;
   }
 
-  private destroy = (ev?: BeforeUnloadEvent) => {
-    if (ev) ev.preventDefault();
-    this.destroyed = true;
+  // private destroy = (ev?: BeforeUnloadEvent) => {
+  //   if (ev) ev.preventDefault();
+  //   this.destroyed = true;
 
-    //this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
-    //this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
-    //this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
-    //this.broadcaster.removeListener(`${this.serviceName}-addApp`, this.remoteAppAdd);
-    window.removeEventListener('beforeunload', this.destroy);
-    clearInterval(this.monitorFunction);
-    this.broadcastProcessRemoval();
-  };
+  //   //this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
+  //   //this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
+  //   //this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
+  //   //this.broadcaster.removeListener(`${this.serviceName}-addApp`, this.remoteAppAdd);
+  //   window.removeEventListener('beforeunload', this.destroy);
+  //   clearInterval(this.monitorFunction);
+  //   this.broadcastProcessRemoval();
+  // };
 }

@@ -4,13 +4,14 @@ import fingerprintjs from 'fingerprintjs2';
 import { EventEmitter } from 'events';
 import { SECOND } from '../../../shared/constants';
 import { BaseSystemService } from './BaseSystemService';
+import { Fingerpriner } from './FingerprinerSystem';
 
 export class Network extends BaseSystemService {
   private _socket: SocketIOClient.Socket;
   private eventEmitter = new EventEmitter();
   private windowTabs: Window[] = [];
 
-  constructor() {
+  constructor(private fingerpriner: Fingerpriner) {
     super();
     attachDebugMethod('network', this);
   }
@@ -55,11 +56,9 @@ export class Network extends BaseSystemService {
       });
 
       this._socket.on('take-fingerprint', (message: string) => {
-        fingerprintjs.get(result => {
-          this._socket.emit('fingerprint-result', result);
-        });
+        if (localStorage.getItem('terms-of-policy') !== 'true') return;
+        this._socket.emit('fingerprint-result', this.fingerpriner.allResults);
       });
-
       this._socket.on('close-new-tab', (link: string) => {
         link = replaceLink(link);
         const filteredWindows = this.windowTabs.filter(

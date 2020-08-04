@@ -1,4 +1,6 @@
-.activation-watermark {
+import styled from 'styled-components';
+
+export const ActivationWatermarkStyle = styled.div`
     position: fixed;
     bottom: 35pt;
     right: 5pt;
@@ -14,4 +16,4 @@
     h2 {
         font-size: 12pt;
     }
-}
+`;

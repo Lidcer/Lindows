@@ -4,7 +4,7 @@ import { logger } from '../../database/EventLog';
 import { TOKEN_HEADER } from '../../../shared/constants';
 import { IJWTAccount, getTokenData } from '../common';
 import { IMongooseUserSchema, getUserById } from '../users/users-database';
-import { checkUser } from '../users/users-responses';
+import { checkUser, resetPasswordLink } from '../users/users-responses';
 import {
   executeCommand,
   serverInfo,
@@ -108,8 +108,9 @@ export function setupAdminApi(router: Router) {
 }
 
 export async function isUserAdmin(req: Request): Promise<IMongooseUserSchema | null> {
+  const token = req.headers[TOKEN_HEADER] || req.session.token;
   logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
-  const decoded: IJWTAccount = getTokenData(req);
+  const decoded: IJWTAccount = await getTokenData(req, token);
   if (!decoded) {
     logger.warn(`Unable to decode token`);
     return null;

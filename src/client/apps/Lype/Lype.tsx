@@ -1,5 +1,4 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
-import './Lype.scss';
 import React from 'react';
 import { LypeWebpage } from './LypeWebpage';
 

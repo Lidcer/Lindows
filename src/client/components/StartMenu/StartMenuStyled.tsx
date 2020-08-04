@@ -1,22 +1,17 @@
-.start-menu {
+import styled from 'styled-components';
+
+export const StartMenuStyled = styled.div`
     position: absolute;
     width: 200pt;
     height: 50pt;
 
     background-color: black;
-    background-image: url(/assets/images/noise.png);
+    background-image: url(//assets//images//noise.png);
     z-index: 500;
     padding: 5pt;
-}
+`;
 
-.start-menu-bottom {
-    bottom: 30pt;
-
-    transition: width 0.2s, height 0.2s;
-}
-
-
-.task-bar-item {
+export const TaskBarItem = styled.div`
     margin: 1pt;
     height: 25pt;
     padding: 1pt;
@@ -27,7 +22,7 @@
     color: white;
 
     &:hover {
-        background-color: transparentize($color: #ffffff, $amount: 0.75);
+        background-color: rgba(255, 255, 255, 0.75);
         border: 1pt solid rgba(255, 255, 255, 0.5);
     }
 
@@ -44,5 +39,4 @@
         left: 10pt;
         bottom: 5pt;
     }
-
-}
+`;
