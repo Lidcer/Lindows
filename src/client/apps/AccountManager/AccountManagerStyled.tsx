@@ -14,6 +14,7 @@ export const AccountManagerPage = styled.div`
     max-width: 500pt;
     max-height: 500pt;
     overflow: auto;
+    background-color : rgba(16, 16, 16, 1);
  `;
   
 export const AccountManagerScrollabled = styled.div`
@@ -69,7 +70,8 @@ export const AccountManagerAvatar = styled.div`
  export const AccountManager = styled.div`
    color: white;
    text-align: center;
- 
+   height:100%;
+   background-color : rgba(16, 16, 16, 1);
    h1 {
      font-size: 25pt;
    }
@@ -80,7 +82,7 @@ export const AccountManagerAvatar = styled.div`
      margin: 2pt;
      border-radius: 2pt;
      display: block;
-     width: calc(100% - 4pt);
+     width: 100%;
    }
  
    a {

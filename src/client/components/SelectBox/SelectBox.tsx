@@ -35,7 +35,6 @@ export class SelectBox extends React.Component<IPos, IState> {
       x: event.clientX,
       y: event.clientY,
     });
-    //   console.log('test', this.a);
   };
 
   render() {

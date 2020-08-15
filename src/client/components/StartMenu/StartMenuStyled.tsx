@@ -6,7 +6,7 @@ export const StartMenuStyled = styled.div`
     height: 50pt;
 
     background-color: black;
-    background-image: url(//assets//images//noise.png);
+    background-image: url(/assets/images/noise.png);
     z-index: 500;
     padding: 5pt;
 `;

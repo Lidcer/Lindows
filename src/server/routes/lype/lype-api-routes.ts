@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import * as Axios from 'axios';
+
 import {
   checkLypeUser,
   createLypeUser,
@@ -36,6 +38,20 @@ export function setupLypeUsersApi(router: Router) {
 
   router.put('/api/v1/lype/unblock-user', (req, res) => {
     unblockLypeUser(req, res);
+  });
+
+  router.post('/api/v1/web-explorer/', async (req, res) => {
+
+    try {
+      const data = await Axios.default.get(req.body.url)
+
+      const html = data.data;
+      return res.status(200).json({html});
+    
+    } catch (error) {
+      return res.status(404).render('');
+    
+    }
   });
 
   // router.post('/api/v1/lype/post-message', (req, res) => {

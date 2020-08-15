@@ -5,7 +5,6 @@ import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { Account } from './AccounSystem';
-import { NotificationSystem } from './NotificationSystem';
 
 export declare interface IServices {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
@@ -21,7 +20,6 @@ export class IServices extends EventEmitter {
   private _processor: Processor;
   private _fingerprinter: Fingerpriner;
  // private _fingerprinter: Notification;
-  private _notificationSystem: NotificationSystem;
   private isReady = false;
 
   constructor() {
@@ -37,9 +35,7 @@ export class IServices extends EventEmitter {
     await this.initNetwork();
     await this.initAccount();
     await this.initProcessor();
-    await this.initNotification();
 
-    console.log('ready')
     this.isReady = true;
     this.emit('allReady', this);
   }
@@ -96,19 +92,8 @@ export class IServices extends EventEmitter {
     try {
       await this._network.start();
       this.emit('onServiceReady', 'Network');
-      console.log('newtork connected')
     } catch (error) {
       this.emit('onServiceFailed', 'Network');
-    }
-  }
-
-  private async initNotification(): Promise<void> {
-    this._notificationSystem = new NotificationSystem(this._storage);
-    try {
-      this._notificationSystem.start();
-      this.emit('onServiceReady', 'Notification System');
-    } catch (error) {
-      this.emit('onServiceFailed', 'Notification System');
     }
   }
 
@@ -136,10 +121,6 @@ export class IServices extends EventEmitter {
     return this._account;
   }
  
-  get notificationSystem() {
-    return this._notificationSystem;
-  }
-  
   get network() {
     return this._network;
   }

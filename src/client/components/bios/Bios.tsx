@@ -7,6 +7,7 @@ import Axios from 'axios';
 import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
 import { BiosStyled, BiosTop, BiosTitle, BiosGradient, BiosNavBar, BiosButton, BiosMiddle, BiosSettings, BiosSystemInfo, BiosPopup,
   BiosPopupInner, BiosPopupTitle, BiosPopupInnerContent, BiosPopupButtons, BiosInfo, BiosTopInfo, BiosBottomInfo, BiosBottom } from './BiosStyled';
+import { inIframe } from '../../utils/util';
 
 interface IBIOSProps {
   next: (type: WebpageType) => void;
@@ -242,13 +243,13 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     return (
       <BiosSystemInfo>
         <span>
-          OS: {os.name} {os.version}
+          OS: {inIframe() ? 'Lindows Alpha 1.0.0' : `${os.name} ${os.version}`}
         </span>
         <span>
-          Browser: {browser.name}({browser.version})
+          Browser: {inIframe() ? 'Virtual crate(unknown)' : `${browser.name}(${browser.version})`}
         </span>
         <span>
-          Engine: {engine.name}({engine.version})
+          Engine: {inIframe() ? 'Link(unknown)' : `${engine.name}(${engine.version})`}
         </span>
         {cpu.architecture ? <span>CPU: {cpu.architecture}</span> : null}
         <span>Language: {systemInfo.language}</span>
@@ -347,13 +348,14 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
   componentDidMount() {
     this.interval = setInterval(this.animateBar, 50);
-    const data: IBIOSStorage = services.browserStorage.getItem(this.BROWSER_STORAGE_KEY);
+    // const data: IBIOSStorage = services.browserStorage.getItem(this.BROWSER_STORAGE_KEY);
 
-    if (!data) this.bootOptionPopup();
-    else if (!this.props.shouldStayInBios) {
-      this.props.next(data.bootInLindows ? 'lindows' : 'webpage');
-      return;
-    }
+    // if (!data) this.bootOptionPopup();
+    // else if (!this.props.shouldStayInBios) {
+    //   this.props.next(data.bootInLindows ? 'lindows' : 'webpage');
+    //   return;
+    // }
+    this.props.next('lindows')
     document.addEventListener('keyup', this.keyboardListener, false);
   }
 

@@ -29,8 +29,10 @@ import { Lype, LypeContent, LypeLoadingOverlay, LypeWarnContent, LypeWarnIgnore,
   LypeLoadingBottom, LypeLoadingLeft, LypeLoadingRight, LypeLoading, LypeLoadingBox, LypeLoginRequired, LypeLeftFriends, LypeLeftUserInfo, 
   LypeLeftBar, LypeLeftNavbarButtons, LypeLeftNavbar, LypeLeftUserInfoName, LypeluiDisplayedName, LypeluiCustomStatus, LypeLeftUserInfoAvatar,
   LypelusButton, LypeLeftUserInfoSettings, LypeChatInput, LypeAccountStatusBadge, LaStatus, LypeLeftNavbarButton, LypeMessages, LypeAccountStatusBadgeBig } from './LypeStyled';
+import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
+import { BaseWindow } from '../BaseWindow/BaseWindow';
 interface ILypeProps {
-  window?: boolean;
+  window?: BaseWindow;
   destroy?: () => void;
 }
 
@@ -59,6 +61,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   private animationState: 'start' | 'loop' | 'end' | 'idle' = 'idle';
   private animationIdle = 0;
   private animationMaxOffset = 45;
+  private notification: NotificationSystem;
   destroyed = false;
 
   constructor(props: ILypeProps) {
@@ -661,7 +664,6 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     services.account.removeListener('logout', this.update);
     this.lypeService.removeListener('destroy', this.lypeServiceCrash);
     window.removeEventListener('resize', this.update);
-    services.notificationSystem.raise('Lype', 'Shutdown', 'App just has been shut down');
   }
 
   lypeServiceCrash = () => {
@@ -783,7 +785,10 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     if (this.lypeService.state === LypeServiceState.Error) {
       state.error = this.lypeService.errorMessage;
     }
-    services.notificationSystem.raise('Lype', 'Startup', 'App just started up');
+    if (this.props.window) {
+      this.notification = getNotification();
+      this.raiseNotification('Startup', 'App just started up');
+    }
     this.setState(state);
   };
 
@@ -822,4 +827,10 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     }
     if (!this.props.window) location.reload();
   };
+
+  raiseNotification(title: string, content: string) {
+    if(!this.props.window) return;
+   this.notification.raise(this.props.window, 'Startup', 'App just started up');
+  }
+
 }

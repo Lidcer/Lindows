@@ -3,23 +3,26 @@ import React from 'react';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { TaskManagerStyle } from './taskManagerStyled';
 
-export const manifest: IManifest = {
-  fullAppName: 'TaskManager',
-  launchName: 'taskmgr',
-  icon: '/assets/images/appsIcons/TaskManager.svg',
-};
-
 export class TaskManager extends BaseWindow {
+  
+    public static readonly onlyOne = true;
+    public static manifest: IManifest = {
+      fullAppName: 'TaskManager',
+      launchName: 'taskmgr',
+      icon: '/assets/images/appsIcons/TaskManager.svg',
+    };
+
   private selected: BaseWindow;
+
   constructor(props: IBaseWindowProps) {
-    super(props, manifest, {
+    super(props, {
       alwaysOnTop:true
     });
   }
   onStartUp() {
     this.changeOptions({
       title: 'Task Manager',
-      image: manifest.icon,
+      image: TaskManager.manifest.icon,
     });
 
     services.processor.on('appAdd', this.update);
@@ -57,7 +60,7 @@ export class TaskManager extends BaseWindow {
   }
 
   killAll = () => {
-    services.processor.processes.forEach(e => {
+    services.processor.processes.forEach((e: any) => {
       if (e !== this) e.exit();
     });
     setTimeout(() => {
@@ -74,10 +77,10 @@ export class TaskManager extends BaseWindow {
   };
 
   get renderList() {
-    return services.processor.processes.map(this.getItem);
+    return services.processor.processes.map(this.getThing);
   }
 
-  getItem = (window: BaseWindow, index: number) => {
+  getThing = (window: BaseWindow, index: number) => {
     const entries = Object.entries(window);
     const style = this.selected === window ? {backgroundColor: 'rgba(125, 125, 125, 0.25)'} : {};
     let size = 0;

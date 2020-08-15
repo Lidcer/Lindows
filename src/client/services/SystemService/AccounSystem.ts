@@ -19,6 +19,7 @@ import { BaseSystemService } from './BaseSystemService';
 import { EventEmitter } from 'events';
 import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
+import { inIframe } from '../../utils/util';
 
 export interface IAccountInfo {
   accountId: string;
@@ -364,7 +365,9 @@ export class Account extends BaseSystemService {
   }
 
   get token() {
-    this._token = localStorage.getItem('auth');
+    if(!inIframe()) { //TODO replace with storage
+      this._token = localStorage.getItem('auth');
+    }
     return this._token;
   }
 

@@ -2,6 +2,7 @@ import * as compress from 'compress-str';
 import { EventEmitter } from 'events';
 import { BaseSystemService } from './BaseSystemService';
 import { attachDebugMethod, isDev } from '../../essential/requests';
+import { inIframe } from '../../utils/util';
 
 export class BrowserStorage extends BaseSystemService {
   private readonly storageName = '__lindows__';
@@ -30,6 +31,10 @@ export class BrowserStorage extends BaseSystemService {
     const accepted = localStorage.getItem('terms-of-policy');
     if (accepted !== 'true') {
       this.acceptTermsOfService();
+    }
+
+    if(inIframe()) {
+      return;
     }
 
     let data = '';
@@ -61,6 +66,7 @@ export class BrowserStorage extends BaseSystemService {
   async setItem(key: string, value: any): Promise<void> {
     if (key.length < 3) throw new Error('key must have more than 3 characters');
     this.data[key] = value;
+    if(inIframe()) return;
     await this.save();
   }
   getItem(key: string) {
@@ -79,6 +85,7 @@ export class BrowserStorage extends BaseSystemService {
   setItemRaw(key: string, value: string): boolean {
     if (key === this.storageName) throw new Error(`Cannot use "${key}" as key`);
     if (!this.ok) return false;
+    if(inIframe()) return true;
     if (this.useSession && sessionStorage) {
       sessionStorage.setItem(key, value);
     } else {

@@ -69,10 +69,10 @@ export class Fingerpriner extends BaseSystemService {
   };
 
   setTouch() {
-    if (this.result) return;
-    const usesTouch = this.result.find(f => f.key === 'usesTouch');
-    if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
-    else usesTouch.value = true;
+    // if (this.result) return;
+    // const usesTouch = this.result.find(f => f.key === 'usesTouch');
+    // if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
+    // else usesTouch.value = true;
   }
 
   get supportsLetAndConst() {

@@ -12,12 +12,46 @@ import {
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { random, clamp } from 'lodash';
-import { IBaseWindowEmitter, WindowEvent, IBaseWindowEmitterType, IBaseWindowKeyboard } from './WindowEvent';
-import { ReactGeneratorFunction } from '../../essential/apps';
+import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
 import { EventEmitter } from 'events';
-import { MsgBoxIcon, MsgBoxButton, MsgBoxButtons, MsgBoxCaption, LWindow, LWindowContent, LWindowUpHover, LWindowBottomHover, LWindowLeftHover, LWindowRightHover, LWindowUpLeftHover, LWindowUpRightHover, LWindowBottomLeftHover, LWindowBottomRightHover, TitleBarButtonDisabled, TitleBarExit, TitleBarIcon, TitleBar, TitleBarRight, TitleBarTitleWithIcon, TitleBarButtonHover, LWindowFullscreen, LWindowBottom, LWindowTop, LWindowRight, LWindowLeft, MsgBoxContent } from './baseWindowStyled';
+import { cloneDeep, randomString } from '../../../shared/utils';
+import {
+  MsgBoxIcon,
+  MsgBoxButton,
+  MsgBoxButtons,
+  MsgBoxCaption,
+  LWindow,
+  LWindowContent,
+  LWindowUpHover,
+  LWindowBottomHover,
+  LWindowLeftHover,
+  LWindowRightHover,
+  LWindowUpLeftHover,
+  LWindowUpRightHover,
+  LWindowBottomLeftHover,
+  LWindowBottomRightHover,
+  TitleBarButtonDisabled,
+  TitleBarExit,
+  TitleBarIcon,
+  TitleBar,
+  TitleBarRight,
+  TitleBarTitleWithIcon,
+  TitleBarButtonHover,
+  MsgBoxContent,
+  Blocker,
+  UserAdminStyled,
+  UserAdminTop,
+  UserAdminContent,
+  TitleBarTitle,
+  UserAdminMiddle,
+  UserAdminBottom,
+  MsgBoxWarper,
+} from './baseWindowStyled';
 import { alwaysOnTop as alwaysOnTopIndex } from '../../Constants';
-
+import { WindowEvent } from './WindowEvent';
+import { Network } from '../../services/SystemService/NetworkSystem';
+import { attachDebugMethod } from '../../essential/requests';
+import './baseWindows.scss'
 const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
@@ -89,58 +123,159 @@ declare type ResizingType =
 
 // eslint-disable-next-line
 export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
+  manifest: IManifest;
   renderInside(): JSX.Element;
 
   load?(): void | Promise<void>;
+  shown?(): void | Promise<void>;
   closed?(): void | Promise<void>;
   closing?(): void | Promise<void>;
-  onKeyDown?(event: KeyboardEvent):void
-  onKeyPress?(event: KeyboardEvent):void
-  onKeyUp?(event: KeyboardEvent):void
+  onKeyDown?(event: KeyboardEvent): void;
+  onKeyPress?(event: KeyboardEvent): void;
+  onKeyUp?(event: KeyboardEvent): void;
+
+  onUpdate?(variables: B): void;
+  onExit?(event: WindowEvent): void;
+  onMinimize?(event: WindowEvent): void;
+  onRestore?(event: WindowEvent): void;
+  onMaximize?(event: WindowEvent): void;
+  onRestoreDown?(event: WindowEvent): void;
+  onBlur?(event: WindowEvent): void;
+  onFocus?(event: WindowEvent): void;
+
+  // | 'move'
+  // | 'resize'
+  // | 'stateUpdate';
 
   resize?(width: number, height: number): void;
 }
 
+const securityKeys = new WeakMap<BaseWindow, Symbol>();
+const adminAllowed = new WeakMap<BaseWindow, boolean>();
+
+function overrideProtector(baseWindow: BaseWindow) {
+  const overrideProtectionShow = (overriddenMethod: string, suggestedMethod: string) => {
+    MessageBox.Show(
+      baseWindow,
+      `System.overrideProtection exception has occurred. You cannot override ${overriddenMethod}()!" Please consider using ${suggestedMethod}() function.`,
+      'Override violation',
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Error,
+    );
+  };
+
+  const overrideProtectionBlock = (overriddenMethod: string) => {
+    MessageBox.Show(
+      baseWindow,
+      `System.overrideProtection exception has occurred. ${overriddenMethod}() is system method you are not allowed to override!"`,
+      'Override violation',
+      MessageBoxButtons.OK,
+      MessageBoxIcon.Error,
+    );
+  };
+
+  const reactMethods: { method: string; suggested: string }[] = [
+    { method: 'componentDidMount', suggested: 'load' },
+    { method: 'componentWillUnmount', suggested: 'closing' },
+    { method: 'render', suggested: 'renderInside' },
+  ];
+  //This has to be in set timeout because baseWindow needs to be shown before showing message boxes
+  for (const rectMethod of reactMethods) {
+    if (baseWindow[rectMethod.method] !== BaseWindow.prototype[rectMethod.method]) {
+      baseWindow.exit();
+      overrideProtectionShow(rectMethod.method, rectMethod.suggested);
+      return;
+    }
+  }
+  const entries = Object.getOwnPropertyDescriptors(BaseWindow.prototype);
+  for (const [key] of Object.entries(entries)) {
+    //bound methods cannot be protected
+    if (!key) continue;
+    if (key === 'constructor') continue;
+    try {
+      BaseWindow.prototype[key];
+    } catch (error) {
+      continue;
+    } // you cannot access getters
+    if (baseWindow[key] && BaseWindow.prototype[key] && baseWindow[key] !== BaseWindow.prototype[key]) {
+      baseWindow.exit();
+      overrideProtectionBlock(key);
+    }
+  }
+}
+
+let anonymous = false;
+
 export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
-  private minHeight = 250;
-  private minWidth = 250;
-  private titleBarOffsetX: number;
-  private titleBarOffsetY: number;
-  private isWindowMoving = false;
-  private lastX = 0;
-  private lastY = 0;
-  private speedX = 0;
-  private speedY = 0;
-  private monitorInterval: number;
-  private resizeType: ResizingType = 'none';
-  private ref: React.RefObject<HTMLDivElement>;
+  private _ref: React.RefObject<HTMLDivElement> = React.createRef();
+  public static readonly onlyOne:boolean = false;
+  private development = false;
+  private _minHeight = 250;
+  private _minWidth = 250;
+  private _titleBarOffsetX: number;
+  private _titleBarOffsetY: number;
+  private _isWindowMoving = false;
+  private _lastX = 0;
+  private _lastY = 0;
+  private _speedX = 0;
+  private _speedY = 0;
+  private _monitorInterval: number;
+  private _resizeType: ResizingType = 'none';
   private wasActive = false;
-  private ignoreMouse = false;
-  private phone = null;
+  private _ignoreMouse = false;
+  private _phone = null;
   private _mounted = false;
-  private manifest: IManifest;
-  private windowEmitter: IBaseWindowEmitter;
-  private started = false;
-  private memorizedState = {
+  private _started = false;
+  private _frozen = false;
+  private _warnOnce = false;
+  private _memorizedState = {
     x: 0,
     y: 0,
   };
   private timeouts: (NodeJS.Timeout | number)[] = [];
 
-  constructor(props: IBaseWindowProps, manifest: IManifest, options?: IWindow, variables?: Readonly<B>) {
+  constructor(props: IBaseWindowProps, options?: IWindow, variables?: Readonly<B>) {
     super(props);
-    this.windowEmitter = new IBaseWindowEmitter(this);
-    this.manifest = manifest;
-    Object.freeze(this.manifest);
-    this.phone = services.fingerprinter.mobile.phone();
-    this.ref = React.createRef();
-    this.minWidth = options && options.minWidth ? options.minWidth : this.minWidth;
-    this.minHeight = options && options.minHeight ? options.minHeight : this.minHeight;
+    //@ts-ignore manifest not showing up
+    const manifest: IManifest = this.constructor.manifest;
 
-    let width = options && options.width ? options.width : this.minWidth;
-    let height = options && options.height ? options.height : this.minHeight;
-    if (height < this.minHeight) height = this.minHeight;
-    if (width < this.minWidth) width = this.minWidth;
+
+    if (!anonymous) {
+      anonymous = false;
+      if (!manifest) {
+        MessageBox._anonymousShow('Missing manifest of the app', 'Error');
+        return;
+      }
+
+      if (!manifest.launchName) {
+        MessageBox._anonymousShow('Missing launch name', 'Error');
+        return;
+      }
+
+      if (!manifest.fullAppName) {
+        MessageBox._anonymousShow('Missing full app Name in manifest name', 'Error');
+        return;
+      }
+
+      if (props === undefined) {
+        MessageBox._anonymousShow(
+          `Cannot create app. Please use 'await ${this.constructor.name}.New()'`,
+          'Wrong implementation',
+        );
+        return;
+      }
+    }
+
+    securityKeys.set(this, Symbol());
+
+    this._phone = services.fingerprinter.mobile.phone();
+    this._minWidth = options && options.minWidth ? options.minWidth : this._minWidth;
+    this._minHeight = options && options.minHeight ? options.minHeight : this._minHeight;
+
+    let width = options && options.width ? options.width : this._minWidth;
+    let height = options && options.height ? options.height : this._minHeight;
+    if (height < this._minHeight) height = this._minHeight;
+    if (width < this._minWidth) width = this._minWidth;
 
     width = clamp(width, 0, window.innerWidth);
     height = clamp(height, 0, window.innerHeight);
@@ -181,176 +316,289 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     //Override protection
     setTimeout(async () => {
-      //This has to be in set timeout because baseWindow needs to be shown before showing message boxes
-      if (this.componentDidMount !== BaseWindow.prototype.componentDidMount) {
-        this.exit();
-        await MessageBox.Show(
-          this,
-          'System.overrideProtection exception has occurred. You cannot override componentDidMount!" Please consider using load() function.',
-          'Error',
-          MessageBoxButtons.OK,
-          MessageBoxIcon.Error,
-        );
-        this.componentDidMount = BaseWindow.prototype.componentDidMount;
-      } else if (this.componentWillUnmount !== BaseWindow.prototype.componentWillUnmount) {
-        this.exit();
-        MessageBox.Show(
-          this,
-          'System.overrideProtection exception has occurred. You cannot override componentWillUnmount!" Please consider using closing() function.',
-          'Error',
-          MessageBoxButtons.OK,
-          MessageBoxIcon.Error,
-        );
-        this.componentWillUnmount = BaseWindow.prototype.componentWillUnmount;
-      } else if (this.componentWillUnmount !== BaseWindow.prototype.componentWillUnmount) {
-        this.exit();
-        MessageBox.Show(
-          this,
-          'System.overrideProtection exception has occurred. You cannot override render!" Please consider using renderInside() function.',
-          'Error',
-          MessageBoxButtons.OK,
-          MessageBoxIcon.Error,
-        );
-        this.componentWillUnmount = BaseWindow.prototype.componentWillUnmount;
-      }
+      overrideProtector(this);
     });
+  }
+
+  public static async New() {
+    // @ts-ignore It does exist
+    const manifest: IManifest = this.prototype.constructor.manifest;
+
+    if (manifest) { 
+      const generator = appConstructorGenerator(manifest.launchName);
+       if (generator) {
+         const app = await services.processor.addApp<BaseWindow>(generator, manifest.launchName);
+         return app.object;
+       }
+    } 
+    const App = this.prototype.constructor;
+    const name = manifest && manifest.launchName ? manifest.launchName : randomString(20);
+    const mockGenerator: ReactGeneratorFunction = (id: number, props?) => <App key={id} id={id} {...props}></App>;
+    anonymous = true;
+
+    const app = await services.processor.addApp<BaseWindow>(mockGenerator, name);
+    return app.object;
+    
   }
 
   async componentDidMount() {
     if (this.load) {
-      const promise = this.load();
-      if (promise instanceof Promise) {
-        try {
-          await promise;
-        } catch (error) {
-          MessageBox.Show(this, error.message, 'Error', MessageBoxButtons.OK, MessageBoxIcon.Error);
-          this.exit();
-          return;
-        }
+      try {
+        const promise = this.load();
+        if (promise instanceof Promise) await promise;
+      } catch (error) {
+        this.exit();
+        MessageBox._anonymousShow(
+          getMessageFromError(error, 'An unknown error occurred on load'),
+          'Error',
+          MessageBoxButtons.OK,
+          MessageBoxIcon.Error,
+        );
+        return;
       }
     }
-    this.started = true;
+    this._started = true;
+    this._mounted = true;
+    window.addEventListener('resize', this._onResize, false);
 
-    this._mounted = false;
-    window.addEventListener('resize', this.onResize, false);
-
-    window.addEventListener('mousedown', this.mouseDown, false);
+    window.addEventListener('mousedown', this._mouseDown, false);
     window.addEventListener('touchstart', this.touchStart, false);
 
-    window.addEventListener('mousemove', this.mouseMove, false);
-    window.addEventListener('touchmove', this.touchMove, false);
+    window.addEventListener('mousemove', this._mouseMove, false);
+    window.addEventListener('touchmove', this._touchMove, false);
 
-    window.addEventListener('mouseup', this.mouseUp, false);
-    window.addEventListener('touchend', this.touchEnd, false);
-    window.addEventListener('keydown', this.keyboard);
-    window.addEventListener('keypress', this.keyboard);
-    window.addEventListener('keyup', this.keyboard);
+    window.addEventListener('mouseup', this._mouseUp, false);
+    window.addEventListener('touchend', this._touchEnd, false);
+    window.addEventListener('keydown', this._keyboard);
+    window.addEventListener('keypress', this._keyboard);
+    window.addEventListener('keyup', this._keyboard);
 
     services.processor.startProcess(this);
     this.changeActiveState(true);
     services.processor.makeActive(this);
     this.setState({ animate: 'in' });
     const t = setTimeout(() => {
-      this.removeTimeout(t);
+      this._removeTimeout(t);
       this.setState({ animate: 'none' });
     }, 1000);
     this.timeouts.push(t);
 
-    this.monitorInterval = setInterval(this.monitor);
+    this._monitorInterval = setInterval(this._windowLoop);
 
-    this.windowEmitter.emit('ready');
-  }
-
-  async componentWillUnmount() {
-    if (this.closing) {
-      const promise = this.closing();
-      if (promise instanceof Promise) {
+    setTimeout(async () => {
+      if (this.shown && this._mounted) {
         try {
-          await promise;
+          const promise = this.shown();
+          if (promise instanceof Promise) await promise;
         } catch (error) {
-          MessageBox.Show(this, error.message, 'Error', MessageBoxButtons.OK, MessageBoxIcon.Error);
+          MessageBox._anonymousShow(
+            getMessageFromError(error, 'An unknown error occurred on shown'),
+            'Error',
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error,
+          );
           return;
         }
       }
-    }
-    this._mounted = true;
-    window.removeEventListener('resize', this.onResize, false);
+    });
+  }
 
-    window.removeEventListener('mousedown', this.mouseDown, false);
+  async componentWillUnmount() {
+    this._mounted = false;
+    clearInterval(this._monitorInterval);
+    window.removeEventListener('resize', this._onResize, false);
+
+    window.removeEventListener('mousedown', this._mouseDown, false);
     window.removeEventListener('touchstart', this.touchStart, false);
 
-    window.removeEventListener('mousemove', this.mouseMove, false);
-    window.removeEventListener('touchmove', this.touchMove, false);
+    window.removeEventListener('mousemove', this._mouseMove, false);
+    window.removeEventListener('touchmove', this._touchMove, false);
 
-    window.removeEventListener('mouseup', this.mouseUp, false);
-    window.removeEventListener('touchend', this.touchEnd, false);
+    window.removeEventListener('mouseup', this._mouseUp, false);
+    window.removeEventListener('touchend', this._touchEnd, false);
     const timeouts = this.timeouts;
     for (const timeout of timeouts) {
-      this.removeTimeout(timeout);
+      this._removeTimeout(timeout);
     }
 
     services.processor.killProcess(this);
-    this.windowEmitter.removeAllListeners();
-    clearInterval(this.monitorInterval);
     if (this.closed) {
-      const promise = this.closed();
-      if (promise instanceof Promise) {
-        try {
-          await promise;
-        } catch (error) {
-          MessageBox.Show(this, error.message, 'Error', MessageBoxButtons.OK, MessageBoxIcon.Error);
-          return;
-        }
+      try {
+        const promise = this.closed();
+        if (promise instanceof Promise) await promise;
+      } catch (error) {
+        MessageBox._anonymousShow(
+          getMessageFromError(error, 'An error occurred while closed'),
+          'Error',
+          MessageBoxButtons.OK,
+          MessageBoxIcon.Error,
+        );
+        return;
       }
     }
   }
 
   render() {
-    if (!this.started) return null;
-    let WindowDiv = LWindow;
+    if (!this._started) return null;
+    let className = this._windowClass;
 
     if (this.state.options.windowType === 'fullscreen') {
-      WindowDiv = LWindowFullscreen;
-    } else if(this.state.options.maximized) {
+      className += ' LWindowFullscreen';
+    } else if (this.state.options.maximized) {
       switch (navBarPos) {
         case 'bottom':
-          WindowDiv = LWindowBottom;
-        break;
-        case 'top':
-          WindowDiv = LWindowTop;
-        break;
+          className += ' LWindowBottom';          
+          break;
+          case 'top':
+            className += ' LWindowTop';          
+          break;
         case 'left':
-          WindowDiv = LWindowLeft;
-        break;
-        case 'right':
-          WindowDiv = LWindowRight;
-        break;
+          className += ' LWindowLeft';    
+          break;
+          case 'right':
+            className += ' LWindowRight';    
+          break;
         default:
           break;
       }
-    } 
+    }
 
+    const blocker = this._frozen ? <Blocker /> : null;
     return (
-      <WindowDiv className={this.windowClass} ref={this.ref} style={this.getStyle()}>
-        {this.renderResizable()}
-        {this.renderTitleBar()}
-        <LWindowContent>{this.giveView()}</LWindowContent>
-      </WindowDiv>
+      <LWindow className={className + ' lll'} ref={this._ref} style={this.getStyle()}>
+        {blocker}
+        {this._renderResizable()}
+        {this._renderTitleBar()}
+        <LWindowContent>
+          {blocker}
+          {this._giveView()}
+        </LWindowContent>
+      </LWindow>
     );
   }
 
-  on(event: IBaseWindowEmitterType | '*', listener: (event: WindowEvent) => void) {
-    return this.windowEmitter.on(event, listener);
+  changeOptions(options: IWindow) {
+    this.setState({ options: this.verifyOptions(options) });
   }
 
-  private monitor = () => {
-    if (!this.isWindowMoving) {
-      const { x, y, corrected } = this.getFixedPos(this.state.x - this.speedX, this.state.y - this.speedY);
+  setVariables(object: Partial<B>) {
+    const state = { ...this.state };
+    Object.assign(state.variables, object)
+    this.setState(state);
+  }
+
+  changeActiveState(active: boolean, doProcess = true) {
+    if (this._frozen) return;
+    if (this.state.active) this.wasActive = true;
+    else this.wasActive = false;
+
+    if (active !== this.state.active) {
+      if (active) {
+        const we = new WindowEvent('focus', this);
+        if (this.onFocus) {
+          try {
+            this.onFocus(we);
+          } catch (error) {
+            this.exit();
+            MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onFocus() method')}`);
+          }
+        }
+
+        if (we.isDefaultPrevented && doProcess) return;
+      } else if (!active) {
+        if (this.onBlur) {
+          const we = new WindowEvent('blure', this);
+          try {
+            this.onBlur(we);
+          } catch (error) {
+            this.exit();
+            MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onBlur() method')}`);
+          }
+          if (we.isDefaultPrevented && doProcess) return;
+        }
+      }
+      this.setState({ active });
+    }
+    if (active && doProcess) services.processor.makeActive(this);
+  }
+
+  focus() {
+    if (this.minimized) {
+      this.minimize();
+    }
+    this.changeActiveState(true);
+  }
+
+  minimize = () => {
+    const options = { ...this.state.options };
+    options.minimized = !options.minimized;
+
+    this.setState({
+      animate: options.minimized ? 'unMinimize' : 'minimize',
+      options,
+    });
+  };
+
+  //You need app key to access key
+  freeze(key: Symbol) {
+    this.changeActiveState(false);
+    if (key === securityKeys.get(this)) {
+      this._frozen = true;
+    } else {
+      MessageBox.Show(this, 'Invalid key');
+    }
+  }
+
+  unFreeze(key: Symbol) {
+    if (key === securityKeys.get(this)) {
+      this._frozen = false;
+    } else {
+      MessageBox.Show(this, 'Invalid key');
+    }
+  }
+
+  getProcessor() {
+    if (adminAllowed.get(this)) {
+      return services.processor;
+    }
+    return null;
+  }
+
+  async requestAdmin(): Promise<boolean> {
+    if (!adminAllowed.get(this)) {
+      return await AdminPromp.requestAdmin(this);
+    }
+    return adminAllowed.get(this);
+  }
+
+  getAccount(password: string) {
+    return services.account;
+  }
+
+  get network() {
+    return services.network;
+  }
+
+  setItem(value: string) {
+    return services.browserStorage.setItem(this.getManifest().fullAppName, value);
+  }
+
+  getItem() {
+    return services.browserStorage.getItem(this.getManifest().fullAppName);
+  }
+
+  get reference() {
+    return this._ref;
+  }
+
+  private _windowLoop = () => {
+    if (!this._isWindowMoving) {
+      const { x, y, corrected } = this._getFixedPos(this.state.x - this._speedX, this.state.y - this._speedY);
       if (x === this.state.x && y === this.state.y) return;
 
       if (corrected) {
-        this.speedX = 0;
-        this.speedY = 0;
+        this._speedX = 0;
+        this._speedY = 0;
       }
 
       this.setState({ x, y });
@@ -358,63 +606,61 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       const slidingAmount = 0.05;
       const autoAlign = 0.01;
 
-      if (this.speedY > autoAlign) this.speedY = this.speedY - slidingAmount * this.speedY;
-      else if (this.speedY < -autoAlign) this.speedY = this.speedY + slidingAmount * -this.speedY;
-      else this.speedY = this.speedY = 0;
+      if (this._speedY > autoAlign) this._speedY = this._speedY - slidingAmount * this._speedY;
+      else if (this._speedY < -autoAlign) this._speedY = this._speedY + slidingAmount * -this._speedY;
+      else this._speedY = this._speedY = 0;
 
-      if (this.speedX > autoAlign) this.speedX = this.speedX - slidingAmount * this.speedX;
-      else if (this.speedX < -autoAlign) this.speedX = this.speedX + slidingAmount * -this.speedX;
-      else this.speedX = this.speedX = 0;
+      if (this._speedX > autoAlign) this._speedX = this._speedX - slidingAmount * this._speedX;
+      else if (this._speedX < -autoAlign) this._speedX = this._speedX + slidingAmount * -this._speedX;
+      else this._speedX = this._speedX = 0;
     }
   };
 
-  private renderTitleBar() {
+  private _renderTitleBar() {
     if (this.state.options.windowType === 'windowed') {
       return (
         <TitleBar
-          style={!this.active ? { backgroundColor: 'rgba(255, 255, 255, 0.25)'} : null}
-          onMouseDown={e => this.onTitleBarMouseDown(e.nativeEvent)}
-          onTouchStart={e => this.onTitleBarTouchStart(e.nativeEvent)}
+          style={!this.active ? { backgroundColor: 'rgba(64, 64, 64, 1)' } : { backgroundColor: 'rgba(0, 0, 0, 1)' }}
+          onMouseDown={e => this._onTitleBarMouseDown(e.nativeEvent)}
+          onTouchStart={e => this._onTitleBarTouchStart(e.nativeEvent)}
           onTouchEnd={() => {
-            if (this.ignoreMouse) this.ignoreMouse = false;
+            if (this._ignoreMouse) this._ignoreMouse = false;
           }}
         >
-          {this.renderIcon()}
-          {this.renderTitleBarTitle()}
+          {this._renderIcon()}
+          {this._renderTitleBarTitle()}
           <TitleBarRight>
-            {this.renderRedirectToWebpage()}
-            {this.renderMinimize()}
-            {this.renderMaximizeRestoreDown()}
-            {this.renderExit()}
+            {this._renderRedirectToWebpage()}
+            {this._renderMinimize()}
+            {this._renderMaximizeRestoreDown()}
+            {this._renderExit()}
           </TitleBarRight>
         </TitleBar>
       );
     }
     return null;
   }
-  private renderIcon() {
+  private _renderIcon() {
     if (this.state.options.showIcon) {
       return <TitleBarIcon src={this.state.options.image} alt='App Icon' />;
     }
     return null;
   }
 
-  private renderTitleBarTitle() {
+  private _renderTitleBarTitle() {
     const tClass = this.state.options.showIcon ? 'title-bar-title-with-icon' : 'title-bar-title';
 
     if (this.state.options.title) {
- 
       if (this.state.options.showIcon) {
-        return <TitleBarTitleWithIcon>{this.state.options.title}</TitleBarTitleWithIcon>
+        return <TitleBarTitleWithIcon>{this.state.options.title}</TitleBarTitleWithIcon>;
       } else {
-        return <TitleBarExit>{this.state.options.title}</TitleBarExit>
+        return <TitleBarTitle>{this.state.options.title}</TitleBarTitle>;
       }
-
     }
     return null;
   }
 
-  private renderExit() {
+  private _renderExit() {
     if (this.state.options.closeButton === 'shown') {
       return (
         <TitleBarExit onClick={this.buttonExit}>
@@ -431,20 +677,21 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return null;
   }
 
-  private renderRedirectToWebpage = () => {
+  private _renderRedirectToWebpage() {
     if (!!this.state.options.redirectToWebpageButton) {
       return (
-        <TitleBarButtonHover onClick={this.redirect}>
+        <TitleBarButtonHover onClick={this._redirect}>
           <FontAwesomeIcon icon={faFile}></FontAwesomeIcon>
         </TitleBarButtonHover>
       );
     } else {
       return null;
     }
-  };
+  }
 
-  private redirect = async () => {
-    this.buttonMinimize();
+  private _redirect = async () => {
+    if (this._frozen) return;
+    this._buttonMinimize();
     try {
       await services.processor.saveState();
       document.location.href = this.state.options.redirectToWebpageButton;
@@ -453,9 +700,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
   };
 
-  private renderMaximizeRestoreDown() {
+  private _renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
-    const buttonFunction = this.state.options.maximized ? this.buttonMaximize : this.buttonRestore;
+    const buttonFunction = this.state.options.maximized ? this._buttonMaximize : this._buttonRestore;
 
     if (this.state.options.maximizeRestoreDownButton === 'shown') {
       return (
@@ -473,14 +720,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return null;
   }
 
-  private renderMinimize() {
+  private _renderMinimize() {
     if (this.state.options.minimizeButton === 'shown') {
       return (
         <TitleBarButtonHover
           onMouseDown={() => {
-            this.isWindowMoving = false;
+            this._isWindowMoving = false;
           }}
-          onClick={this.buttonMinimize}
+          onClick={this._buttonMinimize}
         >
           <FontAwesomeIcon icon={faWindowMinimize}></FontAwesomeIcon>
         </TitleBarButtonHover>
@@ -495,55 +742,55 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return null;
   }
 
-  private renderResizable() {
+  private _renderResizable() {
     if (this.state.options.resizable && this.state.options.windowType === 'windowed') {
       return (
         <>
           <LWindowUpHover
-            onMouseEnter={() => this.mouseResize('verticalResize')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('verticalResize')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('up')}
             onTouchStart={() => this.setResize('up')}
           ></LWindowUpHover>
           <LWindowBottomHover
-            onMouseEnter={() => this.mouseResize('verticalResize')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('verticalResize')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('bottom')}
             onTouchStart={() => this.setResize('bottom')}
           ></LWindowBottomHover>
           <LWindowLeftHover
-            onMouseEnter={() => this.mouseResize('horizontalResize')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('horizontalResize')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('left')}
             onTouchStart={() => this.setResize('left')}
           ></LWindowLeftHover>
           <LWindowRightHover
-            onMouseEnter={() => this.mouseResize('horizontalResize')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('horizontalResize')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('right')}
             onTouchStart={() => this.setResize('right')}
           ></LWindowRightHover>
           <LWindowUpLeftHover
-            onMouseEnter={() => this.mouseResize('diagonalResize2')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('diagonalResize2')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('left-up')}
             onTouchStart={() => this.setResize('left-up')}
           ></LWindowUpLeftHover>
           <LWindowUpRightHover
-            onMouseEnter={() => this.mouseResize('diagonalResize1')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('diagonalResize1')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('right-up')}
             onTouchStart={() => this.setResize('right-up')}
           ></LWindowUpRightHover>
           <LWindowBottomLeftHover
-            onMouseEnter={() => this.mouseResize('diagonalResize1')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('diagonalResize1')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('left-bottom')}
             onTouchStart={() => this.setResize('left-bottom')}
           ></LWindowBottomLeftHover>
           <LWindowBottomRightHover
-            onMouseEnter={() => this.mouseResize('diagonalResize2')}
-            onMouseLeave={this.mouseResizeLeave}
+            onMouseEnter={() => this._mouseResize('diagonalResize2')}
+            onMouseLeave={this._mouseResizeLeave}
             onMouseDown={() => this.setResize('right-bottom')}
             onTouchStart={() => this.setResize('right-bottom')}
           ></LWindowBottomRightHover>
@@ -553,19 +800,20 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return null;
   }
 
-  private mouseResize = (type: CursorType) => {
-    if (!this.isWindowMoving) mousePointer.changeMouse(type);
+  private _mouseResize = (type: CursorType) => {
+    if (!this._isWindowMoving) mousePointer.changeMouse(type);
   };
   private setResize = (resizeType: ResizingType) => {
-    this.resizeType = resizeType;
+    this._resizeType = resizeType;
   };
 
-  private mouseResizeLeave = () => {
-    if (this.resizeType === 'none') mousePointer.changeMouse('normal');
+  private _mouseResizeLeave = () => {
+    if (this._resizeType === 'none') mousePointer.changeMouse('normal');
   };
 
-  private onResize = () => {
-    const { x, y } = this.getFixedPos();
+  private _onResize = () => {
+    if (this._frozen) return;
+    const { x, y } = this._getFixedPos();
     const width = clamp(this.state.width, 0, window.innerWidth);
     const height = clamp(this.state.height, 0, window.innerHeight);
     if (x !== this.state.x || y !== this.state.y || width !== this.state.width || height !== this.state.height) {
@@ -573,10 +821,10 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
   };
 
-  private getFixedPos(xPos?: number, yPos?: number) {
+  private _getFixedPos(xPos?: number, yPos?: number) {
     let x = xPos === undefined ? this.state.x : xPos;
     let y = yPos === undefined ? this.state.y : yPos;
-    const bounding = this.ref.current.getBoundingClientRect();
+    const bounding = this._ref.current.getBoundingClientRect();
     const maxY = window.innerHeight - bounding.height;
     const maxX = window.innerWidth - bounding.width;
     let corrected = false;
@@ -592,7 +840,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return { x, y, corrected };
   }
 
-  private get windowClass() {
+  private get _windowClass() {
     switch (this.state.animate) {
       case 'in':
         return `animated jackInTheBox faster`;
@@ -606,22 +854,23 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return '';
   }
 
-  private giveView = () => {
+  private _giveView = () => {
     if (!this.renderInside) return <div>Missing content</div>;
     return this.renderInside();
   };
 
-  private mouseMove = (event: MouseEvent) => {
-    if (this.ignoreMouse) return;
-    this.handleWindowMove(event.clientX, event.clientY);
+  private _mouseMove = (event: MouseEvent) => {
+    if (this._frozen) return;
+    if (this._ignoreMouse) return;
+    this._handleWindowMove(event.clientX, event.clientY);
   };
 
-  private touchMove = (event: TouchEvent) => {
-    this.handleWindowMove(event.touches[0].clientX, event.touches[0].clientY);
+  private _touchMove = (event: TouchEvent) => {
+    this._handleWindowMove(event.touches[0].clientX, event.touches[0].clientY);
   };
 
-  private handleWindowMove(clientX: number, clientY: number) {
-    if (this.resizeType !== 'none' && !this.isWindowMoving) {
+  private _handleWindowMove(clientX: number, clientY: number) {
+    if (this._resizeType !== 'none' && !this._isWindowMoving) {
       let width = this.state.width;
       let height = this.state.height;
       let x = this.state.x;
@@ -631,7 +880,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       const maxHeight = window.innerHeight;
       const maxWidth = window.innerWidth;
 
-      switch (this.resizeType) {
+      switch (this._resizeType) {
         case 'right':
           if (newX >= window.innerWidth) break;
           width = newX - this.state.x;
@@ -639,7 +888,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         case 'left':
           if (newX <= 0) break;
           const tlWidth = this.state.x - clientX + this.state.width;
-          if (tlWidth >= this.minWidth && tlWidth < maxWidth) {
+          if (tlWidth >= this._minWidth && tlWidth < maxWidth) {
             width = tlWidth;
             x = clientX;
           }
@@ -648,7 +897,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         case 'up':
           if (newY <= 0) break;
           const upHeight = this.state.y - clientY + this.state.height;
-          if (upHeight >= this.minHeight && upHeight < maxHeight) {
+          if (upHeight >= this._minHeight && upHeight < maxHeight) {
             height = upHeight;
             y = clientY;
           }
@@ -668,7 +917,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           if (newY >= window.innerHeight) break;
           const lbWidth = this.state.x - clientX + this.state.width;
           height = clientY - this.state.y;
-          if (lbWidth >= this.minWidth && lbWidth < maxWidth) {
+          if (lbWidth >= this._minWidth && lbWidth < maxWidth) {
             x = clientX;
             width = lbWidth;
           }
@@ -677,7 +926,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           if (newX >= window.innerWidth) break;
           if (newY <= 0) break;
           const ruHeight = this.state.y - clientY + this.state.height;
-          if (ruHeight >= this.minHeight && ruHeight < maxHeight) {
+          if (ruHeight >= this._minHeight && ruHeight < maxHeight) {
             height = ruHeight;
             y = clientY;
             width = clientX - this.state.x;
@@ -689,11 +938,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           if (newY <= 0) break;
           const ltHeight = this.state.y - clientY + this.state.height;
           const ltWidth = this.state.x - clientX + this.state.width;
-          if (ltWidth >= this.minWidth && ltWidth < maxWidth) {
+          if (ltWidth >= this._minWidth && ltWidth < maxWidth) {
             x = clientX;
             width = ltWidth;
           }
-          if (ltHeight >= this.minHeight && ltHeight < maxHeight) {
+          if (ltHeight >= this._minHeight && ltHeight < maxHeight) {
             height = ltHeight;
             y = clientY;
           }
@@ -703,98 +952,83 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           break;
       }
 
-      width = clamp(width, this.minWidth, maxWidth);
-      height = clamp(height, this.minHeight, maxHeight);
+      width = clamp(width, this._minWidth, maxWidth);
+      height = clamp(height, this._minHeight, maxHeight);
 
       this.setState({ width, height, y, x });
       if (this.resize) this.resize(this.state.width, this.state.height);
     }
 
-    if (this.isWindowMoving) {
-      this.calculateSpeed(clientX, clientY);
+    if (this._isWindowMoving) {
+      this._calculateSpeed(clientX, clientY);
 
       //prevents moving outside
-      const { x, y } = this.getFixedPos(clientX - this.titleBarOffsetX, clientY - this.titleBarOffsetY);
+      const { x, y } = this._getFixedPos(clientX - this._titleBarOffsetX, clientY - this._titleBarOffsetY);
       this.setState({ x, y });
     }
   }
 
-  private mouseDown = (event: MouseEvent | TouchEvent) => {
-    const div = this.ref.current as HTMLDivElement;
+  private _mouseDown = (event: MouseEvent | TouchEvent) => {
+    const div = this._ref.current as HTMLDivElement;
     const target = event.target as HTMLDivElement;
     if (div.contains(target)) this.changeActiveState(true);
     else this.changeActiveState(false);
   };
 
   private touchStart = (event: TouchEvent) => {
-    this.ignoreMouse = true;
-    this.mouseDown(event);
+    if (this._frozen) return;
+    this._ignoreMouse = true;
+    this._mouseDown(event);
   };
 
-  changeActiveState(active: boolean, doProcess = true) {
-    if (this.state.active) this.wasActive = true;
-    else this.wasActive = false;
-
-    if (active !== this.state.active) {
-      if (active) {
-        this.windowEmitter.emit('focus');
-        //const shouldPreventDefault = this.emitter.emit('focus');
-        //if (!shouldPreventDefault && doProcess) return;
-      } else if (!active) {
-        this.windowEmitter.emit('blur');
-        //const shouldPreventDefault = this.emitter.emit('blur');
-        //if (!shouldPreventDefault && doProcess) return;
-      }
-      this.setState({ active });
-    }
-    if (active && doProcess) services.processor.makeActive(this);
+  private _calculateSpeed(x: number, y: number) {
+    this._speedX = this._lastX - x;
+    this._speedY = this._lastY - y;
+    this._lastY = y;
+    this._lastX = x;
   }
 
-  private calculateSpeed(x: number, y: number) {
-    this.speedX = this.lastX - x;
-    this.speedY = this.lastY - y;
-    this.lastY = y;
-    this.lastX = x;
-  }
-
-  private mouseUp = (event: MouseEvent) => {
-    this.resizeType = 'none';
-    this.onTitleBarSetOffset(event.clientX, event.clientY, false);
+  private _mouseUp = (event: MouseEvent) => {
+    if (this._frozen) return;
+    this._resizeType = 'none';
+    this._onTitleBarSetOffset(event.clientX, event.clientY, false);
   };
 
-  private touchEnd = (event: TouchEvent) => {
-    this.resizeType = 'none';
+  private _touchEnd = (event: TouchEvent) => {
+    if (this._frozen) return;
+    this._resizeType = 'none';
 
-    if (event.touches[0]) this.onTitleBarSetOffset(event.touches[0].clientX, event.touches[0].clientY, false);
-    else this.onTitleBarSetOffset(0, 0, false);
+    if (event.touches[0]) this._onTitleBarSetOffset(event.touches[0].clientX, event.touches[0].clientY, false);
+    else this._onTitleBarSetOffset(0, 0, false);
   };
 
-  private onTitleBarMouseDown(event: MouseEvent) {
+  private _onTitleBarMouseDown(event: MouseEvent) {
     const div = event.target as HTMLDivElement;
     if (div.tagName.toLowerCase() === 'span' || div.tagName.toLowerCase() === 'div')
-      this.onTitleBarSetOffset(event.offsetX, event.offsetY);
+      this._onTitleBarSetOffset(event.offsetX, event.offsetY);
   }
-  private onTitleBarTouchStart = (event: TouchEvent) => {
-    if (!this.ignoreMouse) this.ignoreMouse = true;
+  private _onTitleBarTouchStart = (event: TouchEvent) => {
+    if (!this._ignoreMouse) this._ignoreMouse = true;
     if (event.targetTouches[0]) {
       const div = event.target as HTMLDivElement;
       if (div.tagName.toLowerCase() === 'span' || div.tagName.toLowerCase() === 'div') {
         const x = event.targetTouches[0].clientX - this.state.x;
         const y = event.targetTouches[0].clientY - this.state.y;
-        this.onTitleBarSetOffset(x, y);
+        this._onTitleBarSetOffset(x, y);
       }
     }
   };
 
-  private onTitleBarSetOffset = (offsetX: number, offsetY: number, moving = true) => {
-    this.isWindowMoving = moving;
-    this.titleBarOffsetX = offsetX || 0;
-    this.titleBarOffsetY = offsetY || 0;
+  private _onTitleBarSetOffset = (offsetX: number, offsetY: number, moving = true) => {
+    if (this._frozen) return;
+    this._isWindowMoving = moving;
+    this._titleBarOffsetX = offsetX || 0;
+    this._titleBarOffsetY = offsetY || 0;
   };
 
   private getStyle(): React.CSSProperties {
     let zIndex = 10;
-    if (this.active) zIndex =  10000;
+    if (this.active) zIndex = 10000;
     if (this.state.options.alwaysOnTop) zIndex = alwaysOnTopIndex;
     if (this.state.options.maximized) {
       const scale = devicePixelRatio * 20;
@@ -815,49 +1049,89 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     };
   }
 
-  private buttonMinimize = () => {
-    const shouldPrevent = this.windowEmitter.emit('buttonMinimize');
-    if (!shouldPrevent) this.minimize();
-  };
+  private _buttonMinimize = () => {
+    if (this._frozen) return;
+    const we = new WindowEvent('minimize', this);
+    if (this.onMinimize) {
+      try {
+        this.onFocus(we);
+      } catch (error) {
+        this.exit();
+        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onMinimize() method')}`);
+      }
+    }
 
-  minimize = () => {
-    const options = { ...this.state.options };
-    options.minimized = !options.minimized;
-
-    this.setState({
-      animate: options.minimized ? 'unMinimize' : 'minimize',
-      options,
-    });
+    if (!we.isDefaultPrevented) this.minimize();
   };
 
   private buttonExit = () => {
-    const shouldContinue = this.windowEmitter.emit('buttonExit');
-    if (!shouldContinue) this.exit();
+    if (this._frozen) return;
+    const we = new WindowEvent('exit', this);
+    if (this.onExit) {
+      try {
+        this.onExit(we);
+      } catch (error) {
+        this.exit();
+        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onExit() method')}`);
+      }
+    }
+    if (!we.isDefaultPrevented) this.exit();
   };
 
-  exit = (): Promise<void> => {
-    return new Promise(resolve => {
-      this.windowEmitter.emit('exit');
+  exit(): Promise<void> {
+    return new Promise(async resolve => {
+      if (this.closing) {
+        try {
+          const promise = this.closing();
+          if (promise instanceof Promise) await promise;
+        } catch (error) {
+          MessageBox._anonymousShow(
+            getMessageFromError(error, 'An error occurred while closing'),
+            'Error',
+            MessageBoxButtons.OK,
+            MessageBoxIcon.Error,
+          );
+        }
+      }
+      securityKeys.delete(this);
       this.setState({
         animate: 'out',
       });
       const t = setTimeout(() => {
         services.processor.killProcess(this);
-        this.removeTimeout(t);
+        this._removeTimeout(t);
         resolve();
       }, 200);
       this.timeouts.push(t);
     });
+  }
+
+  private _buttonRestore = () => {
+    if (this._frozen) return;
+    const we = new WindowEvent('restore', this);
+    if (this.onRestore) {
+      try {
+        this.onRestore(we);
+      } catch (error) {
+        this.exit();
+        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onRestore() method')}`);
+      }
+    }
+    if (!we.isDefaultPrevented) this.maximizeRestoreDown();
   };
 
-  private buttonRestore = () => {
-    const shouldPrevent = this.windowEmitter.emit('buttonMaximize');
-    if (!shouldPrevent) this.maximizeRestoreDown();
-  };
-
-  private buttonMaximize = () => {
-    const shouldPrevent = this.windowEmitter.emit('buttonMaximize');
-    if (!shouldPrevent) this.maximizeRestoreDown();
+  private _buttonMaximize = () => {
+    if (this._frozen) return;
+    const we = new WindowEvent('maximize', this);
+    if (this.onMaximize) {
+      try {
+        this.onMaximize(we);
+      } catch (error) {
+        this.exit();
+        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onMaximize() method')}`);
+      }
+    }
+    if (!we.isDefaultPrevented) this.maximizeRestoreDown();
   };
 
   maximizeRestoreDown = () => {
@@ -865,14 +1139,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     options.maximized = !options.maximized;
 
     if (options.maximized || options.windowType === 'fullscreen') {
-      this.memorizedState = {
+      this._memorizedState = {
         x: this.state.x,
         y: this.state.y,
       };
     } else {
       this.setState({
-        x: this.memorizedState.x,
-        y: this.memorizedState.y,
+        x: this._memorizedState.x,
+        y: this._memorizedState.y,
       });
     }
 
@@ -881,7 +1155,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       options,
     });
     const t = setTimeout(() => {
-      this.removeTimeout(t);
+      this._removeTimeout(t);
       this.setState({ animate: 'none' });
     }, 500);
     this.timeouts.push(t);
@@ -897,30 +1171,23 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       | Pick<IBaseWindowProps, any>,
     callback?: () => void,
   ): void {
-    //console.log(state);
-    if (this._mounted) {
-      console.error(new Error('Trying to update destroyed component'));
+    if (!this._mounted) {
+      if (!this._warnOnce) {
+        MessageBox._anonymousShow('Trying to update not mounted or destroyed window', 'Crash prevention');
+        this._warnOnce = true;
+        this.exit();
+      }
     } else {
       super.setState(state, callback);
-      this.windowEmitter.emit('stateUpdate');
+      if (this.onUpdate) {
+        try {
+          this.onUpdate(this.state.variables);
+        } catch (error) {
+          this.exit();
+          MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onUpdate() method')}`);
+        }
+      }
     }
-  }
-
-  _silentSetState(
-    state:
-      | IBaseWindowState<B>
-      | ((
-          prevState: Readonly<IBaseWindowState<B>>,
-          props: Readonly<IBaseWindowProps>,
-        ) => IBaseWindowState<any> | Pick<IBaseWindowState<B>, any>)
-      | Pick<IBaseWindowProps, any>,
-    callback?: () => void,
-  ): void {
-    super.setState(state, callback);
-  }
-
-  changeOptions(options: IWindow) {
-    this.setState({ options: this.verifyOptions(options) });
   }
 
   private verifyOptions(options?: IWindow): IWindow {
@@ -933,46 +1200,66 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       minimizeButton: options.minimizeButton === undefined ? 'shown' : options.minimizeButton,
       maximized: options.maximized === undefined ? false : options.maximized,
       minimized: options.minimized === undefined ? false : options.minimized,
-      image: options.image === undefined ? manifest.icon ||  DEFAULT_APP_IMAGE : options.image,
+      width: options.width === undefined ? window.innerWidth : options.width,
+      height: options.height === undefined ? window.innerHeight : options.height,
+
+      maxWidth: options.maxWidth === undefined ? window.innerWidth : options.maxWidth,
+      maxHeight: options.maxHeight === undefined ? window.innerHeight : options.maxHeight,
+
+      minWidth: options.minWidth === undefined ? 0 : options.minWidth,
+      minHeight: options.maxHeight === undefined ? 0 : options.minHeight,
+
+      image: options.image === undefined ? this.getManifest().icon || DEFAULT_APP_IMAGE : options.image,
       redirectToWebpageButton: options.redirectToWebpageButton || options.redirectToWebpageButton,
       showIcon: options.showIcon === undefined ? true : options.showIcon,
-      title: options.title === undefined ? this.manifest.fullAppName || 'An app' : options.title,
-      maximizeRestoreDownButton: options.maximizeRestoreDownButton === undefined ? 'shown' : options.maximizeRestoreDownButton,
-      alwaysOnTop: options.alwaysOnTop === undefined ? false : options.alwaysOnTop
+      title: options.title === undefined ? this.getManifest().fullAppName || 'An app' : options.title,
+      maximizeRestoreDownButton:
+        options.maximizeRestoreDownButton === undefined ? 'shown' : options.maximizeRestoreDownButton,
+      alwaysOnTop: options.alwaysOnTop === undefined ? false : options.alwaysOnTop,
     };
   }
 
-  setOptions(options: IWindow) {
-    const state = { ...this.state };
-    state.options = this.verifyOptions(options);
-    this.setState(state);
-  }
-
-  setVariables(object: B) {
-    const state = { ...this.state };
-    state.variables = object;
-    this.setState(state);
-  }
-
-  private removeTimeout(timeout: NodeJS.Timeout | number) {
+  private _removeTimeout(timeout: NodeJS.Timeout | number) {
     const indexOf = this.timeouts.indexOf(timeout);
     clearTimeout(timeout as number);
     if (indexOf === -1) return;
     this.timeouts.splice(indexOf, 1);
   }
 
-  private keyboard = (ev: KeyboardEvent) => {
+  private _keyboard = (ev: KeyboardEvent) => {
+    if (this._frozen) return;
     if (!this.state.active) return;
-    switch(ev.type){
+    switch (ev.type) {
       case 'keydown':
-      if (this.onKeyDown) this.onKeyDown(ev);   
-      break
+        if (this.onKeyDown) {
+          try {
+            this.onKeyDown(ev);
+          } catch (error) {
+            this.exit();
+            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onkeyDown'), 'Error');
+          }
+        }
+        break;
       case 'keypress':
-        if (this.onKeyPress) this.onKeyPress(ev);   
-        break
-        case 'keyup':
-          if (this.onKeyUp) this.onKeyUp(ev);   
-        break
+        if (this.onKeyPress) {
+          try {
+            this.onKeyPress(ev);
+          } catch (error) {
+            this.exit();
+            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onKeyPress'), 'Error');
+          }
+        }
+        break;
+      case 'keyup':
+        if (this.onKeyUp) {
+          try {
+            this.onKeyUp(ev);
+          } catch (error) {
+            this.exit();
+            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onKeyUp'), 'Error');
+          }
+        }
+        break;
     }
   };
 
@@ -1010,7 +1297,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   get isPhone() {
-    return this.phone;
+    return this._phone;
   }
 
   get flashing(): boolean {
@@ -1025,8 +1312,18 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return !!this.props.onlyOne;
   }
 
-  get _manifest() {
-    return this.manifest;
+  getManifest(): IManifest {
+    //@ts-ignore
+    const manifest:IManifest= this.constructor.manifest; 
+    if (manifest) {
+      return manifest;
+    } else {
+      return {
+        fullAppName: 'Anonymous app',
+        launchName: '',
+        icon: DEFAULT_APP_IMAGE,
+      }
+    }
   }
 }
 
@@ -1059,74 +1356,106 @@ export enum MessageBoxIcon {
   Warning,
 }
 
-export const manifest: IManifest = {
-  fullAppName: 'message box',
-  launchName: 'msgBox',
-  icon: '/assets/images/appsIcons/appIcon.svg',
-};
-
 interface IMessageBoxState {
   message: string;
+  content: string;
   buttons: MessageBoxButtons;
   icon: MessageBoxIcon;
 }
 
 export class MessageBox extends BaseWindow<IMessageBoxState> {
-  public msgBoxEmitter = new EventEmitter();
+  msgBoxEmitter = new EventEmitter();
   private _dialogResult: DialogResult;
 
-  constructor(props: IBaseWindowProps) {
+  public static manifest: IManifest = {
+    fullAppName: 'message box',
+    launchName: 'msgBox',
+    icon: '/assets/images/appsIcons/appIcon.svg',
+  };
+
+  constructor(props) {
     super(
       props,
-      manifest,
       {
         title: 'Message box',
         image: '/assets/images/appsIcons/appIcon.svg',
         startPos: 'center',
-        alwaysOnTop: true,
+        //alwaysOnTop: true,
         resizable: false,
-
+        showIcon: false,
         minimizeButton: 'hidden',
-        maximizeRestoreDownButton:'hidden',
+        maximizeRestoreDownButton: 'hidden',
         minimized: false,
         minHeight: 175,
         minWidth: 400,
       },
       {
         message: '',
+        content: '',
         buttons: MessageBoxButtons.OK,
         icon: MessageBoxIcon.None,
       },
     );
-
-    this.on('exit', () => {
-      this.onButtonClick(DialogResult.Cancel, false);
-    });
   }
 
   public static Show(
-    object: BaseWindow,
+    baseWindow: BaseWindow,
     message: string,
     caption?: string,
     messageBoxButtons?: MessageBoxButtons,
     messageBoxIcon?: MessageBoxIcon,
   ) {
-    return new Promise<DialogResult>(resolve => {
+    return new Promise<DialogResult>(async resolve => {
       const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
         <MessageBox key={id} id={id} {...props}></MessageBox>
       );
+      const key = securityKeys.get(baseWindow);
+      baseWindow.freeze(key);
+      const changeActiveState = baseWindow.changeActiveState;
+      const messageBox = await services.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
 
-      const messageBox = services.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox').object;
-      messageBox.message = message || '';
-      messageBox.caption = caption || 'Message box';
-      messageBox.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
-      messageBox.icon = messageBoxIcon || MessageBoxIcon.None;
       const onClick = (dialogResult: DialogResult) => {
-        messageBox.msgBoxEmitter.removeListener('onClick', onClick);
+        messageBox.object.msgBoxEmitter.removeListener('onClick', onClick);
+        baseWindow.changeActiveState = changeActiveState;
+        baseWindow.unFreeze(key);
         resolve(dialogResult);
       };
 
-      messageBox.msgBoxEmitter.on('onClick', onClick);
+      messageBox.object.message = message || '';
+      messageBox.object.caption = caption || 'Message box';
+      messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
+      messageBox.object.icon = messageBoxIcon || MessageBoxIcon.None;
+      baseWindow.changeActiveState = bool => {
+        setTimeout(() => {
+          if (bool && !messageBox.object.active) {
+            messageBox.object.changeActiveState(true);
+          }
+        });
+      };
+      messageBox.object.msgBoxEmitter.on('onClick', onClick);
+    });
+  }
+
+  onExit(event: WindowEvent) {
+    this.onButtonClick(DialogResult.Cancel);
+    event.preventDefault();
+  }
+
+  public static _anonymousShow(
+    message: string,
+    caption?: string,
+    messageBoxButtons?: MessageBoxButtons,
+    messageBoxIcon?: MessageBoxIcon,
+  ) {
+    const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
+      <MessageBox key={id} id={id} {...props}></MessageBox>
+    );
+    setTimeout(async () => {
+      const messageBox = await services.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
+      messageBox.object.message = message || '';
+      messageBox.object.caption = caption || 'Message box';
+      messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
+      messageBox.object.icon = messageBoxIcon || MessageBoxIcon.None;
     });
   }
 
@@ -1141,13 +1470,13 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
     this.setState(state);
   }
 
-  private set buttons(messageBoxButtons: MessageBoxButtons) {
+  set buttons(messageBoxButtons: MessageBoxButtons) {
     const variables = this.variables;
     variables.buttons = messageBoxButtons;
     this.setVariables(variables);
   }
 
-  private set icon(messageBoxIcon: MessageBoxIcon) {
+  set icon(messageBoxIcon: MessageBoxIcon) {
     const variables = this.variables;
     variables.icon = messageBoxIcon;
     this.setVariables(variables);
@@ -1159,6 +1488,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       this.exit();
     }
   };
+
   get dialogResult() {
     return this._dialogResult;
   }
@@ -1222,13 +1552,155 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
   }
 
   renderInside() {
-    return (<>
-      <MsgBoxContent>
-        {this.image}
-        <MsgBoxCaption>{this.variables.message}</MsgBoxCaption>
-
-      </MsgBoxContent>
+    return (
+      <MsgBoxWarper>
+        <MsgBoxContent>
+          {this.image}
+          <MsgBoxCaption>{this.variables.message}</MsgBoxCaption>
+        </MsgBoxContent>
         <MsgBoxButtons>{this.actionButtons}</MsgBoxButtons>
-    </>);
+      </MsgBoxWarper>
+    );
+  }
+}
+
+export function getMessageFromError(error: Error, fallbackMessage: string) {
+  if (typeof error === 'string') {
+    return error;
+  } else if (typeof error === 'object' && typeof error.message === 'string') {
+    return error.message;
+  }
+  return fallbackMessage;
+}
+
+export class AdminPromp extends BaseWindow {
+  public static manifest: IManifest = {
+    fullAppName: 'Admin Prop',
+    launchName: 'adminProp',
+    icon: '/assets/images/appsIcons/appIcon.svg',
+  };
+
+  adminPrompEmitter = new EventEmitter();
+  private _baseWindow: BaseWindow;
+
+  constructor(props) {
+    super(props, {
+      title: 'User Account Control',
+      image: '/assets/images/appsIcons/appIcon.svg',
+      startPos: 'center',
+      alwaysOnTop: true,
+      resizable: false,
+      windowType: 'borderless',
+
+      minimizeButton: 'hidden',
+      maximizeRestoreDownButton: 'hidden',
+      minimized: false,
+      minHeight: 400,
+      minWidth: 400,
+    });
+  }
+
+  static requestAdmin(baseWindow: BaseWindow) {
+    return new Promise<boolean>(async resolve => {
+      const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
+        <AdminPromp key={id} id={id} {...props}></AdminPromp>
+      );
+      const key = securityKeys.get(baseWindow);
+      baseWindow.freeze(key);
+      const changeActiveState = baseWindow.changeActiveState;
+      const adminPromp = await services.processor.addApp<AdminPromp>(reactGeneratorFunction, 'msgBox');
+
+      const onClick = (bool: boolean) => {
+        adminPromp.object.adminPrompEmitter.removeListener('onClick', onClick);
+        adminPromp.object.exit();
+        baseWindow.changeActiveState = changeActiveState;
+        baseWindow.unFreeze(key);
+        resolve(bool);
+      };
+
+      baseWindow.changeActiveState = bool => {
+        setTimeout(() => {
+          if (bool && !adminPromp.object.active) {
+            adminPromp.object.changeActiveState(true);
+          }
+        });
+      };
+      adminPromp.object._baseWindow = baseWindow;
+      adminPromp.object.forceUpdate();
+      adminPromp.object.adminPrompEmitter.on('onClick', onClick);
+    });
+  }
+
+  onExit(event: WindowEvent) {
+    event.preventDefault();
+    this.reject();
+  }
+
+  private accept = (mouseEvent: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    if (!mouseEvent) {
+      return this.unknownSourceReject('function has been called without mouse event!');
+    }
+    if (!mouseEvent.isTrusted) {
+      return this.unknownSourceReject('Action cannot be trusted!');
+    }
+    if (!this.reference) return;
+    const div = this.reference.current as HTMLDivElement;
+    const target = event.target as HTMLDivElement;
+    if (div.contains(target)) {
+      adminAllowed.set(this._baseWindow, true);
+      this.adminPrompEmitter.emit('onClick', true);
+      return securityKeys.get(this._baseWindow);
+    }
+    return this.unknownSourceReject('Unknown source of mouse event!');
+  };
+
+  private reject = () => {
+    this.adminPrompEmitter.emit('onClick', false);
+  };
+
+  private unknownSourceReject(reason: string) {
+    this.adminPrompEmitter.emit('onClick', false);
+    MessageBox._anonymousShow(reason, 'Security violation');
+    return new Error(reason);
+  }
+
+  getIcon() {
+    if (this._baseWindow && this._baseWindow.manifest && this._baseWindow.manifest.icon) {
+      return <img src={this._baseWindow.manifest.icon} />;
+    }
+    return null;
+  }
+
+  getName() {
+    if (this._baseWindow && this._baseWindow.manifest && this._baseWindow.manifest.fullAppName) {
+      return <div>{this._baseWindow.manifest.fullAppName}</div>;
+    }
+    return null;
+  }
+
+  renderInside() {
+    return (
+      <UserAdminStyled>
+        <UserAdminTop>
+          <TitleBar>
+            <TitleBarTitle>{this.state.options.title}</TitleBarTitle>
+            <TitleBarRight>
+              <TitleBarExit onClick={this.reject}>
+                <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
+              </TitleBarExit>
+            </TitleBarRight>
+          </TitleBar>
+          <UserAdminContent>Do you want to allow this app to make changes to your device?</UserAdminContent>
+        </UserAdminTop>
+        <UserAdminMiddle>
+          {this.getIcon()}
+          {this.getName()}
+        </UserAdminMiddle>
+        <UserAdminBottom>
+          <button onClick={this.accept}>Yes</button>
+          <button onClick={this.reject}>No</button>
+        </UserAdminBottom>
+      </UserAdminStyled>
+    );
   }
 }

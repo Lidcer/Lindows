@@ -35,7 +35,7 @@ export function pagesRouter() {
   router.get(`/**`, async (req, res) => {
     const userAgent = req.headers['user-agent']
     const manifest = await getManifest();
-    if (userAgent.match(/Trident.*rv[ :]*11\./)){
+    if (userAgent.match(/Trident.*rv[ :]*11\.|Edge/)){
       return res.render('unsupported-browser.ejs', { manifest });
     }
     res.render('page.ejs', { manifest });

@@ -1,12 +1,16 @@
-import { Terminal, manifest as terminalManifest } from '../apps/Terminal/Terminal';
-import { TaskManager, manifest as taskManagerManifest } from '../apps/TaskManager/TaskManager';
-import { AccountManager, manifest as accountManagerManifest } from '../apps/AccountManager/AccountManager';
-import { Lype, manifest as lypeManifest } from '../apps/Lype/Lype';
-import { MouseProperties, manifest as MousePropertiesManifest } from '../apps/MouseProperties/MouseProperties';
+import { Terminal } from '../apps/Terminal/Terminal';
+import { TaskManager } from '../apps/TaskManager/TaskManager';
+import { AccountManager} from '../apps/AccountManager/AccountManager';
+import { Lype } from '../apps/Lype/Lype';
+import { MouseProperties } from '../apps/MouseProperties/MouseProperties';
+import { GroupViewer, } from '../apps/GroupViewer/GroupViewer';
 import React from 'react';
-import { IManifest } from '../apps/BaseWindow/BaseWindow';
+import { IManifest, BaseWindow } from '../apps/BaseWindow/BaseWindow';
 import { services } from '../services/SystemService/ServiceHandler';
-import { attachDebugMethod } from './requests';
+import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
+import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
+import { attachDebugMethod, isDev } from './requests';
+import { AnApp } from '../apps/AnApp/AnApp';
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -16,26 +20,7 @@ interface AllApps {
   app: ReactGeneratorFunction;
 }
 
-export const allApps: AllApps[] = [
-  { manifest: terminalManifest, app: (id: number, props?: any) => <Terminal key={id} id={id} {...props}></Terminal> },
-  {
-    manifest: taskManagerManifest,
-    app: (id: number, props?: any) => <TaskManager key={id} id={id} onlyOne={true} {...props}></TaskManager>,
-  },
-  {
-    manifest: accountManagerManifest,
-    app: (id: number, props?: any) => <AccountManager key={id} id={id} onlyOne={true} {...props}></AccountManager>,
-  },
-  {
-    manifest: lypeManifest,
-    app: (id: number, props?: any) => <Lype key={id} id={id} onlyOne={true} {...props}></Lype>,
-  },
-
-  {
-    manifest: MousePropertiesManifest,
-    app: (id: number, props?: any) => <MouseProperties key={id} id={id} onlyOne={true} {...props}></MouseProperties>,
-  },
-];
+export const allApps: AllApps[] = [];
 
 export function launchApp(appName: string) {
   const app = appConstructorGenerator(appName);
@@ -53,4 +38,39 @@ export function appConstructorGenerator(appName: string) {
     return object.app;
   }
   return null;
+}
+
+export function installApp(baseWindow: BaseWindow | any) {
+    if (!baseWindow) {
+      throw new Error('Failed to install passed empty app');
+    } 
+    if (!baseWindow.manifest){
+      throw new Error('Cannot install without manifest');
+    }
+
+    if (!baseWindow.manifest.launchName){
+      throw new Error('Missing launch name');
+    }
+    const Element = baseWindow as any;
+
+  const exist = allApps.find(a => a.manifest.launchName === baseWindow.manifest.launchName)
+  if (exist) throw new Error(`App under name ${baseWindow.manifest.launchName} is already installed`); 
+  allApps.push({
+    manifest: baseWindow.manifest,
+    app: (id: number, props?: any) => <Element key={id} id={id} onlyOne={!!baseWindow.onlyOne} {...props}></Element>,
+  })
+}
+
+
+
+installApp(Terminal);
+installApp(TaskManager);
+installApp(AccountManager);
+installApp(Lype);
+installApp(GroupViewer);
+installApp(WebExplorer);
+installApp(VirtualCreate);
+installApp(MouseProperties);
+if (isDev()) {
+  installApp(AnApp);
 }

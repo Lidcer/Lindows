@@ -14,7 +14,7 @@ interface IStringifiedProcess {
   state: any;
 }
 
-interface IDisplayingApp<T = unknown> {
+export interface IDisplayingApp<T = unknown> {
   processID: number;
   app: JSX.Element;
   object?: T;
@@ -39,6 +39,7 @@ export class Processor extends BaseSystemService {
   private lastPerformance = 0;
   private paused = false;
   private eventEmitter = new EventEmitter();
+  public onAppAdd() {}
 
   constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
     super();
@@ -218,9 +219,9 @@ export class Processor extends BaseSystemService {
       displayingObject.object = object;
     }
     if (displayingObject && displayingObject.state) {
-      object.on('ready', () => {
-        object.setState(displayingObject.state);
-      });
+      // object.on('ready', () => {
+      //   object.setState(displayingObject.state);
+      // });
     }
     object.changeActiveState(false);
     this.lindowsProcesses.push(object);
@@ -251,21 +252,27 @@ export class Processor extends BaseSystemService {
     });
   }
 
-  addApp = <A = JSX.Element>(reactGeneratorFunction: ReactGeneratorFunction, appName: string, id?: number) => {
-    if (id === undefined) {
-      id = this.processID++;
-      this.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
-    } else if (id > this.processID) this.processID = id + 1;
+  addApp = <A = JSX.Element>(reactGeneratorFunction: ReactGeneratorFunction, appName: string, id?: number):Promise<IDisplayingApp<A>> => {
+    return new Promise(resolve => {
+      if (id === undefined) {
+        id = this.processID++;
+        this.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
+      } else if (id > this.processID) this.processID = id + 1;
+  
+      const jsxElement = reactGeneratorFunction(id);
+      const displayingApp: IDisplayingApp<A> = { 
+        processID: id,
+        app: jsxElement, 
+  
+      };
+      this.displaying.push(displayingApp);
+      this.emit('appDisplayingAdd', displayingApp);
 
-    const jsxElement = reactGeneratorFunction(id);
-    const displayingApp: IDisplayingApp<A> = { 
-      processID: id,
-      app: jsxElement, 
-
-    };
-    this.displaying.push(displayingApp);
-    this.emit('appDisplayingAdd', displayingApp);
-    return displayingApp;
+      //react doesn't update element instantly
+      setTimeout(() => {
+        resolve(displayingApp);
+      });
+    })
   };
 
   saveState = (): Promise<void> => {
@@ -284,7 +291,7 @@ export class Processor extends BaseSystemService {
     const stringifiedProcesses: IStringifiedProcess[] = [];
     this.processes.forEach(app => {
       const stringifiedProcess: IStringifiedProcess = {
-        manifest: app._manifest,
+        manifest: app.getManifest(),
         props: app.props,
         state: app.state,
       };

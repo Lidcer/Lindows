@@ -2,9 +2,25 @@
 
 import { logger } from '../database/EventLog';
 import { WebSocket } from './SocketHandler';
+import { IWebsocketPromise } from '../../shared/Websocket';
 
 export class SocketValidator {
   constructor(private webSocket: WebSocket) {}
+
+  validateWebSocketPromise(client: SocketIO.Socket, promise:IWebsocketPromise){
+    const error = () => {
+      client.disconnect();
+      logger.error(
+        '[Websocket security]',
+        `Unable to validate websocketPromise client: ${client.id} ${this.getClientUserId(client)}`.trim(),
+      );
+      return false
+    }
+    if (typeof promise !== 'object') return error();
+    if(!promise.id) return error();
+    if(!promise.status) return error();
+    return true;
+  }
 
   validateString(client: SocketIO.Socket, string: string) {
     if (typeof string !== 'string') {
@@ -108,4 +124,5 @@ export class SocketValidator {
     if (userSchema) message = `User ID: ${userSchema._id.toString()}`;
     return message;
   }
+
 }

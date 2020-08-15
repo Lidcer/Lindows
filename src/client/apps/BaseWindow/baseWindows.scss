@@ -1,0 +1,29 @@
+.LWindowBottom {
+    height: calc(100% - 30pt);
+    width: 100%;
+}
+  
+.LWindowTop {
+   top: 20pt;
+   height: calc(100% - 30pt);
+   width: 100%;
+}
+  
+.LWindowLeft {
+    left: 20pt;
+    height: 100%;
+    width: calc(100% - 50pt);
+}
+  
+.LWindowRight {
+    height: 100%;
+    width: calc(100% - 50pt);
+}
+
+.LWindowFullscreen {
+    position: fixed !important;
+    height: 100% !important;
+    width: 100% !important;
+    z-index: 500 !important;
+    border: none !important;
+}

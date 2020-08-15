@@ -15,33 +15,7 @@ export declare type IBaseWindowEmitterType =
   | 'stateUpdate';
 
 export declare type KeyboardEmitterType = 'keypress' | 'keydown' | 'keyup';
-export interface IBaseWindowEmitter {
-  on(event: IBaseWindowEmitterType | '*', listener: (event: WindowEvent) => void): this;
-}
 
-export class IBaseWindowEmitter extends EventEmitter {
-  constructor(private windows: BaseWindow) {
-    super();
-  }
-
-  emit(event: IBaseWindowEmitterType): boolean {
-    const ev = new WindowEvent(event, this.windows);
-    super.emit('*', ev);
-    super.emit(event, ev);
-    return ev.isDefaultPrevented;
-  }
-}
-
-export class IBaseWindowKeyboard extends EventEmitter {
-  constructor() {
-    super();
-  }
-
-  emit(event: Event['type'], keyboardEvent: KeyboardEvent): boolean {
-    super.emit('*', keyboardEvent);
-    return super.emit(event, keyboardEvent);
-  }
-}
 
 export interface IJSONWindowEvent {
   shouldDoDefault: boolean;

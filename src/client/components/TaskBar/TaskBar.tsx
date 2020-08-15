@@ -145,12 +145,12 @@ export class TaskBar extends React.Component<{}, IState> {
       sameInstance = this.state.runningApps.filter(a => a !== window && a instanceof window.constructor);
     }
 
-    const active = window.active ? window.active : !!sameInstance.find(a => a.active);
+    // const active = window.active ? window.active : !!sameInstance.find(a => a.active);
     const multipleInstance = sameInstance.length > 1;
     return (
-      <TaskBarOpenIcons
+      <TaskBarOpenIcons style={ { backgroundColor: window.active ? 'rgba(255,255,255,0.25)' : 'transparent'}}
         key={index}
-        //  onClick={() => this.openAppClick(app)}
+          onClick={() => this.openAppClick(window)}
       >
         <TaskBarIcon src={window.state.options.image} alt={window.state.options.title} />
         {multipleInstance ? this.multipleInstances() : null}
@@ -162,24 +162,26 @@ export class TaskBar extends React.Component<{}, IState> {
     return <TaskBarExtended />;
   }
 
-  generateIcons = (app: BaseWindow, index: number) => {
-    return (
-      <TaskBarIcon
-        key={index}
-        onClick={() => this.openAppClick(app)}
-        className={`${app.active ? 'task-bar-open-icon-active' : ''}`}
-      >
-        <TaskBarIcon src={app.state.options.image} alt={app.state.options.title} />
-      </TaskBarIcon>
-    );
-  };
+  // generateIcons = (app: BaseWindow, index: number) => {
+
+  //   return (
+  //     <TaskBarIcon
+  //       key={index}
+  //       onClick={() => this.openAppClick(app)}
+  //       className={`${app.active ? 'task-bar-open-icon-active' : ''}`}
+  //     >
+  //       <TaskBarIcon title={app.options.title} src={app.options.image} />
+  //     </TaskBarIcon>
+  //   );
+  // };
 
   openAppClick(app: BaseWindow) {
-    if (app.state.options.minimized) {
-      app.maximizeRestoreDown();
-      app.changeActiveState(true);
-    } else if (app._wasActive) app.maximizeRestoreDown();
-    else app.changeActiveState(true);
+    if(app.minimized || !app.active){
+      app.focus();
+    } else {
+      app.minimize();
+    }
+    this.forceUpdate();
   }
 
   getIcon() {

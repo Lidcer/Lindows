@@ -8,12 +8,12 @@ const $zIndex = '50';
 const $scrollbarBG = 'rgb(0, 0, 0)';
 const $thumbBG = 'rgb(48, 50, 51)';
 
-export const LWindowString = `
-  position: absolute;
+export const LWindow = styled.div`
+   position: absolute;
   display: flex;
   flex-direction: column;
 
-  background-color: black;
+  background-color: transparent;
   color: white;
   z-index: 5;
   border: 1px solid #2b4248;
@@ -23,11 +23,6 @@ export const LWindowString = `
       padding: 4pt;
       font-size: 10pt;
   }
-`
-
-
-export const LWindow = styled.div`
-   ${LWindowString}
 `;
 
 export const LWindowContent = styled.div`
@@ -36,7 +31,7 @@ export const LWindowContent = styled.div`
   flex: auto;
   width: 100%;
   display: block;
-  background-color: #242323;
+  background-color: transparent;
   overflow: auto;
 
   &::-webkit-scrollbar {
@@ -149,39 +144,6 @@ export const LWindowBottomRightHover = styled.div`
 
 
 //also modify navbar
-export const LWindowBottom = styled.div`
-   ${LWindowString}
-  height: calc(100% - 30pt);
-  width: 100%;
-`;
-
-export const LWindowTop = styled.div`
-   ${LWindowString}
-  top: 20pt;
-  height: calc(100% - 30pt);
-  width: 100%;
-`;
-
-export const LWindowLeft = styled.div`
-   ${LWindowString}
-  left: 20pt;
-  height: 100%;
-  width: calc(100% - 50pt);
-`;
-
-export const LWindowRight = styled.div`
-   ${LWindowString}
-  height: 100%;
-  width: calc(100% - 50pt);
-`;
-
-export const LWindowFullscreen = styled.div `
-  position: fixed !important;
-  height: 100% !important;
-  width: 100% !important;
-  z-index: 500 !important;
-  border: none;
-`;
 
 const buttons = `
   padding: 5pt;
@@ -248,19 +210,23 @@ export const TitleBarButtonHover = styled.div`
       background-color:rgba(255, 255, 255, 0.25);
       transition: background-color 0.05s ease-out;
   }
-}
-`
+`;
 
 export const TitleBarButtonDisabled = styled.span`
   ${buttons}
   color: #535353;
 `;
 
+export const MsgBoxWarper = styled.div`
+  height: 100%;
+  background-color: rgba(16, 16, 16, 1);
+`;
 
 export const MsgBoxContent = styled.div`
   display:inline-flex;
   width: 100%;
-`;
+
+  `;
 
 
 export const MsgBoxCaption = styled.p`
@@ -290,4 +256,61 @@ export const MsgBoxButtons = styled.div`
   position: absolute;
     text-align: center;
     align-items: center;
+`;
+
+export const Blocker = styled.div`
+  position: absolute; 
+  width: 100%;
+  height: 100%;
+  z-index: 99999;
+`;
+
+export const UserAdminStyled = styled.div`
+  width: 100%;
+  height: 100%;
+  background-color:white;
+`;
+
+export const UserAdminTop = styled.div`
+  position: relative;
+  background-color: #76b9ed;
+  color: black !important;
+  width: 100%;
+  height: auto;
+`
+
+export const UserAdminContent = styled.div`
+  font-size: 20px;
+  margin: 15px;
+  font-weight: bold;
+
+`;
+
+export const UserAdminMiddle = styled.div`
+  display: block;
+  margin: 15px;
+  display: block;
+  img{
+    max-width: 50px;
+    max-height: 50px;
+  }
+  div{
+    display: inline;
+    font-size: 20px;
+  }
+
+`;
+
+export const UserAdminBottom = styled.div`
+  width: 100%;
+  display: inline-block;
+  margin-top: 140px;
+  button {
+    background-color: #b8b8b8;
+    border: none;
+    margin: 0 5%;
+    font-size: 20px;
+    width: 40%
+  }
+
 `;

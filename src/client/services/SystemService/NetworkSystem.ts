@@ -5,6 +5,8 @@ import { EventEmitter } from 'events';
 import { SECOND } from '../../../shared/constants';
 import { BaseSystemService } from './BaseSystemService';
 import { Fingerpriner } from './FingerprinerSystem';
+import { randomString } from '../../../shared/utils';
+import { IWebsocketPromise } from '../../../shared/Websocket'
 
 export class Network extends BaseSystemService {
   private _socket: SocketIOClient.Socket;
@@ -101,6 +103,44 @@ export class Network extends BaseSystemService {
   connection = () => {
     this.emit('connection');
   };
+
+  emitPromise<K, T extends any[]>(value:string, ...args: T) {
+    return new Promise<K>(async (resolve, reject) => {
+      const id = randomString(16);  
+      let timeout:NodeJS.Timeout|undefined;
+
+        const response = (promise:IWebsocketPromise<K>) => {
+
+          this.socket.removeEventListener(id, response);
+          if(timeout !== undefined){
+            clearTimeout(timeout);
+          }
+          if (promise.reject){
+            const error = new Error(promise.reject.message);
+            return reject(error);
+          }
+          resolve(promise.resolve);
+        }  
+        timeout = setTimeout(() => {
+          response({
+            id,
+            reject: {
+              message:'Connection timed out'
+            },
+            status: 'rejected'
+          })
+        }, 5000);
+
+        this.socket.on(`${value}-${id}`, response);
+        const socketPromise:IWebsocketPromise<K> = {
+          id,
+          status: 'pending',
+        }
+        const socketArgs = [value, socketPromise, ...args]
+
+        this.socket.emit.apply(this.socket, socketArgs)
+    })
+  }
 
   get socket() {
     return this._socket;

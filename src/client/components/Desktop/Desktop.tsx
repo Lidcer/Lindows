@@ -77,11 +77,11 @@ export class Desktop extends React.Component<{}, IState> {
   }
 
   updateView = () => {
-    console.log('update')
     // this.terminal.reset();
     this.blueScreen.reset();
     this.killActiveWindow.reset();
-    this.setState({});
+    this.forceUpdate();
+ 
   };
 
   openTerminal = () => {

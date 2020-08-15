@@ -14,6 +14,7 @@ import { setupAdminWebsocketController } from './routes/admin/admin-response';
 import session from 'express-session';
 import mongoGBStore from 'connect-mongodb-session';
 import { WEEK } from '../shared/constants';
+import { setupGroupViewerWebsocket } from './apps/GroupViewer/webSocket';
 const MongoDBStore = mongoGBStore(session);
 
 export const name = 'Lindows';
@@ -57,10 +58,12 @@ app.use(pagesRouter());
 const http = app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);
 });
+
 const io = listen(http);
 export const websocket = new WebSocket(io);
 
 setupLypeWebsocket(websocket);
+setupGroupViewerWebsocket(websocket);
 setupAdminWebsocketController(websocket);
 export const mailService = new MailService(config.SENDGRIND_API_KEY);
 

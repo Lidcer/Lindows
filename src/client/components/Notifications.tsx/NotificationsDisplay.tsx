@@ -1,12 +1,12 @@
 import React from 'react';
 import { services } from '../../services/SystemService/ServiceHandler';
-import { INotification } from '../../services/SystemService/NotificationSystem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { popup } from '../Popup/popupRenderer';
 import { ContextMenu, IElement } from '../ContextMenu/ContextMenu';
 import { SECOND } from '../../../shared/constants';
 import { NotificationContent, NotificationImage, NotificationButtons, NotificationOverlay, NotificationToast } from './NotificationsDisplayStyled';
+import { getNotification, INotification } from '../Desktop/Notifications';
 
 interface INotificationDisplay extends INotification {
   className: 'animated' | 'none';
@@ -18,7 +18,7 @@ interface INotificationsDisplayState {
 
 export class NotificationsDisplay extends React.Component<{}, INotificationsDisplayState> {
   private timeouts: NodeJS.Timeout[] = [];
-
+  private notification = getNotification(); 
   constructor(props) {
     super(props);
     this.state = {
@@ -26,11 +26,12 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     };
   }
   componentDidMount() {
-    services.notificationSystem.on('notification', this.newNotification);
+
+    this.notification.on('notification', this.newNotification);
   }
 
   componentWillUnmount() {
-    services.notificationSystem.removeListener('notification', this.newNotification);
+    this.notification.removeListener('notification', this.newNotification);
     for (const timeout of this.timeouts) {
       this.removeTimeout(timeout);
     }
@@ -128,7 +129,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     );
   }
 
-  notification(notification: INotificationDisplay, key: number) {
+  alert(notification: INotificationDisplay, key: number) {
     return (
       <NotificationToast className={`notification-${notification.className}`} key={key}>
         {this.getImageNotification(notification)}
@@ -161,7 +162,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     return (
       <NotificationOverlay>
         {this.state.notifications.map((n, i) => {
-          return this.notification(n, i);
+          return this.alert(n, i);
         })}
       </NotificationOverlay>
     );

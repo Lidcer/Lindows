@@ -34,11 +34,16 @@ function deviceInfo() {
 }
 
 export class Terminal extends BaseWindow<ITerminal> {
+  public static manifest: IManifest = {
+    fullAppName: 'Terminal',
+    launchName: 'lterminal',
+    icon: '/assets/images/appsIcons/Terminal.svg',
+  };
+
   private currentTabSuggestion: string[] = [];
   constructor(props: IBaseWindowProps) {
     super(
       props,
-      manifest,
       { width: 500, showIcon: true},
       {
         afterCursor: '',
