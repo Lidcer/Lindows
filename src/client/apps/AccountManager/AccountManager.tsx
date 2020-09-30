@@ -28,6 +28,9 @@ export class AccountManager extends BaseWindow {
   }
 
   renderInside() {
+    if (STATIC) {
+      return <div className='text-danger'>Unavailable</div>
+    }
     return <AccountManagerWebpage window={true}></AccountManagerWebpage>;
   }
 }

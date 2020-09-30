@@ -71,9 +71,6 @@ export class Desktop extends React.Component<{}, IState> {
         width: 1920,
       },
     };
-    window.onerror = message => {
-      this.setState({ blueScreen: message.toString() });
-    };
   }
 
   updateView = () => {
@@ -102,6 +99,9 @@ export class Desktop extends React.Component<{}, IState> {
       services.processor.on('appRemove', this.updateView);
 
       backgroundServices().removeListener('ready', serviceReady);
+
+
+      window.addEventListener('error', this.showError)
     };
     if (!backgroundServices().ready) {
       backgroundServices().addListener('ready', serviceReady);
@@ -156,12 +156,23 @@ export class Desktop extends React.Component<{}, IState> {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.updateDimensions, false);
+    window.removeEventListener('showError', this.showError);
     this.terminal.destroy();
     this.killActiveWindow.destroy();
     this.blueScreen.destroy();
     services.processor.removeListener('appDisplayingAdd', this.updateView);
     services.processor.removeListener('appRemove', this.updateView);
   }
+
+  showError = (error:ErrorEvent) => {
+    console.error('error',error);
+    if (error.message.includes('monaco-editor')){
+      // monaco likes to raise weird error   
+      return;
+    }
+   this.setState({ blueScreen: error.message.toString()});
+  }
+
   updateDimensions = () => {
     //if (this.state.wallpaper) return;
     let landscape: boolean;

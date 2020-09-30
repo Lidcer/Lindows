@@ -24,11 +24,8 @@ export class IServices extends EventEmitter {
 
   constructor() {
     super();
-    setTimeout(() => {
-      this.startup();
-    });
   }
-  private async startup() {
+  async init() {
     await this.initBroadcaster();
     await this.initBrowserStorage();
     await this.initFingerPrinter();
@@ -128,3 +125,4 @@ export class IServices extends EventEmitter {
 }
 
 export const services = new IServices();
+services.init();

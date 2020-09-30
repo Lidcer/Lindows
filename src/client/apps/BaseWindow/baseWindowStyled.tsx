@@ -218,14 +218,15 @@ export const TitleBarButtonDisabled = styled.span`
 `;
 
 export const MsgBoxWarper = styled.div`
-  height: 100%;
+  /* height: 100%; */
   background-color: rgba(16, 16, 16, 1);
+  overflow: auto;
 `;
 
 export const MsgBoxContent = styled.div`
   display:inline-flex;
   width: 100%;
-
+  white-space: pre;
   `;
 
 
@@ -252,7 +253,7 @@ export const MsgBoxButton = styled.button`
 
 export const MsgBoxButtons = styled.div`
     width: 100%;
-
+    background-color: rgba(16, 16, 16, 1);
   position: absolute;
     text-align: center;
     align-items: center;

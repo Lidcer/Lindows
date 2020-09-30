@@ -4,13 +4,15 @@ import { AnAppWarper } from './AnAppStyled';
 import { WindowEvent } from '../BaseWindow/WindowEvent';
 import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
 
+
+
 interface WebExplorerState {
   message: string;
 }
 
 export class AnApp extends BaseWindow<WebExplorerState> {
   public static readonly onlyOne = true;
-  public notification:NotificationSystem |undefined;
+  public notification: NotificationSystem |undefined;
 
   public static manifest: IManifest = {
     fullAppName: 'An app',
@@ -32,6 +34,7 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   }
 
   load() {
+    console.log('dev', DEVELOPMENT);
     console.log('function is called before app is ready');
   }
 

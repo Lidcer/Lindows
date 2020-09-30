@@ -10,7 +10,8 @@
     "outDir": "../../dist/client",
     "lib": ["ES2019", "DOM"],
     "types": [],
-    "jsx": "react"
+    "jsx": "react",
+    "typeRoots": ["./"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["**/*.test.ts", "**/*.test.tsx"],

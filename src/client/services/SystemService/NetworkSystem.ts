@@ -19,6 +19,10 @@ export class Network extends BaseSystemService {
   }
 
   start = async () => {
+    if (STATIC) {
+      return; 
+    }
+
     return new Promise<void>((resolve, reject) => {
       const replaceLink = (link: string) => {
         if (!link) return '';
@@ -77,6 +81,7 @@ export class Network extends BaseSystemService {
   };
 
   destroy() {
+    if (STATIC) return;
     this._socket.disconnect();
   }
 
@@ -93,10 +98,12 @@ export class Network extends BaseSystemService {
   }
 
   authenticate = (token: string) => {
+    if (STATIC) return;
     this.socket.emit('authenticate', token);
   };
 
   unauthenticate = () => {
+    if (STATIC) return;
     this.socket.emit('unauthenticate');
   };
 
@@ -106,6 +113,7 @@ export class Network extends BaseSystemService {
 
   emitPromise<K, T extends any[]>(value:string, ...args: T) {
     return new Promise<K>(async (resolve, reject) => {
+      if (STATIC) return reject('Not available');
       const id = randomString(16);  
       let timeout:NodeJS.Timeout|undefined;
 
@@ -145,4 +153,10 @@ export class Network extends BaseSystemService {
   get socket() {
     return this._socket;
   }
+
+
+
+
+
+  
 }

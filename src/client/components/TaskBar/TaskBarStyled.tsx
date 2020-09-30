@@ -81,6 +81,8 @@ export const TaskBarGridHor = styled.div`
   grid-template-rows: 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
+  height: 40px;
+  overflow:hidden;
 `;
 
 export const TaskBarGridVer = styled.div`
@@ -89,6 +91,8 @@ export const TaskBarGridVer = styled.div`
   grid-template-columns: 1fr;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
+  width: 30px;
+  overflow:hidden;
 `;
 
 

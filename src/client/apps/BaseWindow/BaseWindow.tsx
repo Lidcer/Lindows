@@ -1,7 +1,6 @@
 import React from 'react';
 import { mousePointer, CursorType } from '../../components/Cursor/Cursor';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
 import {
   faTimes,
   faWindowMaximize,
@@ -52,6 +51,7 @@ import { WindowEvent } from './WindowEvent';
 import { Network } from '../../services/SystemService/NetworkSystem';
 import { attachDebugMethod } from '../../essential/requests';
 import './baseWindows.scss'
+import { LindowError } from '../../utils/util';
 const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
@@ -142,6 +142,7 @@ export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IB
   onRestoreDown?(event: WindowEvent): void;
   onBlur?(event: WindowEvent): void;
   onFocus?(event: WindowEvent): void;
+  onError?(event: LindowError): void
 
   // | 'move'
   // | 'resize'
@@ -228,6 +229,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _started = false;
   private _frozen = false;
   private _warnOnce = false;
+  private _destroyed = false
+  private _error?: any;
   private _memorizedState = {
     x: 0,
     y: 0,
@@ -332,6 +335,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
        }
     } 
     const App = this.prototype.constructor;
+    
     const name = manifest && manifest.launchName ? manifest.launchName : randomString(20);
     const mockGenerator: ReactGeneratorFunction = (id: number, props?) => <App key={id} id={id} {...props}></App>;
     anonymous = true;
@@ -339,6 +343,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const app = await services.processor.addApp<BaseWindow>(mockGenerator, name);
     return app.object;
     
+  }
+  componentDidCatch(){
+    console.log('yes it throw')
   }
 
   async componentDidMount() {
@@ -439,7 +446,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   render() {
-    if (!this._started) return null;
+      if (!this._started || this._error) return null;
     let className = this._windowClass;
 
     if (this.state.options.windowType === 'fullscreen') {
@@ -464,19 +471,33 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
 
     const blocker = this._frozen ? <Blocker /> : null;
-    return (
-      <LWindow className={className + ' lll'} ref={this._ref} style={this.getStyle()}>
-        {blocker}
-        {this._renderResizable()}
-        {this._renderTitleBar()}
-        <LWindowContent>
+    try {
+      return (
+        <LWindow className={className + ' lll'} ref={this._ref} style={this.getStyle()}>
           {blocker}
-          {this._giveView()}
-        </LWindowContent>
-      </LWindow>
-    );
-  }
+          {this._renderResizable()}
+          {this._renderTitleBar()}
+          <LWindowContent>
+            {blocker}
+            {this._giveView()}
+          </LWindowContent>
+        </LWindow>
+      );
+    } catch (error) {
+      this._error = error;
+      if (this.onError) {
+        console.log('should call on this errror')
+        this.onError(new LindowError(error));
+      } else {
+        console.log('this on error does not exist')
+      }
 
+      this.exit();
+    
+    }
+    return null;
+  }
+  
   changeOptions(options: IWindow) {
     this.setState({ options: this.verifyOptions(options) });
   }
@@ -821,9 +842,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
   };
 
-  private _getFixedPos(xPos?: number, yPos?: number) {
+  private _getFixedPos(xPos?: number, yPos?: number): {x: number, y: number,corrected: boolean} {
     let x = xPos === undefined ? this.state.x : xPos;
     let y = yPos === undefined ? this.state.y : yPos;
+    if (!this._ref.current) {
+      return {x, y, corrected: false};
+    }
+
     const bounding = this._ref.current.getBoundingClientRect();
     const maxY = window.innerHeight - bounding.height;
     const maxX = window.innerWidth - bounding.width;
@@ -856,7 +881,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _giveView = () => {
     if (!this.renderInside) return <div>Missing content</div>;
-    return this.renderInside();
+    const jsx = this.renderInside();
+    //@ts-ignore Im so sorry
+    if (jsx && typeof jsx === 'object' && jsx.$$typeof && typeof jsx.$$typeof === 'symbol') {
+      return jsx
+    }
+    
+    return <div className='text-danger'>Broken renderInside() function!</div>;
   };
 
   private _mouseMove = (event: MouseEvent) => {
@@ -1099,6 +1130,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       });
       const t = setTimeout(() => {
         services.processor.killProcess(this);
+        this._destroyed = true;
         this._removeTimeout(t);
         resolve();
       }, 200);
@@ -1312,6 +1344,10 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return !!this.props.onlyOne;
   }
 
+  get destroyed() {
+    return !!this._destroyed;
+  }
+
   getManifest(): IManifest {
     //@ts-ignore
     const manifest:IManifest= this.constructor.manifest; 
@@ -1381,7 +1417,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
         image: '/assets/images/appsIcons/appIcon.svg',
         startPos: 'center',
         //alwaysOnTop: true,
-        resizable: false,
+        resizable: true,
         showIcon: false,
         minimizeButton: 'hidden',
         maximizeRestoreDownButton: 'hidden',
@@ -1704,3 +1740,5 @@ export class AdminPromp extends BaseWindow {
     );
   }
 }
+
+(window as any).BaseWindow = BaseWindow

@@ -64,42 +64,6 @@ export class TaskBar extends React.Component<{}, IState> {
     });
   };
 
-  render() {
-    const TaskBarClock = this.isHorizontal ? TaskBarClockHor : TaskBarClockVer;
-    const TaskBarShowDesktop = this.isHorizontal ? TaskBarShowDesktopHor : TaskBarShowDesktopVer;
-    const TaskBarStartBtn = this.isHorizontal ? TaskBarStartBtnHor : TaskBarStartBtnVer;
-    const TaskBarGrid = this.isHorizontal ? TaskBarGridHor : TaskBarGridVer;
-    const NavBar = this.navBar;
-    return (
-      <>
-        {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu} /> : null}
-        <NavBar> <Aero /></NavBar>
-        <NavBar> <TaskBarBackground  style={{color:'blue'}}/> </NavBar>
-        <NavBar> <TaskBarGrid>
-          <TaskBarStartBtn>
-            <img
-              src='./assets/images/lidcer-logo.svg'
-              alt='StartMenu'
-              onClick={() => this.setState({ startMenu: !this.state.startMenu })}
-            />
-          </TaskBarStartBtn>
-
-          <p></p>
-          {this.openApps}
-          <p></p>
-
-
-          <TaskBarClock>
-            <div>{this.state.time}</div>
-            <div>{this.state.date}</div>
-          </TaskBarClock>
-          {this.getIcon()}
-          <TaskBarShowDesktop onClick={this.showDesktop}/>
-        </TaskBarGrid></NavBar>
-      </>
-    );
-  }
-
   appClickStartMenu = (name: string) => {
     this.setState({
       startMenu: false,
@@ -228,5 +192,41 @@ export class TaskBar extends React.Component<{}, IState> {
         break;
     }
 
+  }
+
+  render() {
+    const TaskBarClock = this.isHorizontal ? TaskBarClockHor : TaskBarClockVer;
+    const TaskBarShowDesktop = this.isHorizontal ? TaskBarShowDesktopHor : TaskBarShowDesktopVer;
+    const TaskBarStartBtn = this.isHorizontal ? TaskBarStartBtnHor : TaskBarStartBtnVer;
+    const TaskBarGrid = this.isHorizontal ? TaskBarGridHor : TaskBarGridVer;
+    const NavBar = this.navBar;
+    return (
+      <>
+        {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu} /> : null}
+        <NavBar> <Aero /></NavBar>
+        <NavBar> <TaskBarBackground  style={{color:'blue'}}/> </NavBar>
+        <NavBar> <TaskBarGrid>
+          <TaskBarStartBtn>
+            <img
+              src='./assets/images/lidcer-logo.svg'
+              alt='StartMenu'
+              onClick={() => this.setState({ startMenu: !this.state.startMenu })}
+            />
+          </TaskBarStartBtn>
+
+          <p></p>
+          {this.openApps}
+          <p></p>
+
+
+          <TaskBarClock>
+            <div>{this.state.time}</div>
+            <div>{this.state.date}</div>
+          </TaskBarClock>
+          {this.getIcon()}
+          <TaskBarShowDesktop onClick={this.showDesktop}/>
+        </TaskBarGrid></NavBar>
+      </>
+    );
   }
 }

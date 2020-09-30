@@ -8,7 +8,7 @@ $thumbBG: rgb(64, 64, 64);
     margin: 0;
     padding: 0;
     user-select: none;
-    overflow: hidden;
+    font-family: monospace;
 
     &::-webkit-scrollbar {
         width: 11px;
@@ -29,4 +29,8 @@ $thumbBG: rgb(64, 64, 64);
         border: 3px solid $scrollbarBG;
     }
 
+}
+
+#app {
+    overflow: hidden;
 }

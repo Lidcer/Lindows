@@ -14,7 +14,8 @@ export const ContextMenuItem = styled.div`
     display: flex;
 
     &:hover {
-        background-color: rgba($color: #ffffff, $alpha: 0.15);
+        
+        background-color: rgba(0, 0, 0, 0.15);
     }
 
     img {

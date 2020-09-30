@@ -17,6 +17,14 @@ export class ActivationWatermark extends React.Component {
   }
 
   render() {
+    if (STATIC) {
+      return (
+      <ActivationWatermarkStyle>
+        <h1>Lindows Demo</h1>
+        <h2>You are using Demo edition of Lindows</h2>
+      </ActivationWatermarkStyle>
+    );
+    }
     if (services.account.account) return null;
     return (
       <ActivationWatermarkStyle>

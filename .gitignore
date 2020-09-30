@@ -6,4 +6,5 @@ node_modules
 package-lock
 package-lock.json
 data/*
+public/*
 config.json

@@ -1,11 +1,13 @@
 import path from 'path';
-import { Configuration } from 'webpack';
+import { Configuration, DefinePlugin} from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
-import cssnano from 'cssnano';
-
 import { SERVER_PORT, IS_DEV, WEBPACK_PORT } from './src/server/config';
 
-const plugins = [new ManifestPlugin()];
+
+const plugins = [
+  new ManifestPlugin(),
+  new DefinePlugin({ DEVELOPMENT: IS_DEV, STATIC: !!process.env.STATIC }),
+];
 
 // import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 // plugins.push(new BundleAnalyzerPlugin());
@@ -80,6 +82,13 @@ const config: Configuration = {
         test: /.jpe?g$|.gif$|.png$|.svg$|.woff$|.woff2$|.ttf$|.eot$/,
         use: 'url-loader?limit=10000',
       },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }, {
+        test: /\.ttf$/,
+        use: ['file-loader']
+      }
     ],
   },
   devServer: {
@@ -89,9 +98,12 @@ const config: Configuration = {
   },
   plugins,
   externals: {
+    DEVELOPMENT: IS_DEV,
     react: 'React',
     'react-dom': 'ReactDOM',
   },
 };
+
+
 
 export default config;

@@ -11,6 +11,7 @@ import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
 import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
 import { attachDebugMethod, isDev } from './requests';
 import { AnApp } from '../apps/AnApp/AnApp';
+import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -61,16 +62,19 @@ export function installApp(baseWindow: BaseWindow | any) {
   })
 }
 
-
-
 installApp(Terminal);
 installApp(TaskManager);
-installApp(AccountManager);
-installApp(Lype);
-installApp(GroupViewer);
+if (!STATIC) {
+  installApp(AccountManager);
+  installApp(Lype);
+  installApp(GroupViewer);
+}
+
 installApp(WebExplorer);
 installApp(VirtualCreate);
 installApp(MouseProperties);
-if (isDev()) {
+installApp(IDELide);
+if (DEVELOPMENT) {
   installApp(AnApp);
+  (window as any).installApp = installApp;
 }

@@ -1,13 +1,13 @@
 import styled from 'styled-components';
 
 export const StartMenuStyled = styled.div`
-    position: absolute;
+    position: fixed;
     width: 200pt;
     height: 50pt;
 
     background-color: black;
     background-image: url(/assets/images/noise.png);
-    z-index: 500;
+    z-index: ${Number.MAX_SAFE_INTEGER}px;
     padding: 5pt;
 `;
 

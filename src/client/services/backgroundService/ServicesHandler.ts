@@ -12,9 +12,11 @@ interface IBackgroundServices {
 
 export type constructorGenerator = () => BaseService;
 
-const INSTALLED_SERVICES: IBackgroundServices[] = [
-  { name: 'lype', Service: () => new LypeService(), origin: LypeService },
-];
+const INSTALLED_SERVICES: IBackgroundServices[] = [];
+
+if (!STATIC) {
+  INSTALLED_SERVICES.push({ name: 'lype', Service: () => new LypeService(), origin: LypeService });
+}
 
 const startUp: string[] = ['lype'];
 

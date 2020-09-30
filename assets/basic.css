@@ -52,7 +52,7 @@ a.nostyle:visited {
 }
 
 /* blinking cursor */
-#cursor {
+#boot-cursor {
     background: lime;
     line-height: 17px;
     margin-left: 3px;

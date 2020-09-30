@@ -28,32 +28,40 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
     console.log = (...args: any[]) => {
       consoleHistory.push({ level: 'log', message: args });
       log.apply(window, args);
-      if (this.ready) this.forceUpdate();
+      if (this.ready) this.update();
     };
 
     const warn = console.warn;
     console.warn = (...args: any[]) => {
       consoleHistory.push({ level: 'warn', message: args });
       warn.apply(window, args);
-      if (this.ready) this.forceUpdate();
+      if (this.ready) this.update();
     };
 
     const debug = console.debug;
     console.debug = (...args: any[]) => {
       consoleHistory.push({ level: 'debug', message: args });
       debug.apply(window, args);
-      if (this.ready) this.forceUpdate();
+      if (this.ready) this.update();
     };
 
     const error = console.error;
     console.error = (...args: any[]) => {
       consoleHistory.push({ level: 'error', message: args });
       error.apply(window, args);
-      if (this.ready) this.forceUpdate();
+      if (this.ready) this.update();
     };
   }
 
+  update = () => {
+    setTimeout(() => {
+     this.forceUpdate(); 
+    });
+  }
+
   disassembleConsoleMessage(m: any) {
+    if (m === null)  return <span>null</span>
+
     const type = typeof m;
     switch (type) {
       case 'string':
@@ -65,7 +73,12 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       case 'object':
         if (Array.isArray(m)) {
           return m.map((e, i) => {
-            return <span key={i}>{this.disassembleConsoleMessage(e) as JSX.Element}</span>;
+            try {
+              const msg = <span key={i}>{this.disassembleConsoleMessage(e) as JSX.Element}</span>;
+              return msg;
+            } catch (error) {
+                return <span key={i}>{e.toString}</span>
+            }
           });
         } else {
           const entries = Object.entries(m);

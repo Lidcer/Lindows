@@ -105,6 +105,10 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   render() {
+    if (STATIC) {
+      return <div className='text-danger'>Unavailable</div>
+    }
+
     if (this.props.window)
       return (
         <AccountManager>

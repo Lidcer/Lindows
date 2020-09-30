@@ -47,6 +47,9 @@ export class Account extends BaseSystemService {
   }
 
   start = async () => {
+    if (STATIC) { return };
+
+
     try {
       await this.checkAccount();
       this.network.authenticate(this.token);
