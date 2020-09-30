@@ -13,9 +13,12 @@ Mouse properties - Lindows has its own unique built-in mouse. It does have a bit
 Web Explorer - Web browser using iFrame. Can only load websites that do not send x-frame-options header. \
 Virtual crate - It allows you to virtualize web browser operation system. Currently only lindows works(WIP).\
 Group Viewer - App that allows you to share your in browser screen to someone you would like to have access to. Currently it is very slow and viewer cannot interact with shared screen (WIP)\
+IDE-Lide - Allows you to build custom apps.\
+### Demo
+Note that some of the network app won't appear on demo version of lindow those are Account manager, Lype and Group Viewer
 
 ## System services
-Processor service which I suppose it could be called kernel because it kinda does job on kernel level like adding displaying windows doing action like focus closing then and so on.\
+Processor service is responsible for displaying windows doing action like focus, closing then and so on.\
 Account service in order to active your lindows you need to create account which is free.
 broadcaster service is service that handles communicating between browser tabs. The entire operation system is light wight making this thing possible.\
 FingerPriner service is service which tells you all information about your system.\

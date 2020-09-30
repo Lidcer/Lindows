@@ -5,7 +5,7 @@
   "description": "Lidcer Website",
   "main": "index.js",
   "engines": {
-    "node": "12.13.0"
+    "node": "12.18.4"
   },
   "scripts": {
     "test": "jest",
