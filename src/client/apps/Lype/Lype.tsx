@@ -9,18 +9,17 @@ export class Lype extends BaseWindow {
     launchName: 'lype',
     icon: '/assets/images/appsIcons/Lype.svg',
   };
-  
 
   constructor(props: IBaseWindowProps) {
-    super(props,{
+    super(props, {
       title: 'Lype',
       redirectToWebpageButton: 'lype',
       minHeight: 400,
       minWidth: 500,
-    }, );
+    });
   }
 
-  shown(){
+  shown() {
     if (this.isPhone) {
       const options = { ...this.options };
       options.maximized = true;

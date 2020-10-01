@@ -10,10 +10,10 @@ import { TOKEN_HEADER } from '../../shared/constants';
 import { IAccountResponse, IAccount } from '../../shared/ApiUsersRequestsResponds';
 import NavigationBarAdmin from './NaviBar';
 import AdminHome from './Home';
-import { IAdminWebSocket } from './websocket';
+import { IAdminWebSocket } from './Websocket';
 import AdminEventLogRouter from './AdminEventLogRouter';
 import { INotificationHandler } from './NotificationHandler';
-import AdminNotification from './notification';
+import AdminNotification from './Notification';
 import { AdminAccountsRouter } from './AdminAccountsRouter';
 import { AdminWebSocketRouter } from './AdminWebSocketRouter';
 interface IAdminState {

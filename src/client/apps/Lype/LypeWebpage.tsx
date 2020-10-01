@@ -17,19 +17,54 @@ import {
   faUserSlash,
   faCheck,
 } from '@fortawesome/free-solid-svg-icons';
-import { bgService, bgRunningService, killBGService } from '../../services/BackgroundService/ServicesHandler';
-import { LypeService, LypeServiceState, getStatusColour } from '../../services/BackgroundService/LypeServices';
+
 import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsResponds';
 import { LypeAccountInfo } from './LypeAccount';
 import { popup } from '../../components/Popup/popupRenderer';
 import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';
-import { Lype, LypeContent, LypeLoadingOverlay, LypeWarnContent, LypeWarnIgnore, LypeChatHeader, LypeChat, LypeChatContent, 
-  LypeLoadingCenter, LypeLoadingLBottom, LypeLoadingLSide, LypeLoadingCoronerRightTop, LypeLoadingCoronerLeftBottom, LypeLoadingTop, 
-  LypeLoadingBottom, LypeLoadingLeft, LypeLoadingRight, LypeLoading, LypeLoadingBox, LypeLoginRequired, LypeLeftFriends, LypeLeftUserInfo, 
-  LypeLeftBar, LypeLeftNavbarButtons, LypeLeftNavbar, LypeLeftUserInfoName, LypeluiDisplayedName, LypeluiCustomStatus, LypeLeftUserInfoAvatar,
-  LypelusButton, LypeLeftUserInfoSettings, LypeChatInput, LypeAccountStatusBadge, LaStatus, LypeLeftNavbarButton, LypeMessages, LypeAccountStatusBadgeBig } from './LypeStyled';
+import {
+  Lype,
+  LypeContent,
+  LypeLoadingOverlay,
+  LypeWarnContent,
+  LypeWarnIgnore,
+  LypeChatHeader,
+  LypeChat,
+  LypeChatContent,
+  LypeLoadingCenter,
+  LypeLoadingLBottom,
+  LypeLoadingLSide,
+  LypeLoadingCoronerRightTop,
+  LypeLoadingCoronerLeftBottom,
+  LypeLoadingTop,
+  LypeLoadingBottom,
+  LypeLoadingLeft,
+  LypeLoadingRight,
+  LypeLoading,
+  LypeLoadingBox,
+  LypeLoginRequired,
+  LypeLeftFriends,
+  LypeLeftUserInfo,
+  LypeLeftBar,
+  LypeLeftNavbarButtons,
+  LypeLeftNavbar,
+  LypeLeftUserInfoName,
+  LypeluiDisplayedName,
+  LypeluiCustomStatus,
+  LypeLeftUserInfoAvatar,
+  LypelusButton,
+  LypeLeftUserInfoSettings,
+  LypeChatInput,
+  LypeAccountStatusBadge,
+  LaStatus,
+  LypeLeftNavbarButton,
+  LypeMessages,
+  LypeAccountStatusBadgeBig,
+} from './LypeStyled';
 import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
 import { BaseWindow } from '../BaseWindow/BaseWindow';
+import { getStatusColour, LypeService, LypeServiceState } from '../../services/backgroundService/LypeServices';
+import { bgRunningService, bgService, killBGService } from '../../services/backgroundService/ServicesHandler';
 interface ILypeProps {
   window?: BaseWindow;
   destroy?: () => void;
@@ -141,17 +176,17 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   get loadingAnimation() {
     return (
       <LypeLoading>
-        <LypeLoadingTop/>
-        <LypeLoadingBottom/>
-        <LypeLoadingLeft/>
-        <LypeLoadingRight/>
+        <LypeLoadingTop />
+        <LypeLoadingBottom />
+        <LypeLoadingLeft />
+        <LypeLoadingRight />
 
-        <LypeLoadingCoronerRightTop/>
-        <LypeLoadingCoronerLeftBottom/>
+        <LypeLoadingCoronerRightTop />
+        <LypeLoadingCoronerLeftBottom />
 
-        <LypeLoadingCenter/>
-        <LypeLoadingLSide/>
-        <LypeLoadingLBottom/>
+        <LypeLoadingCenter />
+        <LypeLoadingLSide />
+        <LypeLoadingLBottom />
         <LypeLoadingBox
           style={{ left: `${this.state.animation.x}px`, top: `${this.state.animation.y}px` }}
         ></LypeLoadingBox>
@@ -598,7 +633,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     return (
       <LypeLeftFriends>
         {lypeAccount.blocked.map((e, i) => (
-            <li key={i} onClick={() => this.friendClick}>
+          <li key={i} onClick={() => this.friendClick}>
             <LypeAccountInfo
               key={i}
               onContextMenu={ev => {
@@ -609,7 +644,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
               buttons={[
                 {
                   onClick: () => {
-                    console.log('should unblock')
+                    console.log('should unblock');
                   },
                   content: 'Unblock',
                 },
@@ -828,8 +863,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   };
 
   raiseNotification(title: string, content: string) {
-    if(!this.props.window) return;
-   this.notification.raise(this.props.window, 'Startup', 'App just started up');
+    if (!this.props.window) return;
+    this.notification.raise(this.props.window, 'Startup', 'App just started up');
   }
-
 }

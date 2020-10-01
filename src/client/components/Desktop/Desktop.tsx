@@ -9,7 +9,7 @@ import { HotKeyHandler } from '../../essential/apphotkeys';
 import { BlueScreen } from '../BlueScreen/BlueScreen';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { Keypress } from '../../essential/constants/Keypress';
-import { startBackgroundServices, backgroundServices } from '../../services/BackgroundService/ServicesHandler';
+import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
 import { ActivationWatermark } from '../activationWatermark/activationWatermark';
 import { popup } from '../Popup/popupRenderer';
 import { NotificationsDisplay } from '../Notifications.tsx/NotificationsDisplay';
@@ -78,7 +78,6 @@ export class Desktop extends React.Component<{}, IState> {
     this.blueScreen.reset();
     this.killActiveWindow.reset();
     this.forceUpdate();
- 
   };
 
   openTerminal = () => {
@@ -100,8 +99,7 @@ export class Desktop extends React.Component<{}, IState> {
 
       backgroundServices().removeListener('ready', serviceReady);
 
-
-      window.addEventListener('error', this.showError)
+      window.addEventListener('error', this.showError);
     };
     if (!backgroundServices().ready) {
       backgroundServices().addListener('ready', serviceReady);
@@ -164,14 +162,14 @@ export class Desktop extends React.Component<{}, IState> {
     services.processor.removeListener('appRemove', this.updateView);
   }
 
-  showError = (error:ErrorEvent) => {
-    console.error('error',error);
-    if (error.message.includes('monaco-editor')){
-      // monaco likes to raise weird error   
+  showError = (error: ErrorEvent) => {
+    console.error('error', error);
+    if (error.message.includes('monaco-editor')) {
+      // monaco likes to raise weird error
       return;
     }
-   this.setState({ blueScreen: error.message.toString()});
-  }
+    this.setState({ blueScreen: error.message.toString() });
+  };
 
   updateDimensions = () => {
     //if (this.state.wallpaper) return;
@@ -271,6 +269,6 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   get wallpaperStyle() {
-    return this.state.landscape ? {width: '100%', height: 'auto' } : {width: 'auto', height: '100%' };
+    return this.state.landscape ? { width: '100%', height: 'auto' } : { width: 'auto', height: '100%' };
   }
 }

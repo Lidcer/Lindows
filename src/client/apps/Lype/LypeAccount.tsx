@@ -1,8 +1,9 @@
 import React from 'react';
 import { ILypeAccount } from '../../../shared/ApiLypeRequestsResponds';
+import { getStatusColour } from '../../services/backgroundService/LypeServices';
 import { DEFAULT_AVATAR } from '../AccountManager/AccountManagerWebpage';
-import { getStatusColour } from '../../services/BackgroundService/LypeServices';
-import { LypeAccountInfoBTN,
+import {
+  LypeAccountInfoBTN,
   LypeAccountInfoButtons,
   LypeAccountInfoDetails,
   LypeAccountInfoName,
@@ -10,7 +11,7 @@ import { LypeAccountInfoBTN,
   LypeAccountInfoProfilePic,
   LypeAccountStatusBadge,
   LypeAccountInfoStyle,
-  LypeAccountStatusBadgeBig
+  LypeAccountStatusBadgeBig,
 } from './LypeStyled';
 
 interface ILypeAccountInfo {
@@ -100,9 +101,7 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
         onClick={this.handleClick}
       >
         <LypeAccountInfoProfilePic>
-          <LypeAccountStatusBadgeBig
-            style={{ backgroundColor: getStatusColour(this.props.account.status) }}
-          />
+          <LypeAccountStatusBadgeBig style={{ backgroundColor: getStatusColour(this.props.account.status) }} />
           <img src={this.image} />
         </LypeAccountInfoProfilePic>
         {this.name}
