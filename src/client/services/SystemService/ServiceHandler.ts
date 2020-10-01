@@ -8,6 +8,7 @@ import { Account } from './AccountSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { BaseService } from '../backgroundService/BaseService';
 import { attachDebugMethod } from '../../essential/requests';
+import { FileSystem } from './FileSystem';
 
 export declare interface IServices {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
@@ -29,6 +30,7 @@ export class IServices extends EventEmitter {
   private _broadcaster: Service<Broadcaster>;
   private _storage: Service<BrowserStorage>;
   private _account: Service<Account>;
+  private _fileSystem: Service<FileSystem>;
   private _network: Service<Network>;
   private _processor: Service<Processor>;
   private _fingerprinter: Service<Fingerpriner>;
@@ -55,6 +57,8 @@ export class IServices extends EventEmitter {
     this._network = await this.initService(new Network(this.fingerprinter), 'Network');
     this._account = await this.initService(new Account(this.broadcaster, this.network), 'Account');
     this._processor = await this.initService(new Processor(this.browserStorage, this.broadcaster), 'Processor');
+    const systemSymbol = this._processor.service.symbol;
+    this._fileSystem = await this.initService(new FileSystem(this.browserStorage, systemSymbol), 'FileSystem');
     this.isReady = true;
     this.emit('allReady', this);
   }
@@ -111,6 +115,9 @@ export class IServices extends EventEmitter {
     return this._network.service;
   }
 
+  get fileSystem() {
+    return this._fileSystem.service;
+  }
 }
 
 export const services = new IServices();

@@ -6,7 +6,8 @@ import { Broadcaster } from './BroadcasterSystem';
 import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { attachDebugMethod } from '../../essential/requests';
+import { StringSymbol } from '../../utils/FileSystemDirectory';
+import { randomString } from '../../../../dist/shared/utils';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -40,6 +41,7 @@ export class Processor extends BaseSystemService {
   private paused = false;
   private eventEmitter = new EventEmitter();
   private _status = SystemServiceStatus.Uninitialized
+  private _symbol = new StringSymbol(randomString(99));
   public onAppAdd() {}
 
   constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
@@ -329,6 +331,10 @@ export class Processor extends BaseSystemService {
 
   get processes() {
     return this.lindowsProcesses;
+  }
+
+  get symbol() {
+    return this._symbol;
   }
 
   private get frontend() {

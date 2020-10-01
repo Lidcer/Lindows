@@ -76,6 +76,7 @@
     "@popperjs/core": "^2.5.3",
     "@sendgrid/mail": "^6.5.5",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash": "^4.14.161",
     "@types/multer": "^1.4.4",
     "@types/smtp-server": "^3.5.4",
     "axios": "^0.19.2",
