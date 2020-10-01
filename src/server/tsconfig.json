@@ -15,7 +15,8 @@
     "moduleResolution": "node",
     "types": ["node"],
     "incremental": true,
-    "composite": true
+    "composite": true,
+    "skipLibCheck": true,
   },
   "include": ["**/*.ts"],
   "exclude": ["**/*.test.ts"],

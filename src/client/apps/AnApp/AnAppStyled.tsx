@@ -5,7 +5,7 @@ export const AnAppWarper = styled.div`
     height: 100%;
     background-color: gray;
 
-    position:relative;
+    position: relative;
     overflow: hidden;
 `;
 
