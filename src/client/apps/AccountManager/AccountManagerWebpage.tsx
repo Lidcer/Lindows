@@ -1,6 +1,6 @@
 import React from 'react';
 import { services } from '../../services/SystemService/ServiceHandler';
-import { IAccountInfo } from '../../services/SystemService/AccounSystem';
+import { IAccountInfo } from '../../services/SystemService/AccountSystem';
 import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
 import { OpenFileDialog } from '../../essential/FileDialog';
 import { SECOND } from '../../../shared/constants';

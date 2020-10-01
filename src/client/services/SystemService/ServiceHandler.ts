@@ -4,7 +4,7 @@ import { Fingerpriner } from './FingerprinerSystem';
 import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
-import { Account } from './AccounSystem';
+import { Account } from './AccountSystem';
 
 export declare interface IServices {
   on(event: 'onServiceReady', listener: (name: string) => void): this;

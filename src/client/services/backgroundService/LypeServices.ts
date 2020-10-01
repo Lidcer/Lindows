@@ -13,7 +13,7 @@ import {
   ILypeFriendsUserResponse,
 } from '../../../shared/ApiLypeRequestsResponds';
 import { EventEmitter } from 'events';
-import { IAccountInfo } from '../SystemService/AccounSystem';
+import { IAccountInfo } from '../SystemService/AccountSystem';
 
 export interface ILypeAccountInfo extends IAccountInfo {
   customStatus?: string;
