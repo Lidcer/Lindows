@@ -37,7 +37,6 @@ export class IServices extends EventEmitter {
   constructor() {
     super();
     attachDebugMethod('internal', this);
-    console.log('ree')
   }
   private failedServiceInternals() {
     let _status = SystemServiceStatus.Failed;
