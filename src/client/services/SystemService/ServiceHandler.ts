@@ -5,6 +5,9 @@ import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { Account } from './AccountSystem';
+import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
+import { BaseService } from '../backgroundService/BaseService';
+import { attachDebugMethod } from '../../essential/requests';
 
 export declare interface IServices {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
@@ -12,114 +15,101 @@ export declare interface IServices {
   on(event: 'allReady', listener: () => void): this;
 }
 
+interface Service<T> {
+  internalMethods: {
+    start(): void | Promise<void>,
+    destroy(): void | Promise<void>,
+    status(): SystemServiceStatus;
+  }
+  service: T
+}
+
+
 export class IServices extends EventEmitter {
-  private _broadcaster: Broadcaster;
-  private _storage: BrowserStorage;
-  private _account: Account;
-  private _network: Network;
-  private _processor: Processor;
-  private _fingerprinter: Fingerpriner;
- // private _fingerprinter: Notification;
+  private _broadcaster: Service<Broadcaster>;
+  private _storage: Service<BrowserStorage>;
+  private _account: Service<Account>;
+  private _network: Service<Network>;
+  private _processor: Service<Processor>;
+  private _fingerprinter: Service<Fingerpriner>;
   private isReady = false;
 
   constructor() {
     super();
+    attachDebugMethod('internal', this);
+    console.log('ree')
   }
-  async init() {
-    await this.initBroadcaster();
-    await this.initBrowserStorage();
-    await this.initFingerPrinter();
-    await this.initNetwork();
-    await this.initAccount();
-    await this.initProcessor();
+  private failedServiceInternals() {
+    let _status = SystemServiceStatus.Failed;
+    const mockInternal: Service<any>['internalMethods'] = {
+      start: () => {},
+      destroy: () => { _status === SystemServiceStatus.Destroyed},
+      status: () => { return _status}
+    }
+    return mockInternal;
+  }
 
+  async init() {
+    this._broadcaster = await this.initService(new Broadcaster, 'Broadcaster');
+    this._storage = await this.initService(new BrowserStorage(), 'BrowserStorage');
+    this._fingerprinter = await this.initService(new Fingerpriner(), 'Fingerpriner');
+    this._network = await this.initService(new Network(this.fingerprinter), 'Network');
+    this._account = await this.initService(new Account(this.broadcaster, this.network), 'Account');
+    this._processor = await this.initService(new Processor(this.browserStorage, this.broadcaster), 'Processor');
     this.isReady = true;
     this.emit('allReady', this);
   }
-  private async initBroadcaster() {
-    this._broadcaster = new Broadcaster();
-    try {
-      await this._broadcaster.start();
-      this.emit('onServiceReady', 'Broadcaster');
-    } catch (error) {
-      this.emit('onServiceFailed', 'Broadcaster');
+  private emitServiceStatus(service: Service<any>, serviceName: string) {
+    if (!service.internalMethods || service.internalMethods.status() === SystemServiceStatus.Failed) {
+      this.emit('onServiceFailed', serviceName);
+      return
     }
+    this.emit('onServiceReady', serviceName);
   }
-  private async initBrowserStorage(): Promise<void> {
-    this._storage = new BrowserStorage();
-    try {
-      await this._storage.start();
-      this.emit('onServiceReady', 'BrowserStorage');
-    } catch (error) {
-      this.emit('onServiceFailed', 'BrowserStorage');
+  
+    private async initService<S extends BaseSystemService>(service: S, name: string) {
+  
+      const systemService: Service<S> = {
+        service,
+        internalMethods: this.failedServiceInternals()
     }
-  }
-  private async initAccount(): Promise<void> {
-    this._account = new Account(this._broadcaster, this._network);
-    try {
-      await this._account.start();
-      this.emit('onServiceReady', 'Account');
+     try {
+      const internal = systemService.service.init();
+      systemService.internalMethods = internal;
+      await internal.start();
     } catch (error) {
-      this.emit('onServiceFailed', 'Account');
+      DEVELOPMENT && console.error(error);
     }
+    
+    this.emitServiceStatus(systemService, name)
+    return systemService;
   }
-
-  private async initFingerPrinter(): Promise<void> {
-    this._fingerprinter = new Fingerpriner();
-    try {
-      await this._fingerprinter.start();
-      this.emit('onServiceReady', 'Fingerpriner');
-    } catch (error) {
-      this.emit('onServiceFailed', 'Fingerpriner');
-    }
-  }
-
-  private async initProcessor(): Promise<void> {
-    this._processor = new Processor(this._storage, this._broadcaster);
-    try {
-      await this._processor.start();
-      this.emit('onServiceReady', 'Processor');
-    } catch (error) {
-      this.emit('onServiceFailed', 'Processor');
-    }
-  }
-
-  private async initNetwork(): Promise<void> {
-    this._network = new Network(this._fingerprinter);
-    try {
-      await this._network.start();
-      this.emit('onServiceReady', 'Network');
-    } catch (error) {
-      this.emit('onServiceFailed', 'Network');
-    }
-  }
-
   get ready() {
     return this.isReady;
   }
 
   get processor() {
-    return this._processor;
+    return this._processor.service;
   }
 
   get browserStorage() {
-    return this._storage;
+    return this._storage.service;
   }
 
   get fingerprinter() {
-    return this._fingerprinter;
+    return this._fingerprinter.service;
   }
 
   get broadcaster() {
-    return this._broadcaster;
+    return this._broadcaster.service;
   }
 
   get account() {
-    return this._account;
+    return this._account.service;
   }
  
   get network() {
-    return this._network;
+    return this._network.service;
   }
 
 }

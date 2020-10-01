@@ -2,46 +2,58 @@ import { EventEmitter } from 'events';
 import fingerprintjs from 'fingerprintjs2';
 import { UAParser } from 'ua-parser-js';
 import MobileDetect from 'mobile-detect';
-import { BaseSystemService } from './BaseSystemService';
+import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { SECOND } from '../../../shared/constants';
-import { attachDebugMethod } from '../../essential/requests';
 
 export class Fingerpriner extends BaseSystemService {
   private result: fingerprintjs.Component[] = [];
-  constructor() {
-    super();
-    attachDebugMethod('fingerprinter', this);
-  }
+  private _status = SystemServiceStatus.Uninitialized;
 
-  start() {
-    return new Promise<void>((resolve, reject) => {
-      let done = false;
-      fingerprintjs.get(result => {
-        this.result = result;
-        this.injectPlugin();
-        if (!done) {
-          resolve();
-        }
-        done = true;
+  init() {
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    this._status = SystemServiceStatus.WaitingForStart;
+
+    const start = () => {
+      this._status = SystemServiceStatus.Starting;
+      return new Promise<void>((resolve, reject) => {
+        let done = false;
+        fingerprintjs.get(result => {
+          this.result = result;
+          this.injectPlugin();
+          if (!done) {
+            this._status = SystemServiceStatus.Ready;
+            resolve();
+          }
+          done = true;
+        });
+        setTimeout(() => {
+          if (!done) {
+            this._status = SystemServiceStatus.Failed;
+            reject();
+          }
+        }, SECOND * 10);
       });
-      setTimeout(() => {
-        if (!done) {
-          reject();
-        }
-      }, SECOND * 10);
-    });
-  }
+    }
+  
+    const destroy = () => {
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      this._status = SystemServiceStatus.Destroyed;
+      window.removeEventListener('focus', this.setFocused);
+      window.removeEventListener('blur', this.setUnFocused);
+      if (!/windows/i.test(navigator.userAgent)) {
+        window.removeEventListener('touchstart', this.setTouch);
+      }
+    }
 
-  destroy() {
-    window.removeEventListener('focus', this.setFocused);
-    window.removeEventListener('blur', this.setUnFocused);
-    if (!/windows/i.test(navigator.userAgent)) {
-      window.removeEventListener('touchstart', this.setTouch);
+    return {
+      start: start,
+      destroy: destroy,
+      status: this.status,
     }
   }
 
-  get ok() {
-    return !!this.result.length;
+  status = () => {
+    return this._status;
   }
 
   private injectPlugin() {
@@ -68,11 +80,11 @@ export class Fingerpriner extends BaseSystemService {
     else focused.value = false;
   };
 
-  setTouch() {
-    // if (this.result) return;
-    // const usesTouch = this.result.find(f => f.key === 'usesTouch');
-    // if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
-    // else usesTouch.value = true;
+  setTouch = () => {
+    if (this.result) return;
+    const usesTouch = this.result.find(f => f.key === 'usesTouch');
+    if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
+    else usesTouch.value = true;
   }
 
   get supportsLetAndConst() {

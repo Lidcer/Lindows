@@ -1,9 +1,7 @@
 import io from 'socket.io-client';
-import { attachDebugMethod } from '../../essential/requests';
-import fingerprintjs from 'fingerprintjs2';
 import { EventEmitter } from 'events';
 import { SECOND } from '../../../shared/constants';
-import { BaseSystemService } from './BaseSystemService';
+import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { Fingerpriner } from './FingerprinerSystem';
 import { randomString } from '../../../shared/utils';
 import { IWebsocketPromise } from '../../../shared/Websocket'
@@ -12,78 +10,100 @@ export class Network extends BaseSystemService {
   private _socket: SocketIOClient.Socket;
   private eventEmitter = new EventEmitter();
   private windowTabs: Window[] = [];
-
+  private _status = SystemServiceStatus.Uninitialized;
+  
   constructor(private fingerpriner: Fingerpriner) {
     super();
-    attachDebugMethod('network', this);
   }
 
-  start = async () => {
-    if (STATIC) {
-      return; 
+  init() {
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    this._status = SystemServiceStatus.WaitingForStart;
+    const start = async () => {
+      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+      this._status = SystemServiceStatus.Starting;
+      if (STATIC) {
+        this._status = SystemServiceStatus.Failed;
+        return; 
+      }
+  
+      return new Promise<void>((resolve, reject) => {
+        const replaceLink = (link: string) => {
+          if (!link) return '';
+          link = link.replace(/\${origin}/g, origin);
+          link = link.replace(/\${location.host}/g, location.host);
+          link = link.replace(/\${location.hostname}/g, location.hostname);
+          return link;
+        };
+  
+        this._socket = io(origin);
+        this._socket.on('connect', () => {
+          this.connection();
+          this._status = SystemServiceStatus.Ready;
+          resolve();
+        });
+  
+        setTimeout(() => {
+          if (!this._socket.connected) {
+            this._status = SystemServiceStatus.Failed;
+            reject(new Error('Unable to establish connection'));
+          }
+        }, SECOND * 10);
+  
+        this._socket.on('redirect', (redirectLink: string) => window.location.replace(replaceLink(redirectLink)));
+        this._socket.on('open-new-tab', (redirectLink: string) => {
+          this.windowTabs.push(window.open(replaceLink(redirectLink), '_blank'));
+        });
+  
+        this._socket.on('admin-event-log-report', (redirectLink: string) => {
+          console.error('this should not be visible');
+        });
+  
+        this._socket.on('authenticate-failed', (message: string) => {
+          console.error(message);
+        });
+  
+        this._socket.on('disconnect', () => {
+          this.emit('connection');
+        });
+  
+        this._socket.on('take-fingerprint', (message: string) => {
+          if (localStorage.getItem('terms-of-policy') !== 'true') return;
+          this._socket.emit('fingerprint-result', this.fingerpriner.allResults);
+        });
+        this._socket.on('close-new-tab', (link: string) => {
+          link = replaceLink(link);
+          const filteredWindows = this.windowTabs.filter(
+            w =>
+              w.origin === link || w.location.host === link || w.location.hostname === link || w.location.href === link,
+          );
+          for (const w of filteredWindows) {
+            const indexOf = this.windowTabs.indexOf(w);
+            if (indexOf !== -1) this.windowTabs.splice(indexOf, 1);
+            w.close();
+          }
+        });
+      });
+    };
+  
+    const destroy = () => {
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      this._status = SystemServiceStatus.Destroyed;
+      if (STATIC) return;
+      this._socket.disconnect();
     }
-
-    return new Promise<void>((resolve, reject) => {
-      const replaceLink = (link: string) => {
-        if (!link) return '';
-        link = link.replace(/\${origin}/g, origin);
-        link = link.replace(/\${location.host}/g, location.host);
-        link = link.replace(/\${location.hostname}/g, location.hostname);
-        return link;
-      };
-
-      this._socket = io(origin);
-      this._socket.on('connect', () => {
-        this.connection();
-        resolve();
-      });
-
-      setTimeout(() => {
-        if (!this._socket.connected) {
-          reject(new Error('Unable to establish connection'));
-        }
-      }, SECOND * 10);
-
-      this._socket.on('redirect', (redirectLink: string) => window.location.replace(replaceLink(redirectLink)));
-      this._socket.on('open-new-tab', (redirectLink: string) => {
-        this.windowTabs.push(window.open(replaceLink(redirectLink), '_blank'));
-      });
-
-      this._socket.on('admin-event-log-report', (redirectLink: string) => {
-        console.error('this should not be visible');
-      });
-
-      this._socket.on('authenticate-failed', (message: string) => {
-        console.error(message);
-      });
-
-      this._socket.on('disconnect', () => {
-        this.emit('connection');
-      });
-
-      this._socket.on('take-fingerprint', (message: string) => {
-        if (localStorage.getItem('terms-of-policy') !== 'true') return;
-        this._socket.emit('fingerprint-result', this.fingerpriner.allResults);
-      });
-      this._socket.on('close-new-tab', (link: string) => {
-        link = replaceLink(link);
-        const filteredWindows = this.windowTabs.filter(
-          w =>
-            w.origin === link || w.location.host === link || w.location.hostname === link || w.location.href === link,
-        );
-        for (const w of filteredWindows) {
-          const indexOf = this.windowTabs.indexOf(w);
-          if (indexOf !== -1) this.windowTabs.splice(indexOf, 1);
-          w.close();
-        }
-      });
-    });
-  };
-
-  destroy() {
-    if (STATIC) return;
-    this._socket.disconnect();
+    
+    return {
+      start: start,
+      destroy: destroy,
+      status: this.status,
+    }
   }
+
+  status = () => {
+    return this._status;
+  } 
+
 
   on(event: 'connection', listener: (object: this) => void): void;
   on(event: 'disconnect', listener: (object: this) => void): void;
@@ -153,10 +173,4 @@ export class Network extends BaseSystemService {
   get socket() {
     return this._socket;
   }
-
-
-
-
-
-  
 }

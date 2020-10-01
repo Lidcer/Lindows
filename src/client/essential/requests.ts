@@ -33,7 +33,7 @@ export function fetchImage(imageUrl: string): Promise<string | null> {
 }
 
 export function attachDebugMethod(value: string, method: any) {
-  if (isDev()) {
+  if (DEVELOPMENT) {
     (window as any)[value] = method;
   }
 }

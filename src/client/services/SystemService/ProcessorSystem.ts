@@ -5,7 +5,7 @@ import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../.
 import { Broadcaster } from './BroadcasterSystem';
 import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
 import { BrowserStorage } from './BrowserStorageSystem';
-import { BaseSystemService } from './BaseSystemService';
+import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { attachDebugMethod } from '../../essential/requests';
 
 interface IStringifiedProcess {
@@ -39,14 +39,30 @@ export class Processor extends BaseSystemService {
   private lastPerformance = 0;
   private paused = false;
   private eventEmitter = new EventEmitter();
+  private _status = SystemServiceStatus.Uninitialized
   public onAppAdd() {}
 
   constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
     super();
-    attachDebugMethod('processor', this);
+  }
+  
+  init() {
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    this._status = SystemServiceStatus.WaitingForStart;
+    return {
+      start: this.start,
+      destroy: this.destroy,
+      status: this.status,
+    }
   }
 
-  start() {
+ 
+
+
+
+  private start = () => {
+    if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+    this._status = SystemServiceStatus.Starting;
     this.broadcastNewProcess();
 
     // this.broadcaster.on(`${this.serviceName}-attach`, this.addNewProcess);
@@ -58,24 +74,27 @@ export class Processor extends BaseSystemService {
       this.monitor();
       this.lastPerformance = performance.now();
     });
+    this._status = SystemServiceStatus.Ready;
   }
 
-  destroy() {
+  private destroy = () => {
+    if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+    this._status = SystemServiceStatus.Destroyed;
     // this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
     // this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
     // this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
     // this.broadcaster.removeListener(`${this.serviceName}-addApp`, this.remoteAppAdd);
   }
 
-  get ok() {
-    return !this.destroyed;
+  status = () => {
+    return this._status;
   }
 
   updateProcesses = (json: IJSONWindowEvent) => {
     const id = json.props.id;
     const lProcess = this.lindowsProcesses.find(e => e.id === id);
     if (!lProcess) return;
-    lProcess._silentSetState(json.state);
+   // lProcess._silentSetState(json.state);
   };
 
   remoteAppAdd = (prop: [string, number]) => {

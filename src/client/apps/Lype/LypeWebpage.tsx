@@ -18,7 +18,7 @@ import {
   faCheck,
 } from '@fortawesome/free-solid-svg-icons';
 
-import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsResponds';
+import { ILypeAccount } from '../../../shared/ApiLypeRequestsResponds';
 import { LypeAccountInfo } from './LypeAccount';
 import { popup } from '../../components/Popup/popupRenderer';
 import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';

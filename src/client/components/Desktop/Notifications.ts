@@ -23,10 +23,10 @@ export class NotificationSystem {
         attachDebugMethod('notif', this);
         this.browserStorage = services.browserStorage;
         this.processor = services.processor;
-        if (!this.browserStorage.ok) {
+        if (!this.browserStorage.ready) {
             throw new Error('BrowserStorage is not ready');
         }
-        if (!this.browserStorage.ok) {
+        if (!this.processor.ready) {
             throw new Error('processor is not ready');
         }
 

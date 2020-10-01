@@ -15,7 +15,7 @@ import {
 } from '../../../shared/ApiUsersRequestsResponds';
 import { disassembleError } from '../../essential/requests';
 import { fetchImage } from '../../essential/requests';
-import { BaseSystemService } from './BaseSystemService';
+import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { EventEmitter } from 'events';
 import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
@@ -40,25 +40,53 @@ export class Account extends BaseSystemService {
 
   private imageMap = new Map<string, string>();
   private avatar: string = null;
+  private _status = SystemServiceStatus.Uninitialized
 
   constructor(private broadcaster: Broadcaster, private network: Network) {
     super();
     this._token = this.token;
   }
 
-  start = async () => {
-    if (STATIC) { return };
-
-
-    try {
-      await this.checkAccount();
-      this.network.authenticate(this.token);
-    } catch (error) {
-      /* ignored */
+  init() {
+    if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    this._status = SystemServiceStatus.WaitingForStart;
+    
+    const start = async () => {
+      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+      if (STATIC) { 
+        this._status = SystemServiceStatus.Failed;
+        return
+      };
+  
+      try {
+        await this.checkAccount();
+        this.network.authenticate(this.token);
+      } catch (error) {
+        /* ignored */
+      }
+      this.broadcaster.on(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
+      this.broadcaster.on(`${this.SERVICE_NAME}-logout`, this.logoutFromOtherSource);
+      this._status = SystemServiceStatus.Ready;
+    };
+  
+    const destroy = () => {
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      this._status = SystemServiceStatus.Destroyed;
+      this.broadcaster.removeListener(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
+      this.broadcaster.removeListener(`${this.SERVICE_NAME}-logout`, this.logout);
     }
-    this.broadcaster.on(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
-    this.broadcaster.on(`${this.SERVICE_NAME}-logout`, this.logoutFromOtherSource);
-  };
+     
+    return {
+      start: start,
+      destroy: destroy,
+      status: this.status,
+    }
+  }
+
+  status = () => {
+    return this._status;
+  }
+
 
   on(event: 'imageReady', listener: (accountInfo: IAccountInfo | null) => void): void;
   on(event: 'login', listener: (accountInfo: IAccountInfo) => void): void;
@@ -437,11 +465,7 @@ export class Account extends BaseSystemService {
     Object.freeze(accountInfo);
     return accountInfo;
   }
-  public destroy() {
-    this.broadcaster.removeListener(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
-    this.broadcaster.removeListener(`${this.SERVICE_NAME}-logout`, this.logout);
-  }
-
+ 
   get ready() {
     return this.isReady;
   }
