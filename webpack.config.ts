@@ -4,6 +4,7 @@ import ManifestPlugin from 'webpack-manifest-plugin';
 import { SERVER_PORT, IS_DEV, WEBPACK_PORT } from './src/server/config';
 
 
+
 const plugins = [
   new ManifestPlugin(),
   new DefinePlugin({ DEVELOPMENT: IS_DEV, STATIC: !!process.env.STATIC }),
@@ -22,7 +23,9 @@ const entry: Configuration['entry'] = {
 if (IS_DEV) {
   entry.test = './src/client/test';
 }
-entry.admin = './src/client/admin';
+if (!process.env.STATIC) {
+  entry.admin = './src/client/admin';
+}
 
 const config: Configuration = {
   mode: IS_DEV ? 'development' : 'production',

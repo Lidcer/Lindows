@@ -2,7 +2,6 @@ import { LypeService } from './LypeServices';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
 import { attachDebugMethod } from '../../essential/requests';
-import { services } from '../SystemService/ServiceHandler';
 
 interface IBackgroundServices {
   name: string;

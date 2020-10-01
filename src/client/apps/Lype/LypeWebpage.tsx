@@ -23,7 +23,6 @@ import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsRespond
 import { LypeAccountInfo } from './LypeAccount';
 import { popup } from '../../components/Popup/popupRenderer';
 import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';
-import { manifest } from './Lype';
 import { Lype, LypeContent, LypeLoadingOverlay, LypeWarnContent, LypeWarnIgnore, LypeChatHeader, LypeChat, LypeChatContent, 
   LypeLoadingCenter, LypeLoadingLBottom, LypeLoadingLSide, LypeLoadingCoronerRightTop, LypeLoadingCoronerLeftBottom, LypeLoadingTop, 
   LypeLoadingBottom, LypeLoadingLeft, LypeLoadingRight, LypeLoading, LypeLoadingBox, LypeLoginRequired, LypeLeftFriends, LypeLeftUserInfo, 

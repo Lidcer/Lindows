@@ -1,4 +1,4 @@
-import { IAccountInfo } from '../account';
+
 import { services } from '../SystemService/ServiceHandler';
 import { BaseService } from './BaseService';
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
@@ -13,6 +13,7 @@ import {
   ILypeFriendsUserResponse,
 } from '../../../shared/ApiLypeRequestsResponds';
 import { EventEmitter } from 'events';
+import { IAccountInfo } from '../SystemService/AccounSystem';
 
 export interface ILypeAccountInfo extends IAccountInfo {
   customStatus?: string;
@@ -45,7 +46,7 @@ export class LypeService extends BaseService {
   private _pendingRequest: ILypeAccount[] = [];
   private _blocked: ILypeAccount[] = [];
   private eventEmitter = new EventEmitter();
-  private notificationService: NotificationService;
+ // private notificationService: NotificationService;
 
   constructor() {
     super();
