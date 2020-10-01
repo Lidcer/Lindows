@@ -14,8 +14,11 @@ Web Explorer - Web browser using iFrame. Can only load websites that do not send
 Virtual crate - It allows you to virtualize web browser operation system. Currently only lindows works(WIP).\
 Group Viewer - App that allows you to share your in browser screen to someone you would like to have access to. Currently it is very slow and viewer cannot interact with shared screen (WIP)\
 IDE-Lide - Allows you to build custom apps.\
+
 ### Demo
 Note that some of the network app won't appear on demo version of lindow those are Account manager, Lype and Group Viewer
+
+[Demo Lindows](https://lindows-demo.now.sh)
 
 ## System services
 Processor service is responsible for displaying windows doing action like focus, closing then and so on.\

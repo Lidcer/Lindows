@@ -4,7 +4,7 @@ import {
   WarperIDE,
   TextareaIDE,
   TabActive,
-  Tab,
+  Tab as ITab,
   EditorArea,
   Tabs,
   ToolBar,
@@ -23,7 +23,7 @@ import { templateProject } from './template';
 import { IExplorerFile, IExplorerFolder, getFolder, IDEFileExplorer, isFolder } from './FileExplorer';
 import styled from 'styled-components';
 
-interface Tab {
+interface ITab {
   content: string;
   name: string;
 }
@@ -258,9 +258,9 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
             );
           } else {
             return (
-              <Tab key={i} className='muted' onClick={() => this.onChangeSwitchTab(t)}>
+              <ITab key={i} className='muted' onClick={() => this.onChangeSwitchTab(t)}>
                 {t.name}
-              </Tab>
+              </ITab>
             );
           }
         })}
