@@ -281,6 +281,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       const rename = () => {
         try {
           const orgName = f.name;  
+          if(this.state.renaming.value && this.state.renaming.value !== orgName) return;
           if (this.state.renaming.value) {
             f.setName(this.state.renaming.value, this.usr);
           }
