@@ -209,7 +209,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           }
           break;
         default:
-          console.log(event.key);
+         // console.log(event.key);
           break;
       }
 

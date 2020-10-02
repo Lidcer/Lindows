@@ -165,7 +165,7 @@ export class Desktop extends React.Component<{}, IState> {
         // };
       })
       .catch(err => {
-        console.log(err);
+        //console.log(err);
       });
   }
 

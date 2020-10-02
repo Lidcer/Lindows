@@ -89,7 +89,6 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
 
     let loc: IExplorerFile | IExplorerFolder = this.variables.root;
     const req = (srt: string) => {
-      console.log(srt);
       switch (srt) {
         case 'BaseWindow':
           return BaseWindow;
@@ -128,7 +127,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
             const file = (m as IExplorerFolder).contents.find(
               (f: IExplorerFolder) => !f.contents && f.name === key,
             ) as IExplorerFile;
-            console.log(m, key);
+
             if (!file && key) throw new Error(`File does not exist ${key}`);
             if (!file) throw new Error(`Unknown file not exist`);
             const existing = codeMap.has(file.content);
@@ -142,7 +141,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
                   ${code}
                   return exports;
                   })()`;
-              console.log('ff', evaluate);
+  
               const fileCompiled = safeEval(evaluate, context) as BaseWindow.BaseWindow;
               codeMap.set(file.content, fileCompiled);
               loc = this.variables.root;
@@ -179,7 +178,6 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
         throw new Error('invalid app checking that your app had manifest variable!');
       }
       const compiledApp = entry[1] as BaseWindow.BaseWindow;
-      console.log(compiledApp);
 
       if (!compiledApp.onError) {
         //@ts-ignore shut the fuck up

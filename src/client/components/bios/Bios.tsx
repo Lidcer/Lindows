@@ -457,7 +457,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
   keyboardListener = (ev: KeyboardEvent) => {
     const st = this.state;
-    console.log(ev);
+    //console.log(ev);
     switch (ev.keyCode) {
       case Keypress.ArrowRight:
         if (st.popup) {

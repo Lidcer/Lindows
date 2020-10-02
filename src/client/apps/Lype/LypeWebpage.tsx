@@ -469,7 +469,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
         content: <span className='text-danger'>Unblock User</span>,
         iconOrPicture: faUserPlus,
         onClick: () => {
-          console.log('will block');
+          //console.log('will block');
         },
       });
     } else {
@@ -477,7 +477,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
         content: <span className='text-danger'>Block user</span>,
         iconOrPicture: faUserSlash,
         onClick: () => {
-          console.log('will block');
+          //console.log('will block');
         },
       });
     }
@@ -510,7 +510,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
           <LypeAccountInfo
             key={i}
             account={e}
-            onClick={ev => console.log('test')}
+            onClick={ev => /*console.log('test')*/}
             onContextMenu={ev => {
               ev.preventDefault();
               this.openContentMenu(ev, e);
@@ -629,7 +629,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     if (lypeAccount.friends.length === 0) {
       return <LypeLeftFriends className='empty'>Yay no blocks.</LypeLeftFriends>;
     }
-    console.log(lypeAccount);
+    //console.log(lypeAccount);
     return (
       <LypeLeftFriends>
         {lypeAccount.blocked.map((e, i) => (
@@ -644,7 +644,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
               buttons={[
                 {
                   onClick: () => {
-                    console.log('should unblock');
+                    //console.log('should unblock');
                   },
                   content: 'Unblock',
                 },
@@ -682,7 +682,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   }
 
   friendClick = (text: string) => {
-    console.log(text);
+    //console.log(text);
   };
 
   componentDidMount() {

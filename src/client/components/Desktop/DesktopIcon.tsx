@@ -277,7 +277,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   };
 
   getCaption(f: FileSystemDirectory | FileSystemFile) {
-    if (this.state.renaming && this.state.renaming.ref === f) {
+    if (this.state.renaming && this.state.renaming.ref ===o f) {
       const rename = () => {
         try {
           const orgName = f.name;  

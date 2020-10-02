@@ -342,10 +342,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     const app = await services.processor.addApp<BaseWindow>(mockGenerator, name);
     return app.object;
-    
-  }
-  componentDidCatch(){
-    console.log('yes it throw')
+  
   }
 
   async componentDidMount() {
@@ -486,10 +483,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     } catch (error) {
       this._error = error;
       if (this.onError) {
-        console.log('should call on this errror')
         this.onError(new LindowError(error));
-      } else {
-        console.log('this on error does not exist')
       }
 
       this.exit();
