@@ -145,8 +145,41 @@ export class FileSystemDirectory {
   deleteDirectory(owner = everyone) {
     const data = directoriesMap.get(this)
     if (!data) throw new Error('Directory has been deleted!');
-   
-  
+    const permission = data.permission.get(owner.hash);
+
+    if (canModifyFileOrDirectory(permission)) {
+      const pendingForDeletion: DirectoryData['contents'] = [];
+
+      const deepScanner = (contents: DirectoryData['contents'] ) => {
+        for (const content of contents) {
+          if(!canModifyFileOrDirectory(content.getPermission(owner))) {
+            throw new Error('You do not have permission to delete content of folder');
+          }
+          if (isDirectory(content)) {
+            const directory = directoriesMap.get(content);
+              pendingForDeletion.push(content);
+              directoriesMap.delete(content);
+              deepScanner(directory.contents);
+          } else {
+              pendingForDeletion.push(content)
+          }
+        }
+      } 
+      pendingForDeletion.push(this);
+      deepScanner(data.contents);
+
+      for (const shouldDelete of pendingForDeletion) {
+          if (isDirectory(shouldDelete)) {
+            const directory = directoriesMap.get(shouldDelete);
+            directory.contents = [];
+            directoriesMap.delete(shouldDelete);
+          } else {
+            files.delete(shouldDelete);
+          }
+      }
+    }
+    
+    throw new Error('You do not have permission to delete this directory!');
   }
 
   contents(owner = everyone) {
@@ -277,7 +310,7 @@ export class FileSystemFile<C = any> {
     throw new Error('You do not have permission to delete this file');
   }
   
-  permission(owner = everyone) {
+  getPermission(owner = everyone) {
     const file = files.get(this)
     if (!file) throw new Error('File has already been deleted!');
     return file.permission.get(owner.hash) || FileSystemPermissions.None;
@@ -331,6 +364,9 @@ export class FileSystemFile<C = any> {
   }
 }
 
+function isDirectory(fileDirectory: any): fileDirectory  is  FileSystemDirectory {
+  return Array.isArray(fileDirectory.contents) && fileDirectory.name && fileDirectory.permission; 
+}
 
 function canModifyFileOrDirectory(permission: FileSystemPermissions) {
   return permission === FileSystemPermissions.ReadAndWrite || permission === FileSystemPermissions.WriteOnly;
