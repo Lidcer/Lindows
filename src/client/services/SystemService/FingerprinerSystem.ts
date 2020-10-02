@@ -5,7 +5,7 @@ import MobileDetect from 'mobile-detect';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { SECOND } from '../../../shared/constants';
 
-export class Fingerpriner extends BaseSystemService {
+export class Fingerprinter extends BaseSystemService {
   private result: fingerprintjs.Component[] = [];
   private _status = SystemServiceStatus.Uninitialized;
 

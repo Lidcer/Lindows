@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { Processor } from './ProcessorSystem';
-import { Fingerpriner } from './FingerprinerSystem';
+import { Fingerprinter } from './FingerprinerSystem';
 import { Broadcaster } from './BroadcasterSystem';
 import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
@@ -32,7 +32,7 @@ export class IServices extends EventEmitter {
   private _fileSystem: Service<FileSystem>;
   private _network: Service<Network>;
   private _processor: Service<Processor>;
-  private _fingerprinter: Service<Fingerpriner>;
+  private _fingerprinter: Service<Fingerprinter>;
   private isReady = false;
 
   constructor() {
@@ -52,12 +52,11 @@ export class IServices extends EventEmitter {
   async init() {
     this._broadcaster = await this.initService(new Broadcaster, 'Broadcaster');
     this._storage = await this.initService(new BrowserStorage(), 'BrowserStorage');
-    this._fingerprinter = await this.initService(new Fingerpriner(), 'Fingerpriner');
+    this._fingerprinter = await this.initService(new Fingerprinter(), 'Fingerpriner');
     this._network = await this.initService(new Network(this.fingerprinter), 'Network');
     this._account = await this.initService(new Account(this.broadcaster, this.network), 'Account');
-    this._processor = await this.initService(new Processor(this.browserStorage, this.broadcaster), 'Processor');
-    const systemSymbol = this._processor.service.symbol;
-    this._fileSystem = await this.initService(new FileSystem(this.browserStorage, systemSymbol), 'FileSystem');
+    this._processor = await this.initService(new Processor(this.browserStorage, this.broadcaster, this.fingerprinter), 'Processor');
+    this._fileSystem = await this.initService(new FileSystem(this.browserStorage, this.processor), 'FileSystem');
     this.isReady = true;
     this.emit('allReady', this);
   }

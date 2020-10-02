@@ -2,7 +2,7 @@ import io from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { SECOND } from '../../../shared/constants';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { Fingerpriner } from './FingerprinerSystem';
+import { Fingerprinter } from './FingerprinerSystem';
 import { randomString } from '../../../shared/utils';
 import { IWebsocketPromise } from '../../../shared/Websocket'
 
@@ -12,7 +12,7 @@ export class Network extends BaseSystemService {
   private windowTabs: Window[] = [];
   private _status = SystemServiceStatus.Uninitialized;
   
-  constructor(private fingerpriner: Fingerpriner) {
+  constructor(private fingerpriner: Fingerprinter) {
     super();
   }
 

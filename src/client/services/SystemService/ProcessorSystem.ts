@@ -6,8 +6,9 @@ import { Broadcaster } from './BroadcasterSystem';
 import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { StringSymbol } from '../../utils/FileSystemDirectory';
+import { requestSystemSymbol, StringSymbol } from '../../utils/FileSystemDirectory';
 import { randomString } from '../../../shared/utils';
+import { Fingerprinter } from './FingerprinerSystem';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -22,14 +23,16 @@ export interface IDisplayingApp<T = unknown> {
   state?: any;
 }
 
+const systemSymbol = requestSystemSymbol();
+const browserStorageKey = '__processor';
 export class Processor extends BaseSystemService {
-  private readonly browserStorageKey = '__processor';
-  private readonly serviceName = 'procesor';
+  private readonly serviceName = 'processor';
   private readonly processorId = random(1000, 9999);
   private readonly _uptime = Date.now();
   private lindowsProcesses: BaseWindow[] = [];
   private displaying: IDisplayingApp<any>[] = [];
   private user = `Guest${random(1000, 9999)}`;
+  private _deviceName = 'Unknown';
   private _mobileDetect: MobileDetect;
   private _frontend = 'Lindows 1.0 Alpha';
   private processID = 0;
@@ -41,11 +44,15 @@ export class Processor extends BaseSystemService {
   private paused = false;
   private eventEmitter = new EventEmitter();
   private _status = SystemServiceStatus.Uninitialized
-  private _symbol = new StringSymbol(randomString(99));
+  private _symbol = systemSymbol;
   public onAppAdd() {}
 
-  constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster) {
+  constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster, fingerpriner: Fingerprinter) {
     super();
+    const browser = fingerpriner.userAgent.getBrowser();
+    if (browser) {
+      this._deviceName = `${browser.name}${browser.version}`;
+    }
   }
   
   init() {
@@ -57,10 +64,6 @@ export class Processor extends BaseSystemService {
       status: this.status,
     }
   }
-
- 
-
-
 
   private start = () => {
     if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
@@ -204,8 +207,11 @@ export class Processor extends BaseSystemService {
     return this._mobileDetect;
   }
 
-  get userName() {
+  get username() {
     return this.user;
+  }
+  get deviceName() {
+    return this.deviceName;
   }
 
   private get deviceInfo() {
@@ -300,7 +306,7 @@ export class Processor extends BaseSystemService {
     return new Promise(async (resolve, reject) => {
       const stringifiedProcesses = this.stringify;
       try {
-        await this.browserStorage.setItem(this.browserStorageKey, stringifiedProcesses);
+        await this.browserStorage.setItem(browserStorageKey, stringifiedProcesses);
         resolve();
       } catch (error) {
         reject(error);

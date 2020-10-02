@@ -83,14 +83,14 @@ export class BrowserStorage extends BaseSystemService {
     return this._status
   } 
 
-  async setItem(key: string, value: any): Promise<void> {
+  async setItem<V = any>(key: string, value: V): Promise<void> {
     if (key.length < 3) throw new Error('key must have more than 3 characters');
     this.data[key] = value;
     if(inIframe()) return;
     await this.save();
   }
 
-  getItem(key: string) {
+  getItem<V = any>(key: string): V {
     return this.data[key];
   }
 
