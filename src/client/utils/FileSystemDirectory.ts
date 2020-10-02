@@ -380,7 +380,8 @@ export class FileSystemFile<C = any> {
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
-      const upper = directoriesMap.get(upperPath.get(this));
+      const directory = directoryLink.get(this);
+      const upper = directoriesMap.get(directory);
       const sameNameFolder = !!upper.contents.find(d => d.name === name);
       if (sameNameFolder) {
         throw new Error('Duplicate name!');
