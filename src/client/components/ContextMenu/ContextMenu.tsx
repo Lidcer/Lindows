@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronRight, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 
 import { ContextMenuStyled, ContextIcon, ContextSeparator, ContextMenuItem, ContextColumn } from './ContextMenuStyled';
+import { popup } from '../Popup/popupRenderer';
 
 export interface IElements {
   elements: IElement[];
@@ -166,4 +167,17 @@ export class ContextMenu extends React.Component<IElements, IState> {
       left: `${this.state.x | 0}px`,
     };
   }
+}
+
+
+export function showContext(elements:IElement[], x: number, y: number) {
+  const element = (
+    <ContextMenu
+      elements={elements}
+      x={x}
+      y={y}
+      onAnyClick={() => popup.remove(element)}
+    />
+  );
+  popup.add(element);
 }

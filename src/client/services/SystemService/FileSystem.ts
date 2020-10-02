@@ -1,20 +1,22 @@
-import { FileSystemDirectory, FileSystemPermissions, ObjectDirectory, objectifyDirectory, parseDirectory, parseDirectoryOrFile, sanitizeName, StringSymbol } from '../../utils/FileSystemDirectory';
+import { FileSystemDirectory, FileSystemFile, FileSystemPermissions, isDirectory, ObjectDirectory, objectifyDirectory, parseDirectory, parseDirectoryOrFile, sanitizeName, StringSymbol } from '../../utils/FileSystemDirectory';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { Processor } from './ProcessorSystem';
 
 
 const fileSystemKey = '__FileSystem__';
+const browserKeyDir = `__fileSystemKey:_users_`
 let system = new WeakMap<FileSystem, StringSymbol>() 
 export class FileSystem extends BaseSystemService {
   private _status = SystemServiceStatus.Uninitialized;
-  private root: FileSystemDirectory;
+  private _root: FileSystemDirectory;
+  private _home: FileSystemDirectory;
   private username: () => string;
   private deviceName: () => string;
 
   constructor(private browserStorage: BrowserStorage, processor: Processor) {
     super();
-    this.root = new FileSystemDirectory('root', processor.symbol);
+    this._root = new FileSystemDirectory('root', processor.symbol);
     system.set(this, processor.symbol);
     this.username = () => {
       return processor.username;
@@ -34,7 +36,6 @@ export class FileSystem extends BaseSystemService {
       let homeDirectory: FileSystemDirectory; 
 
       const systemSymbol = system.get(this);
-      console.log(systemSymbol)
       const directories = [
         'bin', 'boot', 'dev',
         'etc', 'home', 'media', 
@@ -43,13 +44,14 @@ export class FileSystem extends BaseSystemService {
         'sys', 'tmp', 'usr']
         
         for (const directory of directories) {
-          const createdDirectory = this.root.createDirectory(directory, systemSymbol);
+          const createdDirectory = this._root.createDirectory(directory, systemSymbol);
           if (directory === 'home') {
             homeDirectory = createdDirectory;
+            this._home = homeDirectory;
           }
         }
         //homeDirector.createDirectory(this.username());
-        const browserKeyDir = `__fileSystemKey:_users_`
+  
         const files = this.browserStorage.getItem<ObjectDirectory>(browserKeyDir)
         const populateHomeDirectory = () => {
           if (files) {
@@ -100,4 +102,46 @@ export class FileSystem extends BaseSystemService {
   status = () => {
     return this._status;
   }
+
+  get cleanName() {
+    return sanitizeName(this.username());
+  }
+
+  get root(){
+    return this._root;
+  }
+  get home() {
+    return this._home;
+  }
+  getDirectoryInDirectory(target: FileSystemDirectory, name: string, owner: StringSymbol) {
+    const contents = target.contents(owner); 
+    return contents.find(c => isDirectory(c) && c.name === name) as FileSystemDirectory | undefined;
+  }
+  getFileInDirectory(target: FileSystemDirectory, name: string, owner: StringSymbol) {
+    const contents = target.contents(owner); 
+    return contents.find(c => !isDirectory(c) && c.name === name) as FileSystemFile | undefined;
+  }
+  get userDirectory() {
+    const sys = system.get(this);
+    return this.getDirectoryInDirectory(this.home, this.cleanName, sys);
+  }
+  get userSymbol() {
+    return new StringSymbol(this.username());
+  }
+
+  getUniqueName(target: FileSystemDirectory, name: string, owner: StringSymbol) {
+    const names = target.contents(owner).map(f => f.name);
+    let newName = name;
+    let counter = 1;
+    while(names.includes(newName)) {
+      newName = `${name} (${++counter})`
+    }
+    return newName;
+  }
+
+  saveHome() {
+    const systemSymbol = system.get(this);
+    const objectDir = objectifyDirectory(this.home, systemSymbol);
+    this.browserStorage.setItem(browserKeyDir, objectDir).catch(console.error);
+  } 
 }

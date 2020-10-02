@@ -218,7 +218,8 @@ export const TitleBarButtonDisabled = styled.span`
 `;
 
 export const MsgBoxWarper = styled.div`
-  /* height: 100%; */
+  height: 100%;
+  width: 100%;
   background-color: rgba(16, 16, 16, 1);
   overflow: auto;
 `;

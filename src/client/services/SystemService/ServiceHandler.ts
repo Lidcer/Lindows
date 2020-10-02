@@ -116,6 +116,7 @@ export class IServices extends EventEmitter {
   get fileSystem() {
     return this._fileSystem.service;
   }
+
 }
 
 export const services = new IServices();

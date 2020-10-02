@@ -1,7 +1,7 @@
 import React from 'react';
 import { TaskBar } from '../TaskBar/TaskBar';
 import { Cursor } from '../Cursor/Cursor';
-import { ContextMenu, IElement } from '../ContextMenu/ContextMenu';
+import { ContextMenu, IElement, showContext } from '../ContextMenu/ContextMenu';
 import { SelectBox } from '../SelectBox/SelectBox';
 import Axios from 'axios';
 import { launchApp } from '../../essential/apps';
@@ -14,6 +14,8 @@ import { ActivationWatermark } from '../activationWatermark/activationWatermark'
 import { popup } from '../Popup/popupRenderer';
 import { NotificationsDisplay } from '../Notifications.tsx/NotificationsDisplay';
 import { ScreenStyled, Wallpaper } from './DesktopStyled';
+import { FileSystemDirectory, FileSystemFile, StringSymbol } from '../../utils/FileSystemDirectory';
+import { DesktopIcons } from './DesktopIcon';
 
 interface IState {
   ready: boolean;
@@ -29,30 +31,43 @@ interface IState {
     width: number;
     height: number;
   };
+  icons: JSX.Element;
 }
 
 const customWallpaper: string = '';
 
-const wallpaperContextMenu: IElement[] = [
-  { content: 'View', elements: [{ content: 'Large Icons' }, { content: 'Medium Icons' }, { content: 'Small Icons' }] },
-  {
-    content: 'Sort by',
-    elements: [{ content: 'Name' }, { content: 'Size' }, { content: 'Item type' }, { content: 'Date modified' }],
-  },
-  { content: 'Refresh' },
-  {},
-  { content: 'Paste' },
-  { content: 'LVidia Control Panel', iconOrPicture: './assets/images/livida.svg' },
-  { content: 'New', elements: [{ content: 'Folder' }] },
-  { content: 'Browser Settings', iconOrPicture: './assets/images/browserSettings.svg' },
-  { content: 'Personalize', iconOrPicture: './assets/images/browserSettings.svg' },
-];
 
 export class Desktop extends React.Component<{}, IState> {
+  private wallpaperContextMenu: IElement[] = [
+    { content: 'View', elements: [{ content: 'Large Icons' }, { content: 'Medium Icons' }, { content: 'Small Icons' }] },
+    {
+      content: 'Sort by',
+      elements: [{ content: 'Name' }, { content: 'Size' }, { content: 'Item type' }, { content: 'Date modified' }],
+    },
+    { content: 'Refresh', onClick: () => this.refresh() },
+    {},
+    { content: 'Paste' },
+    { content: 'LVidia Control Panel', iconOrPicture: './assets/images/livida.svg' },
+    { content: 'New', elements: [
+          { content: 'Folder', onClick: e => this.createNewFolder(e) },
+          { content: 'File', onClick: e => this.createNewFile(e) }
+        ] },
+    { content: 'Browser Settings', iconOrPicture: './assets/images/browserSettings.svg' },
+    { content: 'Personalize', iconOrPicture: './assets/images/browserSettings.svg' },
+  ];
+
+
+
+
   private terminal: HotKeyHandler;
   private blueScreen: HotKeyHandler;
   private taskManager: HotKeyHandler;
   private killActiveWindow: HotKeyHandler;
+  private newFile?: {
+    x: number,
+    y: number,
+    file: (FileSystemFile | FileSystemDirectory)
+  };
 
   constructor(props) {
     super(props);
@@ -70,6 +85,7 @@ export class Desktop extends React.Component<{}, IState> {
         height: 1080,
         width: 1920,
       },
+      icons: null,
     };
   }
 
@@ -100,6 +116,7 @@ export class Desktop extends React.Component<{}, IState> {
       backgroundServices().removeListener('ready', serviceReady);
 
       window.addEventListener('error', this.showError);
+      this.refresh();
     };
     if (!backgroundServices().ready) {
       backgroundServices().addListener('ready', serviceReady);
@@ -163,11 +180,6 @@ export class Desktop extends React.Component<{}, IState> {
   }
 
   showError = (error: ErrorEvent) => {
-    console.error('error', error);
-    if (error.message.includes('monaco-editor')) {
-      // monaco likes to raise weird error
-      return;
-    }
     this.setState({ blueScreen: error.message.toString() });
   };
 
@@ -184,23 +196,55 @@ export class Desktop extends React.Component<{}, IState> {
     }
   };
 
-  render() {
-    if (this.state.blueScreen) return <BlueScreen errorCode={this.state.blueScreen}></BlueScreen>;
-    if (!this.state.ready) return null;
-
-    return (
-      <div>
-        <Cursor></Cursor>
-        {this.processApps}
-        {this.shouldShowSelectionBox()}
-        <div></div>
-        <ScreenStyled>{this.wallpaper()}</ScreenStyled>
-        <TaskBar />
-        <NotificationsDisplay />
-        <ActivationWatermark />
-      </div>
-    );
+  createNewFolder = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const usr = services.fileSystem.userSymbol; 
+    const userDirectory = services.fileSystem.userDirectory;
+    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    const uniqueName = services.fileSystem.getUniqueName(desktop, 'New folder', services.processor.symbol);
+    services.fileSystem.saveHome();
+    const file = desktop.createDirectory(uniqueName, new StringSymbol(services.fileSystem.cleanName));
+    this.newFile ={
+      x: ev.clientX,
+      y: ev.clientY,
+      file,
+    }
+    this.refresh();
   }
+  createNewFile = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const usr = services.fileSystem.userSymbol; 
+    const userDirectory = services.fileSystem.userDirectory;
+    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    const uniqueName = services.fileSystem.getUniqueName(desktop, 'New File', services.processor.symbol);
+    const file = desktop.createFile(uniqueName, 'text', '', new StringSymbol(services.fileSystem.cleanName));
+    this.newFile ={
+      x: ev.clientX,
+      y: ev.clientY,
+      file,
+    }
+    services.fileSystem.saveHome();
+    this.refresh();
+  }
+
+  refresh = () => { 
+    const sys = services.processor.symbol; 
+
+    const userDirectory = services.fileSystem.userDirectory;
+    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', sys);
+    const contents = desktop.contents(sys);
+    const userSymbol = services.fileSystem.userSymbol;
+    const icons = <DesktopIcons 
+      desktop={desktop}
+      system={sys} 
+      contents={contents}
+      newFile={this.newFile}
+      userSymbol={userSymbol}
+      onUpdate={this.refresh}
+      selectionBox={this.state.selectionBox}
+    />;
+    this.newFile = undefined;
+    this.setState({icons})
+  }
+
 
   get processApps() {
     return services.processor.runningApps.map((a, i) => {
@@ -247,6 +291,7 @@ export class Desktop extends React.Component<{}, IState> {
         y: event.clientY,
       },
     });
+    requestAnimationFrame(this.refresh);
   };
 
   onWallpaperMouseUp = (event: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
@@ -257,18 +302,35 @@ export class Desktop extends React.Component<{}, IState> {
         y: 0,
       },
     });
+    requestAnimationFrame(this.refresh);
   };
 
   wallpaperClick = (event: React.MouseEvent<HTMLImageElement | HTMLDivElement, MouseEvent>) => {
     event.preventDefault();
-    popup.add(
-      <ContextMenu elements={wallpaperContextMenu} x={event.clientX} y={event.clientY}></ContextMenu>,
-      false,
-      true,
-    );
+    showContext(this.wallpaperContextMenu, event.clientX, event.clientY);
   };
 
   get wallpaperStyle() {
     return this.state.landscape ? { width: '100%', height: 'auto' } : { width: 'auto', height: '100%' };
   }
+
+  render() {
+    if (this.state.blueScreen) return <BlueScreen errorCode={this.state.blueScreen}></BlueScreen>;
+    if (!this.state.ready) return null;
+
+    return (
+      <div>
+        <Cursor></Cursor>
+        {this.state.icons}
+        {this.processApps}
+        {this.shouldShowSelectionBox()}
+        <div></div>
+        <ScreenStyled>{this.wallpaper()}</ScreenStyled>
+        <TaskBar />
+        <NotificationsDisplay />
+        <ActivationWatermark />
+      </div>
+    );
+  }
+
 }

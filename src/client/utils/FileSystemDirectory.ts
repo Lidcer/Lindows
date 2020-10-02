@@ -1,4 +1,5 @@
 import { escapeRegExp } from "lodash";
+import { cloneDeep } from "../../shared/utils";
 
 type Permission = Map<number, FileSystemPermissions>;
 
@@ -11,7 +12,7 @@ export interface FileData<T = string> {
   name: string,
   permission: Permission,
   content: T,
-  type: 'text' | 'unknown',
+  type: 'text' | 'unknown' | 'json',
 }
 export enum FileSystemPermissions {
     None,
@@ -131,7 +132,8 @@ export class FileSystemDirectory {
     if (canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
-        const sameNameFolder = !!directory.contents.find(d => d.name === name)
+        const upper = directoriesMap.get(upperPath.get(this));
+        const sameNameFolder = !!upper.contents.find(d => d.name === name)
         if (sameNameFolder) {
           throw new Error('Duplicate name!');
         }
@@ -148,6 +150,7 @@ export class FileSystemDirectory {
 
     if (canModifyFileOrDirectory(permission)) {
       const pendingForDeletion: DirectoryData['contents'] = [];
+      const upper = upperPath.get(this);
 
       const deepScanner = (contents: DirectoryData['contents'] ) => {
         for (const content of contents) {
@@ -174,21 +177,35 @@ export class FileSystemDirectory {
             directoriesMap.delete(shouldDelete);
           } else {
             files.delete(shouldDelete);
+            upperPath.delete(shouldDelete);
           }
       }
+      if (upper) {
+        const data = directoriesMap.get(upper)
+        if (data) {
+          const index = data.contents.indexOf(this)
+          if (index !== -1) {
+            data.contents.splice(index, 1);
+          }
+        }
+      }
+      return;
     }
     
     throw new Error('You do not have permission to delete this directory!');
   }
 
   contents(owner = everyone) {
-    const directory = directoriesMap.get(this)
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
     if (canReadFileOrDirectory(permission)) {
       return directory.contents;
     }
     throw new Error('Missing permission to read');
+  }
+  get deleted() {
+    return !directoriesMap.get(this);
   }
 
   get path() {
@@ -254,6 +271,9 @@ export class FileSystemFile<C = any> {
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canReadFileOrDirectory(permission)) {
+      if (file.type === 'json') {
+        return cloneDeep(file.content);
+      }
       return file.content;
     }
     throw new Error('Missing permission to read');
@@ -264,6 +284,13 @@ export class FileSystemFile<C = any> {
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
+      if (file.type === 'json') {
+        try {
+          JSON.stringify(content)    
+        } catch (error) {
+            throw new Error('Given file is not a json!');
+        }
+      }
       file.content = content;
       return;
     }
@@ -306,6 +333,7 @@ export class FileSystemFile<C = any> {
         }
       }
       directoryLink.delete(this);
+      return;
     }
     throw new Error('You do not have permission to delete this file');
   }
@@ -352,11 +380,20 @@ export class FileSystemFile<C = any> {
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
+      const upper = directoriesMap.get(upperPath.get(this));
+      const sameNameFolder = !!upper.contents.find(d => d.name === name);
+      if (sameNameFolder) {
+        throw new Error('Duplicate name!');
+      }
       file.name = name;
       return;
     }
-    throw new Error('Missing permission to read');
+    throw new Error('Missing permission to write');
   }
+  get deleted() {
+    return !files.get(this)
+  }
+
   get path() {
     const file = files.get(this)
     const directory = directoryLink.get(this);
@@ -366,7 +403,7 @@ export class FileSystemFile<C = any> {
   }
 }
 
-function isDirectory(fileDirectory: any): fileDirectory is FileSystemDirectory {
+export function isDirectory(fileDirectory: any): fileDirectory is FileSystemDirectory {
   return !!fileDirectory.contents && !!fileDirectory.name &&
    !!fileDirectory.getPermission && !!fileDirectory.setPermission &&
     !!fileDirectory.setPermissionFor && !!fileDirectory.createDirectory &&
@@ -426,7 +463,7 @@ export interface ObjectDirectory {
 interface ObjectFile {
   name: string,
   permission: ObjectPermission,
-  content: String,
+  content: string,
   type: FileData['type']
 }
 
@@ -450,6 +487,7 @@ function objectifyFile(file: FileSystemFile, systemPermission = everyone): Objec
   const content = stringifyAnything(file.getContent(systemPermission));
   const type = file.getType(systemPermission);
   const permission = objectifyPermission(data.permission);
+  const name = data.name;
 
   return { content, name, permission, type};
 }
@@ -501,8 +539,18 @@ export function parseDirectoryOrFile(root: FileSystemDirectory, obj: ObjectDirec
 }
 
 function parseFile(root: FileSystemDirectory, objFile: ObjectFile, owner = everyone) {
-  const file = root.createFile(objFile.name, objFile.type, objFile.type, owner);
-  const data = files.get(this)
+  let content = objFile.content;
+  if (objFile.type === 'json') {
+    try {
+      const conContent = JSON.parse(content);
+      content = conContent;
+    } catch (error) { 
+      DEVELOPMENT && console.error('Unable to parse JSON', content);
+     }
+  }
+
+  const file = root.createFile(objFile.name, objFile.type, content, owner);
+  const data = files.get(file)
   if (!data) throw new Error('Something went horribly wrong!');
   const permissionsEntires = Object.entries(objFile.permission);
   for (const [a, b] of permissionsEntires) {
@@ -516,7 +564,7 @@ function parseFile(root: FileSystemDirectory, objFile: ObjectFile, owner = every
 }
 
 function isObjectDirectory(objectDirectory: any): objectDirectory is ObjectDirectory{
-  return !!objectDirectory.contents || !!objectDirectory.name || !!objectDirectory.permission;
+  return !!objectDirectory.contents && !!objectDirectory.name && !!objectDirectory.permission;
 }
 
 
@@ -529,6 +577,10 @@ function stringifyAnything(unknown: unknown) {
     case 'number':
         return `${unknown}`;
     case 'object':
+        try {
+          const json = JSON.stringify(unknown);
+          return json
+        } catch (error) {/* ignored */}
         return `${unknown}`;
   }
   return 'null';
