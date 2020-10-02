@@ -7,7 +7,7 @@ import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { StringSymbol } from '../../utils/FileSystemDirectory';
-import { randomString } from '../../../../dist/shared/utils';
+import { randomString } from '../../../shared/utils';
 
 interface IStringifiedProcess {
   manifest: IManifest;

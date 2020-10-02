@@ -1,5 +1,5 @@
 import { escapeRegExp } from "lodash";
-import { randomString } from "../../../dist/shared/utils";
+import { randomString } from "../../shared/utils";
 
 export interface DirectoryData {
   name: string,

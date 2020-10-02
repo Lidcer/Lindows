@@ -6,7 +6,6 @@ import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { Account } from './AccountSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { BaseService } from '../backgroundService/BaseService';
 import { attachDebugMethod } from '../../essential/requests';
 import { FileSystem } from './FileSystem';
 
