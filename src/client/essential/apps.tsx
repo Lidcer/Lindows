@@ -1,9 +1,9 @@
 import { Terminal } from '../apps/Terminal/Terminal';
 import { TaskManager } from '../apps/TaskManager/TaskManager';
-import { AccountManager} from '../apps/AccountManager/AccountManager';
+import { AccountManager } from '../apps/AccountManager/AccountManager';
 import { Lype } from '../apps/Lype/Lype';
 import { MouseProperties } from '../apps/MouseProperties/MouseProperties';
-import { GroupViewer, } from '../apps/GroupViewer/GroupViewer';
+import { GroupViewer } from '../apps/GroupViewer/GroupViewer';
 import React from 'react';
 import { IManifest, BaseWindow } from '../apps/BaseWindow/BaseWindow';
 import { services } from '../services/SystemService/ServiceHandler';
@@ -12,6 +12,7 @@ import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
 import { attachDebugMethod, isDev } from './requests';
 import { AnApp } from '../apps/AnApp/AnApp';
 import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
+import { SnakeGame } from '../apps/SnakeGame/SnakeGame';
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -42,28 +43,29 @@ export function appConstructorGenerator(appName: string) {
 }
 
 export function installApp(baseWindow: BaseWindow | any) {
-    if (!baseWindow) {
-      throw new Error('Failed to install passed empty app');
-    } 
-    if (!baseWindow.manifest){
-      throw new Error('Cannot install without manifest');
-    }
+  if (!baseWindow) {
+    throw new Error('Failed to install passed empty app');
+  }
+  if (!baseWindow.manifest) {
+    throw new Error('Cannot install without manifest');
+  }
 
-    if (!baseWindow.manifest.launchName){
-      throw new Error('Missing launch name');
-    }
-    const Element = baseWindow as any;
+  if (!baseWindow.manifest.launchName) {
+    throw new Error('Missing launch name');
+  }
+  const Element = baseWindow as any;
 
-  const exist = allApps.find(a => a.manifest.launchName === baseWindow.manifest.launchName)
-  if (exist) throw new Error(`App under name ${baseWindow.manifest.launchName} is already installed`); 
+  const exist = allApps.find(a => a.manifest.launchName === baseWindow.manifest.launchName);
+  if (exist) throw new Error(`App under name ${baseWindow.manifest.launchName} is already installed`);
   allApps.push({
     manifest: baseWindow.manifest,
     app: (id: number, props?: any) => <Element key={id} id={id} onlyOne={!!baseWindow.onlyOne} {...props}></Element>,
-  })
+  });
 }
 
 installApp(Terminal);
 installApp(TaskManager);
+installApp(SnakeGame);
 if (!STATIC) {
   installApp(AccountManager);
   installApp(Lype);

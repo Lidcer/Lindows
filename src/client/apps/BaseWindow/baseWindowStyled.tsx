@@ -9,7 +9,7 @@ const $scrollbarBG = 'rgb(0, 0, 0)';
 const $thumbBG = 'rgb(48, 50, 51)';
 
 export const LWindow = styled.div`
-   position: absolute;
+  position: absolute;
   display: flex;
   flex-direction: column;
 
@@ -20,8 +20,8 @@ export const LWindow = styled.div`
   box-shadow: 3px 3px 10px 5px rgba(0, 0, 0, 0.25);
 
   h1 {
-      padding: 4pt;
-      font-size: 10pt;
+    padding: 4pt;
+    font-size: 10pt;
   }
 `;
 
@@ -35,22 +35,20 @@ export const LWindowContent = styled.div`
   overflow: auto;
 
   &::-webkit-scrollbar {
-      width: 11px;
+    width: 11px;
   }
 
-
   scrollbar-width: thin;
-scrollbar-color: ${$thumbBG} ${$scrollbarBG};
-
+  scrollbar-color: ${$thumbBG} ${$scrollbarBG};
 
   &::-webkit-scrollbar-track {
-      background: ${$scrollbarBG};
+    background: ${$scrollbarBG};
   }
 
   &::-webkit-scrollbar-thumb {
-      background-color: ${$thumbBG};
-      border-radius: 6px;
-      border: 3px solid ${$scrollbarBG};
+    background-color: ${$thumbBG};
+    border-radius: 6px;
+    border: 3px solid ${$scrollbarBG};
   }
 `;
 
@@ -142,7 +140,6 @@ export const LWindowBottomRightHover = styled.div`
   z-index: ${$zIndex};
 `;
 
-
 //also modify navbar
 
 const buttons = `
@@ -154,11 +151,11 @@ export const TitleBar = styled.div`
   height: ${$titleBarHeight};
   width: 100%;
   flex: none;
-`
+`;
 
 export const TitleBarInactive = styled.div`
   background-color: rgba(255, 255, 255, 0.25);
-`
+`;
 
 export const TitleBarIcon = styled.img`
   position: absolute;
@@ -168,7 +165,6 @@ export const TitleBarIcon = styled.img`
   height: 15pt;
   width: 15pt;
 `;
-
 
 export const TitleBarTitle = styled.div`
   position: absolute;
@@ -188,7 +184,6 @@ export const TitleBarTitleWithIcon = styled.span`
   text-overflow: ellipsis;
 `;
 
-
 export const TitleBarRight = styled.div`
   height: ${$titleBarHeight};
   position: absolute;
@@ -199,16 +194,16 @@ export const TitleBarRight = styled.div`
 export const TitleBarExit = styled.div`
   ${buttons}
   &:hover {
-      background-color: red;
-      transition: background-color 0.05s ease-out;
+    background-color: red;
+    transition: background-color 0.05s ease-out;
   }
 `;
 
 export const TitleBarButtonHover = styled.div`
- ${buttons}
+  ${buttons}
   &:hover {
-      background-color:rgba(255, 255, 255, 0.25);
-      transition: background-color 0.05s ease-out;
+    background-color: rgba(255, 255, 255, 0.25);
+    transition: background-color 0.05s ease-out;
   }
 `;
 
@@ -225,11 +220,10 @@ export const MsgBoxWarper = styled.div`
 `;
 
 export const MsgBoxContent = styled.div`
-  display:inline-flex;
+  display: inline-flex;
   width: 100%;
   white-space: pre;
-  `;
-
+`;
 
 export const MsgBoxCaption = styled.p`
   color: white;
@@ -251,17 +245,16 @@ export const MsgBoxButton = styled.button`
   border: none;
 `;
 
-
 export const MsgBoxButtons = styled.div`
-    width: 100%;
-    background-color: rgba(16, 16, 16, 1);
+  width: 100%;
+  background-color: rgba(16, 16, 16, 1);
   position: absolute;
-    text-align: center;
-    align-items: center;
+  text-align: center;
+  align-items: center;
 `;
 
 export const Blocker = styled.div`
-  position: absolute; 
+  position: absolute;
   width: 100%;
   height: 100%;
   z-index: 99999;
@@ -270,7 +263,7 @@ export const Blocker = styled.div`
 export const UserAdminStyled = styled.div`
   width: 100%;
   height: 100%;
-  background-color:white;
+  background-color: white;
 `;
 
 export const UserAdminTop = styled.div`
@@ -279,28 +272,26 @@ export const UserAdminTop = styled.div`
   color: black !important;
   width: 100%;
   height: auto;
-`
+`;
 
 export const UserAdminContent = styled.div`
   font-size: 20px;
   margin: 15px;
   font-weight: bold;
-
 `;
 
 export const UserAdminMiddle = styled.div`
   display: block;
   margin: 15px;
   display: block;
-  img{
+  img {
     max-width: 50px;
     max-height: 50px;
   }
-  div{
+  div {
     display: inline;
     font-size: 20px;
   }
-
 `;
 
 export const UserAdminBottom = styled.div`
@@ -312,7 +303,6 @@ export const UserAdminBottom = styled.div`
     border: none;
     margin: 0 5%;
     font-size: 20px;
-    width: 40%
+    width: 40%;
   }
-
 `;

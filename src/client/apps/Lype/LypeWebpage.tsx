@@ -510,7 +510,9 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
           <LypeAccountInfo
             key={i}
             account={e}
-            onClick={ev => /*console.log('test')*/}
+            onClick={ev => {
+              /*console.log('test')*/
+            }}
             onContextMenu={ev => {
               ev.preventDefault();
               this.openContentMenu(ev, e);

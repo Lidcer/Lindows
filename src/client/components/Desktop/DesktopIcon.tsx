@@ -11,15 +11,15 @@ interface IPropertyDesktopIcon {
   userSymbol: StringSymbol;
   desktop: FileSystemDirectory;
   newFile: {
-    x: number,
-    y: number,
-    file: (FileSystemDirectory | FileSystemFile),
-  },
+    x: number;
+    y: number;
+    file: FileSystemDirectory | FileSystemFile;
+  };
   selectionBox: {
-    x: number,
-    y: number,
-    shown: boolean
-  }
+    x: number;
+    y: number;
+    shown: boolean;
+  };
   onUpdate: () => void;
   contents: (FileSystemDirectory | FileSystemFile)[];
 }
@@ -40,7 +40,7 @@ interface IStateDesktopIcon {
   };
 }
 
-interface DotDesktop {
+interface IDotDesktop {
   [key: string]: {
     x: number;
     y: number;
@@ -51,7 +51,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   private readonly folderImage = './assets/images/folderIcon.svg';
   private readonly fileImage = './assets/images/fileIcon.svg';
 
-  private dotDesktop: DotDesktop = {};
+  private dotDesktop: IDotDesktop = {};
   private doNotUnselect = false;
 
   constructor(props) {
@@ -76,11 +76,11 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   componentDidMount() {
     let desktopDes = services.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
     if (!desktopDes) {
-      desktopDes = this.props.desktop.createFile<DotDesktop>('.desktop', 'json', {}, this.sys);
+      desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
     } else {
       if (desktopDes.getType(this.sys) !== 'json') {
         desktopDes.deleteFile(this.sys);
-        desktopDes = this.desktop.createFile<DotDesktop>('.desktop', 'json', {}, this.sys);
+        desktopDes = this.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
       }
     }
     this.dotDesktop = desktopDes.getContent(this.sys);
@@ -101,28 +101,28 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
 
   onResize = () => {
     this.forceUpdate();
-  }
+  };
 
   saveDotDesktop = () => {
     let desktopDes = services.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
     if (!desktopDes) {
-      desktopDes = this.props.desktop.createFile<DotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+      desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
     } else {
       if (desktopDes.getType(this.sys) !== 'json') {
         desktopDes.deleteFile(this.sys);
-        desktopDes = this.desktop.createFile<DotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+        desktopDes = this.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
       }
     }
     desktopDes.setContent(this.dotDesktop, this.sys);
     services.fileSystem.saveHome();
-  }
+  };
 
   unselect = () => {
     if (this.doNotUnselect) {
       this.doNotUnselect = false;
       return;
     }
-   this.setState({ selected: [] });
+    this.setState({ selected: [] });
   };
 
   get showHiddenFiles() {
@@ -130,34 +130,33 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   getStyle(file: FileSystemDirectory | FileSystemFile, overlay = false): React.CSSProperties {
-    const cords = this.dotDesktop[file.name]; 
-    const offset = 100; 
-    let x = clamp((cords && cords.x) || 0, 0, window.innerWidth - offset); 
-    let y = clamp((cords && cords.y) || 0, 0, window.innerHeight - offset);
+    const cords = this.dotDesktop[file.name];
+    const offset = 100;
+    const x = clamp((cords && cords.x) || 0, 0, window.innerWidth - offset);
+    const y = clamp((cords && cords.y) || 0, 0, window.innerHeight - offset);
 
     if (this.state.selected.includes(file)) {
-      return { 
+      return {
         border: '1px solid white',
         backgroundColor: 'rgba(255, 255, 255, 0.50)',
         top: y,
-        left: x
+        left: x,
       };
     } else if (!overlay && this.state.moving && this.state.moving.ref === file) {
       return {
         top: `${this.state.moving.y}px`,
         left: `${this.state.moving.x}px`,
-      }
+      };
     }
     return {
       top: y,
-      left: x
+      left: x,
     };
   }
 
   onClick = (events: React.MouseEvent<HTMLElement, MouseEvent>, selected: FileSystemDirectory | FileSystemFile) => {
-
     this.doNotUnselect = true;
-    this.setState({ selected: [selected], moving:undefined });
+    this.setState({ selected: [selected], moving: undefined });
   };
 
   onContext = (event: React.MouseEvent<HTMLElement, MouseEvent>, selected: FileSystemDirectory | FileSystemFile) => {
@@ -204,20 +203,22 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
 
   componentDidUpdate() {
     if (!this.state.renaming && this.props.newFile) {
-      this.dotDesktop[this.props.newFile.file.name] ={
+      this.dotDesktop[this.props.newFile.file.name] = {
         x: this.props.newFile.x,
-        y: this.props.newFile.y
-      }
+        y: this.props.newFile.y,
+      };
 
-      this.setState({renaming: {
-        ref: this.props.newFile.file,
-        value: this.props.newFile.file.name
-      }})
+      this.setState({
+        renaming: {
+          ref: this.props.newFile.file,
+          value: this.props.newFile.file.name,
+        },
+      });
     }
   }
 
   onMouseDown = (event: React.MouseEvent<HTMLElement, MouseEvent>, selected: FileSystemDirectory | FileSystemFile) => {
-    if (this.state.renaming) return
+    if (this.state.renaming) return;
     if (event.button !== 0) return;
 
     this.setState({
@@ -247,45 +248,43 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       const minY = Math.min(this.props.selectionBox.y, event.clientY);
       const maxX = Math.max(this.props.selectionBox.x + 75, event.clientX);
       const maxY = Math.max(this.props.selectionBox.y + 100, event.clientY);
-      const files = this.props.contents.map(f => { return {name: f.name, ref: f}});
-      const selected = []; 
+      const files = this.props.contents.map(f => {
+        return { name: f.name, ref: f };
+      });
+      const selected = [];
       for (const file of files) {
         const obj = this.dotDesktop[file.name];
         if (!obj) continue;
-        if (obj.x > minX && obj.y > minY && 
-          obj.x < maxX && obj.y < maxY 
-          ) {
-            if (!selected.includes(file.ref)){
-              selected.push(file.ref);
-            }
+        if (obj.x > minX && obj.y > minY && obj.x < maxX && obj.y < maxY) {
+          if (!selected.includes(file.ref)) {
+            selected.push(file.ref);
+          }
         }
       }
-      this.setState({selected});
-
+      this.setState({ selected });
     }
-
   };
   onMouseUp = (event: MouseEvent) => {
-    if(this.state.moving) {
+    if (this.state.moving) {
       this.dotDesktop[this.state.moving.ref.name] = {
         x: this.state.moving.x,
         y: this.state.moving.y,
-      }
+      };
       this.saveDotDesktop();
       this.setState({ moving: undefined });
     }
   };
 
   getCaption(f: FileSystemDirectory | FileSystemFile) {
-    if (this.state.renaming && this.state.renaming.ref ===o f) {
+    if (this.state.renaming && this.state.renaming.ref === f) {
       const rename = () => {
         try {
-          const orgName = f.name;  
+          const orgName = f.name;
           if (this.state.renaming.value && this.state.renaming.value === orgName) {
             this.props.onUpdate();
-            this.setState({ renaming: undefined }); 
+            this.setState({ renaming: undefined });
             return;
-          };
+          }
           if (this.state.renaming.value) {
             f.setName(this.state.renaming.value, this.usr);
           }
@@ -293,25 +292,24 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
           delete this.dotDesktop[orgName];
           this.saveDotDesktop();
         } catch (error) {
-          MessageBox._anonymousShow(
-            error.message,
-            'Cannot rename file',
-            MessageBoxButtons.OK,
-            MessageBoxIcon.Error,
-          );
+          MessageBox._anonymousShow(error.message, 'Cannot rename file', MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-       
+
         this.props.onUpdate();
-        this.setState({ renaming: undefined }); 
-      }
+        this.setState({ renaming: undefined });
+      };
 
       return (
         <DesktopIconRenamingInput
           ref={i => i && i.focus()}
           value={this.state.renaming.value}
           onChange={e => this.setState({ renaming: { ref: f, value: e.target.value } })}
-          onKeyUp={e => {if (e.key.toLowerCase() === 'enter') rename()}}
-          onBlur={() => { rename() }}
+          onKeyUp={e => {
+            if (e.key.toLowerCase() === 'enter') rename();
+          }}
+          onBlur={() => {
+            rename();
+          }}
         />
       );
     }
@@ -319,9 +317,9 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   getElement(f: FileSystemDirectory | FileSystemFile, key?: number) {
-    let image = <img src={this.fileImage} draggable='false'/>;
+    let image = <img src={this.fileImage} draggable='false' />;
     if (isDirectory(f)) {
-      image = <img src={this.folderImage} draggable='false'/>;
+      image = <img src={this.folderImage} draggable='false' />;
     }
 
     return (
@@ -339,7 +337,6 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   render() {
-
     const moving = this.state.moving && this.state.moving.show ? this.getElement(this.state.moving.ref) : null;
     return (
       <>

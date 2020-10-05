@@ -50,7 +50,7 @@ import { alwaysOnTop as alwaysOnTopIndex } from '../../Constants';
 import { WindowEvent } from './WindowEvent';
 import { Network } from '../../services/SystemService/NetworkSystem';
 import { attachDebugMethod } from '../../essential/requests';
-import './baseWindows.scss'
+import './baseWindows.scss';
 import { LindowError } from '../../utils/util';
 const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
@@ -142,7 +142,7 @@ export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IB
   onRestoreDown?(event: WindowEvent): void;
   onBlur?(event: WindowEvent): void;
   onFocus?(event: WindowEvent): void;
-  onError?(event: LindowError): void
+  onError?(event: LindowError): void;
 
   // | 'move'
   // | 'resize'
@@ -151,7 +151,7 @@ export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IB
   resize?(width: number, height: number): void;
 }
 
-const securityKeys = new WeakMap<BaseWindow, Symbol>();
+const securityKeys = new WeakMap<BaseWindow, symbol>();
 const adminAllowed = new WeakMap<BaseWindow, boolean>();
 
 function overrideProtector(baseWindow: BaseWindow) {
@@ -209,7 +209,7 @@ let anonymous = false;
 
 export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
   private _ref: React.RefObject<HTMLDivElement> = React.createRef();
-  public static readonly onlyOne:boolean = false;
+  public static readonly onlyOne: boolean = false;
   private development = false;
   private _minHeight = 250;
   private _minWidth = 250;
@@ -229,7 +229,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _started = false;
   private _frozen = false;
   private _warnOnce = false;
-  private _destroyed = false
+  private _destroyed = false;
   private _error?: any;
   private _memorizedState = {
     x: 0,
@@ -241,7 +241,6 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     super(props);
     //@ts-ignore manifest not showing up
     const manifest: IManifest = this.constructor.manifest;
-
 
     if (!anonymous) {
       anonymous = false;
@@ -327,22 +326,30 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     // @ts-ignore It does exist
     const manifest: IManifest = this.prototype.constructor.manifest;
 
-    if (manifest) { 
+    if (manifest) {
       const generator = appConstructorGenerator(manifest.launchName);
-       if (generator) {
-         const app = await services.processor.addApp<BaseWindow>(generator, manifest.launchName);
-         return app.object;
-       }
-    } 
+      if (generator) {
+        const app = await services.processor.addApp<BaseWindow>(generator, manifest.launchName);
+        return app.object;
+      }
+    }
     const App = this.prototype.constructor;
-    
+
     const name = manifest && manifest.launchName ? manifest.launchName : randomString(20);
     const mockGenerator: ReactGeneratorFunction = (id: number, props?) => <App key={id} id={id} {...props}></App>;
     anonymous = true;
 
     const app = await services.processor.addApp<BaseWindow>(mockGenerator, name);
     return app.object;
-  
+  }
+
+  getBoundingRect() {
+    return {
+      x: this.state.x,
+      y: this.state.y,
+      width: this.state.width,
+      height: this.state.height,
+    };
   }
 
   async componentDidMount() {
@@ -443,7 +450,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   render() {
-      if (!this._started || this._error) return null;
+    if (!this._started || this._error) return null;
     let className = this._windowClass;
 
     if (this.state.options.windowType === 'fullscreen') {
@@ -451,16 +458,16 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     } else if (this.state.options.maximized) {
       switch (navBarPos) {
         case 'bottom':
-          className += ' LWindowBottom';          
+          className += ' LWindowBottom';
           break;
-          case 'top':
-            className += ' LWindowTop';          
+        case 'top':
+          className += ' LWindowTop';
           break;
         case 'left':
-          className += ' LWindowLeft';    
+          className += ' LWindowLeft';
           break;
-          case 'right':
-            className += ' LWindowRight';    
+        case 'right':
+          className += ' LWindowRight';
           break;
         default:
           break;
@@ -487,18 +494,20 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       }
 
       this.exit();
-    
     }
     return null;
   }
-  
-  changeOptions(options: IWindow) {
-    this.setState({ options: this.verifyOptions(options) });
+
+  changeOptions(newOptions: IWindow) {
+    const options = { ...this.state.options };
+    Object.assign(options, newOptions);
+    this.setState({ options });
+    //this.setState({ options: this.verifyOptions(options) });
   }
 
   setVariables(object: Partial<B>) {
     const state = { ...this.state };
-    Object.assign(state.variables, object)
+    Object.assign(state.variables, object);
     this.setState(state);
   }
 
@@ -555,7 +564,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   };
 
   //You need app key to access key
-  freeze(key: Symbol) {
+  freeze(key: symbol) {
     this.changeActiveState(false);
     if (key === securityKeys.get(this)) {
       this._frozen = true;
@@ -564,7 +573,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
   }
 
-  unFreeze(key: Symbol) {
+  unFreeze(key: symbol) {
     if (key === securityKeys.get(this)) {
       this._frozen = false;
     } else {
@@ -718,7 +727,6 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
     const buttonFunction = this.state.options.maximized ? this._buttonMaximize : this._buttonRestore;
-
     if (this.state.options.maximizeRestoreDownButton === 'shown') {
       return (
         <TitleBarButtonHover onClick={buttonFunction}>
@@ -836,11 +844,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
   };
 
-  private _getFixedPos(xPos?: number, yPos?: number): {x: number, y: number,corrected: boolean} {
+  private _getFixedPos(xPos?: number, yPos?: number): { x: number; y: number; corrected: boolean } {
     let x = xPos === undefined ? this.state.x : xPos;
     let y = yPos === undefined ? this.state.y : yPos;
     if (!this._ref.current) {
-      return {x, y, corrected: false};
+      return { x, y, corrected: false };
     }
 
     const bounding = this._ref.current.getBoundingClientRect();
@@ -878,9 +886,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const jsx = this.renderInside();
     //@ts-ignore Im so sorry
     if (jsx && typeof jsx === 'object' && jsx.$$typeof && typeof jsx.$$typeof === 'symbol') {
-      return jsx
+      return jsx;
     }
-    
+
     return <div className='text-danger'>Broken renderInside() function!</div>;
   };
 
@@ -1245,6 +1253,15 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     };
   }
 
+  protected setX(x: number) {
+    const width = clamp(this.state.width, 0, window.innerWidth);
+    this.setState({ x, width });
+  }
+  protected setY(y: number) {
+    const height = clamp(this.state.height, 0, window.innerHeight);
+    this.setState({ y, height });
+  }
+
   private _removeTimeout(timeout: NodeJS.Timeout | number) {
     const indexOf = this.timeouts.indexOf(timeout);
     clearTimeout(timeout as number);
@@ -1344,7 +1361,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   getManifest(): IManifest {
     //@ts-ignore
-    const manifest:IManifest= this.constructor.manifest; 
+    const manifest: IManifest = this.constructor.manifest;
     if (manifest) {
       return manifest;
     } else {
@@ -1352,7 +1369,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         fullAppName: 'Anonymous app',
         launchName: '',
         icon: DEFAULT_APP_IMAGE,
-      }
+      };
     }
   }
 }
@@ -1734,5 +1751,4 @@ export class AdminPromp extends BaseWindow {
     );
   }
 }
-
-(window as any).BaseWindow = BaseWindow
+attachDebugMethod('BaseWindow', BaseWindow);
