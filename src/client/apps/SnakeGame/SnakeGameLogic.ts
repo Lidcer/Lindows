@@ -167,8 +167,6 @@ export class SnakeGameLogic {
     const distance = 5;
     const time = 50;
     const m = minus ? -1 : 1;
-    const xy = direction === 'top' ? 'top' : 'left';
-
     //this.div.style[direction] = `${boundingClientRect[xy] + (distance  * m)}px`;
     if (direction === 'top') {
       this.setY(boundingClientRect.y + distance * m);
