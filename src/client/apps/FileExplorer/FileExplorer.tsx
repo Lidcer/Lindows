@@ -36,7 +36,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   public static manifest: IManifest = {
     fullAppName: 'File Explorer',
     launchName: 'file-explorer',
-    icon: '/assets/images/appsicons/FileExplorerIcon.svg',
+    icon: '/assets/images/appsIcons/FileExplorerIcon.svg',
   };
 
   constructor(props) {

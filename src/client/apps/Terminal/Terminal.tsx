@@ -24,7 +24,7 @@ export const manifest: IManifest = {
 
 function terminalName() {
   if (services.account.account) return services.account.account.username;
-  return services.processor.userName;
+  return services.processor.username;
 }
 
 function deviceInfo() {
