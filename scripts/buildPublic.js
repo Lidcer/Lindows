@@ -5,12 +5,11 @@ const ejs = require('ejs');
 const npc = require('ncp');
 
 const public = path.join(process.cwd(), 'public');
-
 try {
   fs.accessSync(public);
-} catch (error) {
-  fs.mkdirSync(public);
-}
+  fs.rmdirSync(public, { recursive: true });
+} catch (error) { /* ignored */}
+fs.mkdirSync(public);
 
 function getHtmlTemplate(main, vendors) {
   return `<!doctype html>
@@ -77,8 +76,6 @@ fs.writeFileSync(termsOfService, tosContent, 'UTF-8');
 
 const sourceAssets = path.join(process.cwd(), 'assets');
 const targetAssets = path.join(process.cwd(), 'public', 'assets');
-fs.rmdirSync(public, { recursive: true });
-fs.mkdirSync(public);
 npc(sourceAssets, targetAssets, error => {
   if (error) {
     console.error(error);
