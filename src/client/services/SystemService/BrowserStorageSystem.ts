@@ -15,11 +15,11 @@ export class BrowserStorage extends BaseSystemService {
 
     const obsoleteBrowser = () => {
       location.href = 'unsupported-browser';
-    }
-  
+    };
+
     const acceptTermsOfService = () => {
       location.href = 'terms-of-service';
-    }
+    };
 
     const start = async () => {
       if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
@@ -28,17 +28,17 @@ export class BrowserStorage extends BaseSystemService {
         this._status = SystemServiceStatus.Failed;
         throw new Error('Browser storage does not exist');
       }
-  
+
       const accepted = localStorage.getItem('terms-of-policy');
       if (accepted !== 'true') {
         acceptTermsOfService();
       }
-  
-      if(inIframe()) {
+
+      if (inIframe()) {
         this._status = SystemServiceStatus.Ready;
         return;
       }
-  
+
       let data = '';
       if (sessionStorage) {
         data = sessionStorage.getItem(this.storageName);
@@ -48,7 +48,7 @@ export class BrowserStorage extends BaseSystemService {
       } else {
         data = localStorage.getItem(this.storageName);
       }
-  
+
       if (!data) {
         await this.save();
         this._status = SystemServiceStatus.Ready;
@@ -65,28 +65,28 @@ export class BrowserStorage extends BaseSystemService {
         this.clear();
       }
       this._status = SystemServiceStatus.Ready;
-    }
-  
+    };
+
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
-    }
+    };
 
     return {
-      start:   start,
+      start: start,
       destroy: destroy,
-      status:   this.status,
-    }
+      status: this.status,
+    };
   }
 
   status = () => {
-    return this._status
-  } 
+    return this._status;
+  };
 
   async setItem<V = any>(key: string, value: V): Promise<void> {
     if (key.length < 3) throw new Error('key must have more than 3 characters');
     this.data[key] = value;
-    if(inIframe()) return;
+    if (inIframe()) return;
     await this.save();
   }
 

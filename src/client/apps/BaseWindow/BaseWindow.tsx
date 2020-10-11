@@ -56,9 +56,14 @@ const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
   id: number;
+  flags?: string;
   onlyOne?: boolean;
   windowType?: 'borderless' | 'windowed' | 'fullscreen';
   sudo?: boolean;
+}
+
+export interface ILaunchFlags {
+  [key: string]: string;
 }
 
 let lastX = random(0, window.innerWidth * 0.25);
@@ -206,6 +211,30 @@ function overrideProtector(baseWindow: BaseWindow) {
 }
 
 let anonymous = false;
+function parseFlags(flags?: string): ILaunchFlags {
+  if (typeof flags !== 'string' || !flags) return {};
+  const flagsParsed = flags.split('-');
+  const launchFlags: ILaunchFlags = {};
+  for (const flag of flagsParsed) {
+    const trimmed = flag.trim();
+    if (trimmed) {
+      const values = trimmed.split('=');
+      const key = values[0] && values[0].trim();
+      const value = values[1] && values[1].trim();
+      if (!key) continue;
+      if (value) {
+        const newValue = value.match(/"(?:[^"\\]|\\.)*"/);
+        if (newValue && newValue[0]) {
+          launchFlags[key] = newValue[0].slice(1, -1);
+        }
+      }
+      if (!launchFlags[key]) {
+        launchFlags[key] = value || null;
+      }
+    }
+  }
+  return launchFlags;
+}
 
 export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
   private _ref: React.RefObject<HTMLDivElement> = React.createRef();
@@ -231,6 +260,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _warnOnce = false;
   private _destroyed = false;
   private _error?: any;
+  private _launchFlags: ILaunchFlags;
   private _memorizedState = {
     x: 0,
     y: 0,
@@ -239,6 +269,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   constructor(props: IBaseWindowProps, options?: IWindow, variables?: Readonly<B>) {
     super(props);
+    this._launchFlags = parseFlags(this.props.flags);
+
     //@ts-ignore manifest not showing up
     const manifest: IManifest = this.constructor.manifest;
 
@@ -447,6 +479,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         return;
       }
     }
+  }
+
+  get launchFlags() {
+    return this._launchFlags;
+  }
+  hasLaunchFlag(flag: string) {
+    if (this._launchFlags[flag] === null) return true;
+    return !!this._launchFlags[flag];
   }
 
   render() {

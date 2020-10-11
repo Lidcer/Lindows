@@ -2,19 +2,17 @@ import React from 'react';
 import { appConstructorGenerator, allApps } from '../essential/apps';
 import { services } from '../services/SystemService/ServiceHandler';
 import { BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
+import { pushUniqToArray, removeFromArray } from '../utils/util';
 interface IWindowTesterState {
   display: JSX.Element;
   subWindow: BaseWindow<{}>[];
 }
-interface ConsoleHistory {
+interface IConsoleHistory {
   level: 'log' | 'warn' | 'error' | 'debug';
   message: any;
 }
 
-const consoleHistory: ConsoleHistory[] = [];
-const ll = console.log;
-
-(window as any).c = consoleHistory;
+const consoleHistory: IConsoleHistory[] = [];
 export class WindowTester extends React.Component<{}, IWindowTesterState> {
   private ready = false;
   constructor(props) {
@@ -55,12 +53,12 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
   update = () => {
     setTimeout(() => {
-     this.forceUpdate(); 
+      this.forceUpdate();
     });
-  }
+  };
 
   disassembleConsoleMessage(m: any) {
-    if (m === null)  return <span>null</span>
+    if (m === null) return <span>null</span>;
 
     const type = typeof m;
     switch (type) {
@@ -77,7 +75,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
               const msg = <span key={i}>{this.disassembleConsoleMessage(e) as JSX.Element}</span>;
               return msg;
             } catch (error) {
-                return <span key={i}>{e.toString}</span>
+              return <span key={i}>{e.toString}</span>;
             }
           });
         } else {
@@ -107,7 +105,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
     }
   }
 
-  disassemble(c: ConsoleHistory) {
+  disassemble(c: IConsoleHistory) {
     switch (c.level) {
       case 'log':
       case 'debug':
@@ -151,6 +149,9 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
   }
 
   start() {
+    if ((window as any).app) {
+      (window as any).apps = [];
+    }
     if (!services.ready) {
       services.on('allReady', () => this.start());
       services.on('onServiceReady', e => console.info(`ok ${e}`));
@@ -158,12 +159,12 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       return;
     }
     services.processor.on('appAdd', e => {
+      pushUniqToArray((window as any).apps, e);
       if (e.props.id === -1) return;
       const urlParams = new URLSearchParams(window.location.search);
-      const override = urlParams.get('ignorenewwindows') !== null && (e instanceof MessageBox) && (e instanceof AdminPromp);
-      if(override) {
+      const override = urlParams.get('ignorenewwindows') !== null && e instanceof MessageBox && e instanceof AdminPromp;
+      if (override) {
         const renderInside = e.renderInside.bind(this);
-
 
         e.renderInside = () => {
           return (
@@ -188,13 +189,13 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
         this.forceUpdate();
       }
-
     });
 
-    services.processor.on('appDisplayingAdd', () => {
+    services.processor.on('appDisplayingAdd', app => {
       this.forceUpdate();
     });
-    services.processor.on('appRemove', () => {
+    services.processor.on('appRemove', app => {
+      removeFromArray((window as any).apps, app);
       //this.forceUpdate();
     });
 

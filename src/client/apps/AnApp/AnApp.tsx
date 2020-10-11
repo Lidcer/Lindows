@@ -94,11 +94,11 @@ export class AnApp extends BaseWindow<WebExplorerState> {
 
   openMessageBox = () => {
     MessageBox.Show(this, this.variables.message || ' The message box', 'The message box');
-  }
+  };
 
   antonymousOpenMessageBox = () => {
     MessageBox._anonymousShow(this.variables.message || ' The other message box' , 'The message box');
-  }
+  };
 
   adminButton = async () => {
     let processor = this.getProcessor();

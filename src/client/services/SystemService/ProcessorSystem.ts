@@ -19,6 +19,7 @@ interface IStringifiedProcess {
 export interface IDisplayingApp<T = unknown> {
   processID: number;
   app: JSX.Element;
+  flags?: string;
   object?: T;
   state?: any;
 }
@@ -43,7 +44,7 @@ export class Processor extends BaseSystemService {
   private lastPerformance = 0;
   private paused = false;
   private eventEmitter = new EventEmitter();
-  private _status = SystemServiceStatus.Uninitialized
+  private _status = SystemServiceStatus.Uninitialized;
   private _symbol = systemSymbol;
   public onAppAdd() {}
 
@@ -57,7 +58,7 @@ export class Processor extends BaseSystemService {
       this._deviceName = `${browser.name}${browser.version}`;
     }
   }
-  
+
   init() {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
     this._status = SystemServiceStatus.WaitingForStart;
@@ -65,7 +66,7 @@ export class Processor extends BaseSystemService {
       start: this.start,
       destroy: this.destroy,
       status: this.status,
-    }
+    };
   }
 
   private start = () => {
@@ -83,7 +84,7 @@ export class Processor extends BaseSystemService {
       this.lastPerformance = performance.now();
     });
     this._status = SystemServiceStatus.Ready;
-  }
+  };
 
   private destroy = () => {
     if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
@@ -92,22 +93,22 @@ export class Processor extends BaseSystemService {
     // this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
     // this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
     // this.broadcaster.removeListener(`${this.serviceName}-addApp`, this.remoteAppAdd);
-  }
+  };
 
   status = () => {
     return this._status;
-  }
+  };
 
   updateProcesses = (json: IJSONWindowEvent) => {
     const id = json.props.id;
     const lProcess = this.lindowsProcesses.find(e => e.id === id);
     if (!lProcess) return;
-   // lProcess._silentSetState(json.state);
+    // lProcess._silentSetState(json.state);
   };
 
   remoteAppAdd = (prop: [string, number]) => {
     const reactGeneratorFunction = appConstructorGenerator(prop[0]);
-    this.addApp(reactGeneratorFunction, prop[0], prop[1]);
+    this.addApp(reactGeneratorFunction, prop[0], undefined, prop[1]);
   };
 
   private monitor = () => {
@@ -214,7 +215,7 @@ export class Processor extends BaseSystemService {
     return this.user;
   }
   get deviceName() {
-    return this.deviceName;
+    return this._deviceName;
   }
 
   private get deviceInfo() {
@@ -282,18 +283,22 @@ export class Processor extends BaseSystemService {
     });
   }
 
-  addApp = <A = JSX.Element>(reactGeneratorFunction: ReactGeneratorFunction, appName: string, id?: number):Promise<IDisplayingApp<A>> => {
+  addApp = <A = JSX.Element>(
+    reactGeneratorFunction: ReactGeneratorFunction,
+    appName: string,
+    flags?: string,
+    id?: number,
+  ): Promise<IDisplayingApp<A>> => {
     return new Promise(resolve => {
       if (id === undefined) {
         id = this.processID++;
         this.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
       } else if (id > this.processID) this.processID = id + 1;
-  
-      const jsxElement = reactGeneratorFunction(id);
-      const displayingApp: IDisplayingApp<A> = { 
+
+      const jsxElement = reactGeneratorFunction(id, { flags });
+      const displayingApp: IDisplayingApp<A> = {
         processID: id,
-        app: jsxElement, 
-  
+        app: jsxElement,
       };
       this.displaying.push(displayingApp);
       this.emit('appDisplayingAdd', displayingApp);
@@ -302,7 +307,7 @@ export class Processor extends BaseSystemService {
       setTimeout(() => {
         resolve(displayingApp);
       });
-    })
+    });
   };
 
   saveState = (): Promise<void> => {

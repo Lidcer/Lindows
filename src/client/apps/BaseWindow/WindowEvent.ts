@@ -16,7 +16,6 @@ export declare type IBaseWindowEmitterType =
 
 export declare type KeyboardEmitterType = 'keypress' | 'keydown' | 'keyup';
 
-
 export interface IJSONWindowEvent {
   shouldDoDefault: boolean;
   state: any;

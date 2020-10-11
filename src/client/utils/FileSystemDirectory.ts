@@ -1,42 +1,42 @@
-import { escapeRegExp } from "lodash";
-import { cloneDeep } from "../../shared/utils";
+import { escapeRegExp } from 'lodash';
+import { sizeof } from 'sizeof';
+import { cloneDeep } from '../../shared/utils';
 
 type Permission = Map<number, FileSystemPermissions>;
 
 export interface DirectoryData {
-  name: string,
-  permission: Permission,
-  contents: (FileSystemDirectory | FileSystemFile)[],
+  name: string;
+  permission: Permission;
+  contents: (FileSystemDirectory | FileSystemFile)[];
 }
 export interface FileData<T = string> {
-  name: string,
-  permission: Permission,
-  content: T,
-  type: 'text' | 'unknown' | 'json',
+  name: string;
+  permission: Permission;
+  content: T;
+  type: 'text' | 'unknown' | 'json';
 }
 export enum FileSystemPermissions {
-    None,
-    ReadOnly,
-    WriteOnly,
-    ReadAndWrite,
+  None,
+  ReadOnly,
+  WriteOnly,
+  ReadAndWrite,
 }
 
 function getHash(text: string) {
   let hash = 0;
-    let chr: number;
-    for (let i = 0; i < text.length; i++) {
-      chr = text.charCodeAt(i);
-      hash  = ((hash << 5) - hash) + chr;
-      hash |= 0; 
-    }
-    return hash;
+  let chr: number;
+  for (let i = 0; i < text.length; i++) {
+    chr = text.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0;
+  }
+  return hash;
 }
 
-const verificationSymbol = Symbol()
+const verificationSymbol = Symbol();
 
-const hashMap = new WeakMap<StringSymbol, number>()
+const hashMap = new WeakMap<StringSymbol, number>();
 export class StringSymbol {
-
   constructor(text: string) {
     if (typeof text !== 'string') throw new Error(`Expected string got ${typeof text}!`);
     if (text === 'root') throw new Error('You cannot generate root symbol');
@@ -44,7 +44,7 @@ export class StringSymbol {
     hashMap.set(this, getHash(text));
   }
 
-  getHash(symbol: Symbol) {
+  getHash(symbol: symbol) {
     if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
     return hashMap.get(this);
   }
@@ -54,19 +54,19 @@ const systemSymbol = new StringSymbol('_');
 export const everyone = new StringSymbol('_');
 const rootHash = getHash('root');
 const everyoneHash = getHash('everyone');
-systemSymbol.getHash = (symbol) => {
+systemSymbol.getHash = symbol => {
   if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
   return rootHash;
-}
-everyone.getHash = (symbol) => {
+};
+everyone.getHash = symbol => {
   if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
   return everyoneHash;
-}
-
-
+};
 
 const directoriesMap = new WeakMap<FileSystemDirectory, DirectoryData>();
-const upperPath = new WeakMap<(FileSystemFile | FileSystemDirectory), FileSystemDirectory>();
+const upperPath = new WeakMap<FileSystemFile | FileSystemDirectory, FileSystemDirectory>();
+export type FileSystemContent = FileSystemDirectory | FileSystemFile<any>;
+
 export class FileSystemDirectory {
   constructor(name: string, owner = everyone) {
     const result = isValidName(name);
@@ -74,8 +74,8 @@ export class FileSystemDirectory {
     const directoryData: DirectoryData = {
       name,
       contents: [],
-      permission: new Map()
-    }
+      permission: new Map(),
+    };
     directoryData.permission.set(owner.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     directoryData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     directoriesMap.set(this, directoryData);
@@ -88,11 +88,11 @@ export class FileSystemDirectory {
     if (canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
-      const sameName = !!directory.contents.find(d => d.name === name)
+      const sameName = !!directory.contents.find(d => d.name === name);
       if (sameName) {
         throw new Error('Duplicate name!');
       }
-      const newDirectory = new FileSystemDirectory(name, owner)
+      const newDirectory = new FileSystemDirectory(name, owner);
       upperPath.set(newDirectory, this);
       directory.contents.push(newDirectory);
       return newDirectory;
@@ -100,15 +100,15 @@ export class FileSystemDirectory {
     throw new Error('You do not have permission to edit this folder!');
   }
 
-  createFile<C = any>(name: string, type: FileData['type'], content: C,  owner = everyone) {
-    const directory = directoriesMap.get(this)
+  createFile<C = any>(name: string, type: FileData['type'], content: C, owner = everyone) {
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
 
     if (canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
-      const sameName = !!directory.contents.find(d => d.name === name)
+      const sameName = !!directory.contents.find(d => d.name === name);
       if (sameName) {
         throw new Error('Duplicate name!');
       }
@@ -120,31 +120,31 @@ export class FileSystemDirectory {
   }
 
   get name() {
-    const data = directoriesMap.get(this)
+    const data = directoriesMap.get(this);
     if (!data) throw new Error('Directory has been deleted!');
     return data.name;
   }
 
   setName(name: string, owner = everyone) {
-    const directory = directoriesMap.get(this)
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
-        const upper = directoriesMap.get(upperPath.get(this));
-        const sameNameFolder = !!upper.contents.find(d => d.name === name)
-        if (sameNameFolder) {
-          throw new Error('Duplicate name!');
-        }
-        directory.name = name;
+      const upper = directoriesMap.get(upperPath.get(this));
+      const sameNameFolder = !!upper.contents.find(d => d.name === name);
+      if (sameNameFolder) {
+        throw new Error('Duplicate name!');
+      }
+      directory.name = name;
       return;
     }
     throw new Error('You don not have permission to rename this directory!');
   }
 
   deleteDirectory(owner = everyone) {
-    const data = directoriesMap.get(this)
+    const data = directoriesMap.get(this);
     if (!data) throw new Error('Directory has been deleted!');
     const permission = data.permission.get(owner.getHash(verificationSymbol));
 
@@ -152,38 +152,38 @@ export class FileSystemDirectory {
       const pendingForDeletion: DirectoryData['contents'] = [];
       const upper = upperPath.get(this);
 
-      const deepScanner = (contents: DirectoryData['contents'] ) => {
+      const deepScanner = (contents: DirectoryData['contents']) => {
         for (const content of contents) {
-          if(!canModifyFileOrDirectory(content.getPermission(owner))) {
+          if (!canModifyFileOrDirectory(content.getPermission(owner))) {
             throw new Error('You do not have permission to delete content of folder');
           }
           if (isDirectory(content)) {
             const directory = directoriesMap.get(content);
-              pendingForDeletion.push(content);
-              directoriesMap.delete(content);
-              deepScanner(directory.contents);
+            pendingForDeletion.push(content);
+            directoriesMap.delete(content);
+            deepScanner(directory.contents);
           } else {
-              pendingForDeletion.push(content)
+            pendingForDeletion.push(content);
           }
         }
-      } 
+      };
       pendingForDeletion.push(this);
       deepScanner(data.contents);
 
       for (const shouldDelete of pendingForDeletion) {
-          if (isDirectory(shouldDelete)) {
-            const directory = directoriesMap.get(shouldDelete);
-            directory.contents = [];
-            directoriesMap.delete(shouldDelete);
-          } else {
-            files.delete(shouldDelete);
-            upperPath.delete(shouldDelete);
-          }
+        if (isDirectory(shouldDelete)) {
+          const directory = directoriesMap.get(shouldDelete);
+          directory.contents = [];
+          directoriesMap.delete(shouldDelete);
+        } else {
+          files.delete(shouldDelete);
+          upperPath.delete(shouldDelete);
+        }
       }
       if (upper) {
-        const data = directoriesMap.get(upper)
+        const data = directoriesMap.get(upper);
         if (data) {
-          const index = data.contents.indexOf(this)
+          const index = data.contents.indexOf(this);
           if (index !== -1) {
             data.contents.splice(index, 1);
           }
@@ -191,7 +191,7 @@ export class FileSystemDirectory {
       }
       return;
     }
-    
+
     throw new Error('You do not have permission to delete this directory!');
   }
 
@@ -209,9 +209,9 @@ export class FileSystemDirectory {
   }
 
   get path() {
-    const directory = directoriesMap.get(this)
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
-    let path = [];
+    const path = [];
     let target = this as FileSystemDirectory;
 
     while (target) {
@@ -223,8 +223,9 @@ export class FileSystemDirectory {
   }
 
   setPermissionFor(owner = everyone, target: StringSymbol, permission: FileSystemPermissions) {
-    if (owner.getHash(verificationSymbol) === target.getHash(verificationSymbol)) throw new Error('Cannot set permission to same target');
-    const directory = directoriesMap.get(this)
+    if (owner.getHash(verificationSymbol) === target.getHash(verificationSymbol))
+      throw new Error('Cannot set permission to same target');
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const directoryPermission = directory.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(directoryPermission)) {
@@ -233,9 +234,9 @@ export class FileSystemDirectory {
     }
     throw new Error('You don not have permission to set permission to this directory!');
   }
-  
+
   setPermission(owner = everyone, permission: FileSystemPermissions) {
-    const directory = directoriesMap.get(this)
+    const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const directoryPermission = directory.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(directoryPermission)) {
@@ -246,20 +247,37 @@ export class FileSystemDirectory {
   }
 
   getPermission(owner = everyone) {
-    const data = directoriesMap.get(this)
+    const data = directoriesMap.get(this);
     if (!data) throw new Error('Directory has been deleted!');
     return data.permission.get(owner.getHash(verificationSymbol)) || FileSystemPermissions.None;
   }
+  get size() {
+    const directory = directoriesMap.get(this);
+    if (!directory) throw new Error('Directory has been deleted!');
+    let size = 0;
+    for (const content of directory.contents) {
+      size += content.size;
+    }
+    return size;
+  }
 }
 
-const files = new WeakMap<FileSystemFile<any>, FileData<any>>()
-const directoryLink = new WeakMap<FileSystemFile, FileSystemDirectory>()
+const files = new WeakMap<FileSystemFile<any>, FileData<any>>();
+const directoryLink = new WeakMap<FileSystemFile, FileSystemDirectory>();
 export class FileSystemFile<C = any> {
-  constructor(name: string, type: FileData['type'], content: C, fileSystemDirectory: FileSystemDirectory, owner = everyone) {
+  constructor(
+    name: string,
+    type: FileData['type'],
+    content: C,
+    fileSystemDirectory: FileSystemDirectory,
+    owner = everyone,
+  ) {
     const fileData: FileData<C> = {
-      name, type, content,
-      permission: new Map()
-    }
+      name,
+      type,
+      content,
+      permission: new Map(),
+    };
     fileData.permission.set(owner.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     fileData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     files.set(this, fileData);
@@ -267,7 +285,7 @@ export class FileSystemFile<C = any> {
   }
 
   getContent<CC = C>(owner = everyone): CC {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canReadFileOrDirectory(permission)) {
@@ -280,15 +298,15 @@ export class FileSystemFile<C = any> {
   }
 
   setContent<CC = C>(content: CC, owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
       if (file.type === 'json') {
         try {
-          JSON.stringify(content)    
+          JSON.stringify(content);
         } catch (error) {
-            throw new Error('Given file is not a json!');
+          throw new Error('Given file is not a json!');
         }
       }
       file.content = content;
@@ -298,7 +316,7 @@ export class FileSystemFile<C = any> {
   }
 
   getType(owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
@@ -308,7 +326,7 @@ export class FileSystemFile<C = any> {
   }
 
   setType(type: FileData['type'], owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
@@ -319,7 +337,7 @@ export class FileSystemFile<C = any> {
   }
 
   deleteFile(owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has already been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
@@ -337,16 +355,17 @@ export class FileSystemFile<C = any> {
     }
     throw new Error('You do not have permission to delete this file');
   }
-  
+
   getPermission(owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has already been deleted!');
     return file.permission.get(owner.getHash(verificationSymbol)) || FileSystemPermissions.None;
   }
 
   setPermissionFor(owner = everyone, target: StringSymbol, permission: FileSystemPermissions) {
-    if (owner.getHash(verificationSymbol) === target.getHash(verificationSymbol)) throw new Error('Cannot set permission to same target');
-    const file = files.get(this)
+    if (owner.getHash(verificationSymbol) === target.getHash(verificationSymbol))
+      throw new Error('Cannot set permission to same target');
+    const file = files.get(this);
     if (!file) throw new Error('Directory has been deleted!');
     const directoryPermission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(directoryPermission)) {
@@ -356,9 +375,9 @@ export class FileSystemFile<C = any> {
     }
     throw new Error('You don not have permission to set permission to this directory!');
   }
-  
+
   setPermission(owner = everyone, permission: FileSystemPermissions) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('Directory has been deleted!');
     const directoryPermission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(directoryPermission)) {
@@ -370,13 +389,13 @@ export class FileSystemFile<C = any> {
   }
 
   get name() {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     return file.name;
   }
 
   setName(name: string, owner = everyone) {
-    const file = files.get(this)
+    const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (canModifyFileOrDirectory(permission)) {
@@ -392,41 +411,51 @@ export class FileSystemFile<C = any> {
     throw new Error('Missing permission to write');
   }
   get deleted() {
-    return !files.get(this)
+    return !files.get(this);
   }
 
   get path() {
-    const file = files.get(this)
+    const file = files.get(this);
     const directory = directoryLink.get(this);
     if (!file) throw new Error('File has been deleted!');
     if (!directory) throw new Error('Corrupted file!');
     return `${directory.path}/${file.name}`;
   }
+  get size() {
+    const file = files.get(this);
+    if (!file) throw new Error('File has been deleted!');
+    return sizeof(file.content);
+  }
 }
 
 export function isDirectory(fileDirectory: any): fileDirectory is FileSystemDirectory {
-  return !!fileDirectory.contents && !!fileDirectory.name &&
-   !!fileDirectory.getPermission && !!fileDirectory.setPermission &&
-    !!fileDirectory.setPermissionFor && !!fileDirectory.createDirectory &&
-     !!fileDirectory.deleteDirectory; 
+  return (
+    !!fileDirectory.contents &&
+    !!fileDirectory.name &&
+    !!fileDirectory.getPermission &&
+    !!fileDirectory.setPermission &&
+    !!fileDirectory.setPermissionFor &&
+    !!fileDirectory.createDirectory &&
+    !!fileDirectory.deleteDirectory
+  );
 }
 
 function canModifyFileOrDirectory(permission: FileSystemPermissions) {
   return permission === FileSystemPermissions.ReadAndWrite || permission === FileSystemPermissions.WriteOnly;
 }
 
-function canReadFileOrDirectory(permission: FileSystemPermissions){
+function canReadFileOrDirectory(permission: FileSystemPermissions) {
   return permission === FileSystemPermissions.ReadAndWrite || permission === FileSystemPermissions.ReadOnly;
 }
 
 const notValidCharacters = '\\/:*?"<>|';
 export function sanitizeName(name: string) {
   const notAllowed = notValidCharacters.split('');
-  let newString = '' 
+  let newString = '';
   for (const char of name.split('')) {
-      if(!notAllowed.includes(char)) {
-        newString += char; 
-      }
+    if (!notAllowed.includes(char)) {
+      newString += char;
+    }
   }
   return newString;
 }
@@ -435,24 +464,25 @@ function isValidName(name: string) {
   if (typeof name !== 'string') return result(`${typeof name} are not valid names. Expected string!`);
   if (!name.length) return result('Name must at least one character long!');
   const maxCharactersInFolder = 256;
-  if (name.length > maxCharactersInFolder) return result(`Name cannot be longer than ${maxCharactersInFolder} one character long!`);
+  if (name.length > maxCharactersInFolder)
+    return result(`Name cannot be longer than ${maxCharactersInFolder} one character long!`);
   const regExp = new RegExp(escapeRegExp(notValidCharacters), 'ig');
   if (regExp.test(name)) {
     return result(`Name cannot contain characters "${notValidCharacters}"!`);
   }
-  return result()
+  return result();
 }
 
 function result(error?: string) {
   if (error) {
     return {
       valid: false,
-      reason: error
-    }
+      reason: error,
+    };
   }
   return {
     valid: true,
-  }
+  };
 }
 
 export interface ObjectDirectory {
@@ -462,14 +492,14 @@ export interface ObjectDirectory {
 }
 
 interface ObjectFile {
-  name: string,
-  permission: ObjectPermission,
-  content: string,
-  type: FileData['type']
+  name: string;
+  permission: ObjectPermission;
+  content: string;
+  type: FileData['type'];
 }
 
 interface ObjectPermission {
-  [key: number]: number
+  [key: number]: number;
 }
 
 export function objectifyDirectory(directory: FileSystemDirectory, systemPermission = everyone): ObjectDirectory {
@@ -483,23 +513,22 @@ export function objectifyDirectory(directory: FileSystemDirectory, systemPermiss
 }
 
 function objectifyFile(file: FileSystemFile, systemPermission = everyone): ObjectFile {
-  const data = files.get(file)
+  const data = files.get(file);
   if (!data) throw new Error('File has been deleted!');
   const content = stringifyAnything(file.getContent(systemPermission));
   const type = file.getType(systemPermission);
   const permission = objectifyPermission(data.permission);
   const name = data.name;
 
-  return { content, name, permission, type};
+  return { content, name, permission, type };
 }
 
 function objectifyPermission(permission: Permission) {
   const objectPermissions: ObjectPermission = {};
   permission.forEach((permission, number) => {
     if (number === systemSymbol.getHash(verificationSymbol) || number === everyone.getHash(verificationSymbol)) return;
-    
+
     objectPermissions[number] = permission;
-    
   });
   return objectPermissions;
 }
@@ -520,19 +549,19 @@ export function parseDirectory(root: FileSystemDirectory, objDir: ObjectDirector
   for (const [a, b] of permissionsEntires) {
     const hash = parseInt(a);
     const permissionEnum = parseInt(b);
-    if(isNaN(hash) || isNaN(permissionEnum)) throw Error('Unable to convert permissions!');
+    if (isNaN(hash) || isNaN(permissionEnum)) throw Error('Unable to convert permissions!');
     data.permission.set(hash, permissionEnum);
     data.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
   }
 
   for (const content of objDir.contents) {
-    parseDirectoryOrFile(directory, content, owner)
+    parseDirectoryOrFile(directory, content, owner);
   }
-  return directory
+  return directory;
 }
 
 export function parseDirectoryOrFile(root: FileSystemDirectory, obj: ObjectDirectory | ObjectFile, owner = everyone) {
-  if(isObjectDirectory(obj)) {
+  if (isObjectDirectory(obj)) {
     parseDirectory(root, obj, owner);
   } else {
     parseFile(root, obj, owner);
@@ -545,53 +574,55 @@ function parseFile(root: FileSystemDirectory, objFile: ObjectFile, owner = every
     try {
       const conContent = JSON.parse(content);
       content = conContent;
-    } catch (error) { 
+    } catch (error) {
       DEVELOPMENT && console.error('Unable to parse JSON', content);
-     }
+    }
   }
 
   const file = root.createFile(objFile.name, objFile.type, content, owner);
-  const data = files.get(file)
+  const data = files.get(file);
   if (!data) throw new Error('Something went horribly wrong!');
   const permissionsEntires = Object.entries(objFile.permission);
   for (const [a, b] of permissionsEntires) {
     const hash = parseInt(a);
     const permissionEnum = parseInt(b);
-    if(isNaN(hash) || isNaN(permissionEnum)) throw Error('Unable to convert permissions!');
+    if (isNaN(hash) || isNaN(permissionEnum)) throw Error('Unable to convert permissions!');
     data.permission.set(hash, permissionEnum);
     data.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
   }
   return file;
 }
 
-function isObjectDirectory(objectDirectory: any): objectDirectory is ObjectDirectory{
+function isObjectDirectory(objectDirectory: any): objectDirectory is ObjectDirectory {
   return !!objectDirectory.contents && !!objectDirectory.name && !!objectDirectory.permission;
 }
-
 
 function stringifyAnything(unknown: unknown) {
   switch (typeof unknown) {
     case 'string':
-        return unknown;
+      return unknown;
     case 'boolean':
-        return unknown ? 'true' : ' false';
+      return unknown ? 'true' : ' false';
     case 'number':
-        return `${unknown}`;
+      return `${unknown}`;
     case 'object':
-        try {
-          const json = JSON.stringify(unknown);
-          return json
-        } catch (error) {/* ignored */}
-        return `${unknown}`;
+      try {
+        const json = JSON.stringify(unknown);
+        return json;
+      } catch (error) {
+        /* ignored */
+      }
+      return `${unknown}`;
   }
   return 'null';
 }
 
 let alreadyRequested = false;
-export function requestSystemSymbol(){
+export function requestSystemSymbol() {
   if (alreadyRequested) {
     return;
   }
   alreadyRequested = true;
   return systemSymbol;
 }
+

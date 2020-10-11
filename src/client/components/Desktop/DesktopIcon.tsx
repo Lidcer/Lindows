@@ -1,6 +1,7 @@
 import { clamp } from 'lodash';
 import React from 'react';
 import { MessageBox, MessageBoxButtons, MessageBoxIcon } from '../../apps/BaseWindow/BaseWindow';
+import { launchApp } from '../../essential/apps';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from '../../utils/FileSystemDirectory';
 import { IElement, showContext } from '../ContextMenu/ContextMenu';
@@ -163,7 +164,14 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
     this.doNotUnselect = true;
     event.preventDefault();
     const elements: IElement[] = [
-      { content: 'Open' },
+      {
+        content: 'Open',
+        onClick: () => {
+          if (isDirectory(selected)) {
+            launchApp('file-explorer', `path="${selected.path}"`);
+          }
+        },
+      },
       {
         content: 'Delete',
         onClick: () => {

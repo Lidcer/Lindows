@@ -13,6 +13,7 @@ import { attachDebugMethod, isDev } from './requests';
 import { AnApp } from '../apps/AnApp/AnApp';
 import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
 import { SnakeGame } from '../apps/SnakeGame/SnakeGame';
+import { FileExplorer } from '../apps/FileExplorer/FileExplorer';
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -24,10 +25,10 @@ interface AllApps {
 
 export const allApps: AllApps[] = [];
 
-export function launchApp(appName: string) {
+export function launchApp(appName: string, flags?: string) {
   const app = appConstructorGenerator(appName);
   if (app) {
-    services.processor.addApp(app, appName);
+    services.processor.addApp(app, appName, flags);
     return true;
   }
   return false;
@@ -71,7 +72,7 @@ if (!STATIC) {
   installApp(Lype);
   installApp(GroupViewer);
 }
-
+installApp(FileExplorer);
 installApp(WebExplorer);
 installApp(VirtualCreate);
 installApp(MouseProperties);

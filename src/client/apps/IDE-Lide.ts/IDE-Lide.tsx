@@ -141,7 +141,6 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
                   ${code}
                   return exports;
                   })()`;
-  
               const fileCompiled = safeEval(evaluate, context) as BaseWindow.BaseWindow;
               codeMap.set(file.content, fileCompiled);
               loc = this.variables.root;

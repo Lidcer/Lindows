@@ -7,6 +7,7 @@ import * as neofetch from './commands/leofetch';
 import * as terminal from './commands/terminal';
 import * as taskManager from './commands/taskManager';
 import * as take from './commands/take';
+import * as fileExplorerCommand from './commands/fileExplorer';
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 interface Commands {
@@ -19,6 +20,7 @@ export const COMMANDS: Commands[] = [
   { commands: terminal.COMMANDS, object: tr => new terminal.Terminal(tr) },
   { commands: taskManager.COMMANDS, object: tr => new taskManager.TaskManager(tr) },
   { commands: take.COMMANDS, object: tr => new take.Take(tr) },
+  { commands: fileExplorerCommand.COMMANDS, object: tr => new fileExplorerCommand.FileExplorerCommand(tr) },
 ];
 
 export function onTerminalCommand(options: IWindow, bounds: IBounds, entry: string, iTerminal: BaseWindow) {

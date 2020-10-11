@@ -118,11 +118,7 @@ export class ContextMenu extends React.Component<IElements, IState> {
   contextInContext = (element: IStateElement) => {
     if (!element) return null;
     if (element.hidden) {
-      return (
-        <ContextMenuStyled hidden>
-          {this.elementMap(element.elements)}
-        </ContextMenuStyled>
-      );
+      return <ContextMenuStyled hidden>{this.elementMap(element.elements)}</ContextMenuStyled>;
     }
     return <ContextMenuStyled>{this.elementMap(element.elements)}</ContextMenuStyled>;
   };
@@ -169,15 +165,7 @@ export class ContextMenu extends React.Component<IElements, IState> {
   }
 }
 
-
-export function showContext(elements:IElement[], x: number, y: number) {
-  const element = (
-    <ContextMenu
-      elements={elements}
-      x={x}
-      y={y}
-      onAnyClick={() => popup.remove(element)}
-    />
-  );
+export function showContext(elements: IElement[], x: number, y: number) {
+  const element = <ContextMenu elements={elements} x={x} y={y} onAnyClick={() => popup.remove(element)} />;
   popup.add(element);
 }
