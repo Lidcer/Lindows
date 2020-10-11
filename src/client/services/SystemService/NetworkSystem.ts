@@ -4,14 +4,14 @@ import { SECOND } from '../../../shared/constants';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { Fingerprinter } from './FingerprinerSystem';
 import { randomString } from '../../../shared/utils';
-import { IWebsocketPromise } from '../../../shared/Websocket'
+import { IWebsocketPromise } from '../../../shared/Websocket';
 
 export class Network extends BaseSystemService {
   private _socket: SocketIOClient.Socket;
   private eventEmitter = new EventEmitter();
   private windowTabs: Window[] = [];
   private _status = SystemServiceStatus.Uninitialized;
-  
+
   constructor(private fingerpriner: Fingerprinter) {
     super();
   }
@@ -24,9 +24,9 @@ export class Network extends BaseSystemService {
       this._status = SystemServiceStatus.Starting;
       if (STATIC) {
         this._status = SystemServiceStatus.Failed;
-        return; 
+        return;
       }
-  
+
       return new Promise<void>((resolve, reject) => {
         const replaceLink = (link: string) => {
           if (!link) return '';
@@ -35,38 +35,38 @@ export class Network extends BaseSystemService {
           link = link.replace(/\${location.hostname}/g, location.hostname);
           return link;
         };
-  
+
         this._socket = io(origin);
         this._socket.on('connect', () => {
           this.connection();
           this._status = SystemServiceStatus.Ready;
           resolve();
         });
-  
+
         setTimeout(() => {
           if (!this._socket.connected) {
             this._status = SystemServiceStatus.Failed;
             reject(new Error('Unable to establish connection'));
           }
         }, SECOND * 10);
-  
+
         this._socket.on('redirect', (redirectLink: string) => window.location.replace(replaceLink(redirectLink)));
         this._socket.on('open-new-tab', (redirectLink: string) => {
           this.windowTabs.push(window.open(replaceLink(redirectLink), '_blank'));
         });
-  
+
         this._socket.on('admin-event-log-report', (redirectLink: string) => {
           console.error('this should not be visible');
         });
-  
+
         this._socket.on('authenticate-failed', (message: string) => {
           console.error(message);
         });
-  
+
         this._socket.on('disconnect', () => {
           this.emit('connection');
         });
-  
+
         this._socket.on('take-fingerprint', (message: string) => {
           if (localStorage.getItem('terms-of-policy') !== 'true') return;
           this._socket.emit('fingerprint-result', this.fingerpriner.allResults);
@@ -85,25 +85,24 @@ export class Network extends BaseSystemService {
         });
       });
     };
-  
+
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
       if (STATIC) return;
       this._socket.disconnect();
-    }
-    
+    };
+
     return {
       start: start,
       destroy: destroy,
       status: this.status,
-    }
+    };
   }
 
   status = () => {
     return this._status;
-  } 
-
+  };
 
   on(event: 'connection', listener: (object: this) => void): void;
   on(event: 'disconnect', listener: (object: this) => void): void;
@@ -131,43 +130,42 @@ export class Network extends BaseSystemService {
     this.emit('connection');
   };
 
-  emitPromise<K, T extends any[]>(value:string, ...args: T) {
+  emitPromise<K, T extends any[]>(value: string, ...args: T) {
     return new Promise<K>(async (resolve, reject) => {
       if (STATIC) return reject('Not available');
-      const id = randomString(16);  
-      let timeout:NodeJS.Timeout|undefined;
+      const id = randomString(16);
+      let timeout: NodeJS.Timeout | undefined;
 
-        const response = (promise:IWebsocketPromise<K>) => {
-
-          this.socket.removeEventListener(id, response);
-          if(timeout !== undefined){
-            clearTimeout(timeout);
-          }
-          if (promise.reject){
-            const error = new Error(promise.reject.message);
-            return reject(error);
-          }
-          resolve(promise.resolve);
-        }  
-        timeout = setTimeout(() => {
-          response({
-            id,
-            reject: {
-              message:'Connection timed out'
-            },
-            status: 'rejected'
-          })
-        }, 5000);
-
-        this.socket.on(`${value}-${id}`, response);
-        const socketPromise:IWebsocketPromise<K> = {
-          id,
-          status: 'pending',
+      const response = (promise: IWebsocketPromise<K>) => {
+        this.socket.removeEventListener(id, response);
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
         }
-        const socketArgs = [value, socketPromise, ...args]
+        if (promise.reject) {
+          const error = new Error(promise.reject.message);
+          return reject(error);
+        }
+        resolve(promise.resolve);
+      };
+      timeout = setTimeout(() => {
+        response({
+          id,
+          reject: {
+            message: 'Connection timed out',
+          },
+          status: 'rejected',
+        });
+      }, 5000);
 
-        this.socket.emit.apply(this.socket, socketArgs)
-    })
+      this.socket.on(`${value}-${id}`, response);
+      const socketPromise: IWebsocketPromise<K> = {
+        id,
+        status: 'pending',
+      };
+      const socketArgs = [value, socketPromise, ...args];
+
+      this.socket.emit.apply(this.socket, socketArgs);
+    });
   }
 
   get socket() {

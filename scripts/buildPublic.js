@@ -4,17 +4,16 @@ const manifest = require('../dist/statics/manifest.json');
 const ejs = require('ejs');
 const npc = require('ncp');
 
-const public = path.join(process.cwd(), 'public')
+const public = path.join(process.cwd(), 'public');
 
 try {
-    fs.accessSync(public)   
+  fs.accessSync(public);
 } catch (error) {
-    fs.mkdirSync(public);
+  fs.mkdirSync(public);
 }
 
 function getHtmlTemplate(main, vendors) {
-    return (
-`<!doctype html>
+  return `<!doctype html>
 <html lang="en">
 
 <head>
@@ -45,18 +44,18 @@ function getHtmlTemplate(main, vendors) {
     <script type="text/javascript" src="./${vendors}"></script>
     <script type="text/javascript" src="./${main}"></script>
 </body>
-</html>`
-)}
+</html>`;
+}
 
 const main = manifest['main.js'];
 const mainFileName = main.split('/')[2];
 const vendorFileName = manifest['vendors.js'].split('/')[2];
 const revision = main.split('-')[1];
 
-const client = path.join(process.cwd(), 'dist', 'statics', mainFileName);;
+const client = path.join(process.cwd(), 'dist', 'statics', mainFileName);
 const clientPublic = path.join(public, mainFileName);
 
-const vendorP = path.join(process.cwd(), 'dist', 'statics', vendorFileName);;
+const vendorP = path.join(process.cwd(), 'dist', 'statics', vendorFileName);
 const vendorPublic = path.join(public, vendorFileName);
 
 let mainContent = fs.readFileSync(client, 'UTF-8');
@@ -70,18 +69,19 @@ const index = path.join(public, 'index.html');
 const htmlContent = getHtmlTemplate(manifest['main.js'].split('/')[2], manifest['vendors.js'].split('/')[2]);
 fs.writeFileSync(index, htmlContent, 'UTF-8');
 
-const termsOfServiceRaw = path.join(process.cwd(), 'views', 'terms-of-service.ejs');;
+const termsOfServiceRaw = path.join(process.cwd(), 'views', 'terms-of-service.ejs');
 const termsOfService = path.join(public, 'terms-of-service.html');
-const tos = fs.readFileSync(termsOfServiceRaw,'UTF-8');
-const tosContent = ejs.render(tos,{})
+const tos = fs.readFileSync(termsOfServiceRaw, 'UTF-8');
+const tosContent = ejs.render(tos, {});
 fs.writeFileSync(termsOfService, tosContent, 'UTF-8');
 
 const sourceAssets = path.join(process.cwd(), 'assets');
 const targetAssets = path.join(process.cwd(), 'public', 'assets');
-
-npc(sourceAssets, targetAssets,(error) =>{
-    if(error) {
-        console.error(error);
-    }
-    console.info('done');
-})
+fs.rmdirSync(public, { recursive: true });
+fs.mkdirSync(public);
+npc(sourceAssets, targetAssets, error => {
+  if (error) {
+    console.error(error);
+  }
+  console.info('done');
+});
