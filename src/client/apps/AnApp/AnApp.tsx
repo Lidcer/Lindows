@@ -4,15 +4,13 @@ import { AnAppWarper } from './AnAppStyled';
 import { WindowEvent } from '../BaseWindow/WindowEvent';
 import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
 
-
-
 interface WebExplorerState {
   message: string;
 }
 
 export class AnApp extends BaseWindow<WebExplorerState> {
   public static readonly onlyOne = true;
-  public notification: NotificationSystem |undefined;
+  public notification: NotificationSystem | undefined;
 
   public static manifest: IManifest = {
     fullAppName: 'An app',
@@ -97,12 +95,12 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   };
 
   antonymousOpenMessageBox = () => {
-    MessageBox._anonymousShow(this.variables.message || ' The other message box' , 'The message box');
+    MessageBox._anonymousShow(this.variables.message || ' The other message box', 'The message box');
   };
 
   adminButton = async () => {
     let processor = this.getProcessor();
-    if(processor || await this.requestAdmin()) {
+    if (processor || (await this.requestAdmin())) {
       processor = this.getProcessor();
       MessageBox.Show(this, 'You now have permission to access the processor');
     } else {
@@ -111,10 +109,10 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   };
 
   raiseNotification = () => {
-    if(this.notification){
+    if (this.notification) {
       this.notification.raise(this, AnApp.manifest.fullAppName, this.variables.message || 'notification');
     }
-  }
+  };
 
   renderInside() {
     return (
@@ -125,14 +123,12 @@ export class AnApp extends BaseWindow<WebExplorerState> {
         </div>
         <div>
           <div>
-          <button onClick={this.openMessageBox}>Message box</button>
-          <span>This will freeze windows</span>
-
+            <button onClick={this.openMessageBox}>Message box</button>
+            <span>This will freeze windows</span>
           </div>
           <div>
-          <button  onClick={this.antonymousOpenMessageBox}>Anonymous message box</button>
-          <span>This won't freeze windows</span>
-
+            <button onClick={this.antonymousOpenMessageBox}>Anonymous message box</button>
+            <span>This won&#39;t freeze windows</span>
           </div>
         </div>
 

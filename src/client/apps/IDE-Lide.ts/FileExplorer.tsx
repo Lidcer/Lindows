@@ -53,7 +53,6 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
     this.state = {
       content: null,
     };
-    (window as any).t = this;
   }
 
   componentDidMount() {

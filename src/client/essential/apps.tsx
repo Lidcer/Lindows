@@ -14,10 +14,10 @@ import { AnApp } from '../apps/AnApp/AnApp';
 import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
 import { SnakeGame } from '../apps/SnakeGame/SnakeGame';
 import { FileExplorer } from '../apps/FileExplorer/FileExplorer';
+import { MoneyClicker } from '../apps/MoneyClicker/MoneyClicker';
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 interface AllApps {
   manifest: IManifest;
   app: ReactGeneratorFunction;
@@ -67,6 +67,7 @@ export function installApp(baseWindow: BaseWindow | any) {
 installApp(Terminal);
 installApp(TaskManager);
 installApp(SnakeGame);
+installApp(MoneyClicker);
 if (!STATIC) {
   installApp(AccountManager);
   installApp(Lype);
@@ -74,7 +75,6 @@ if (!STATIC) {
 }
 installApp(FileExplorer);
 installApp(WebExplorer);
-
 
 installApp(VirtualCreate);
 

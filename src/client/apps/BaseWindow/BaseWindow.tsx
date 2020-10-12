@@ -376,6 +376,16 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   getBoundingRect() {
+    if (this.state.options.maximized) {
+      const rect = this.reference.current && this.reference.current.getBoundingClientRect();
+      return {
+        x: 0,
+        y: 0,
+        width: (rect || rect.width) && window.innerWidth,
+        height: (rect || rect.height) && window.innerHeight,
+      };
+    }
+
     return {
       x: this.state.x,
       y: this.state.y,
@@ -766,7 +776,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
-    const buttonFunction = this.state.options.maximized ? this._buttonMaximize : this._buttonRestore;
+    const buttonFunction = this.state.options.maximized ? this._buttonRestore : this._buttonMaximize;
     if (this.state.options.maximizeRestoreDownButton === 'shown') {
       return (
         <TitleBarButtonHover onClick={buttonFunction}>
