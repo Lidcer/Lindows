@@ -8,8 +8,8 @@ export function staticsRouter() {
 
   if (IS_DEV) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const proxy = require('http-proxy-middleware');
-    const sProxy = proxy({
+    const { createProxyMiddleware } = require('http-proxy-middleware');
+    const sProxy = createProxyMiddleware({
       target: `http://localhost:${WEBPACK_PORT}/`,
     });
 

@@ -15,6 +15,10 @@ export const AccountManagerPage = styled.div`
   max-height: 500pt;
   overflow: auto;
   background-color: rgba(16, 16, 16, 1);
+
+  input {
+    max-width: 90%;
+  }
 `;
 
 export const AccountManagerScrollabled = styled.div`
@@ -82,7 +86,7 @@ export const AccountManager = styled.div`
     margin: 2pt;
     border-radius: 2pt;
     display: block;
-    width: 100%;
+    width: calc(100% - 5px);
   }
 
   a {

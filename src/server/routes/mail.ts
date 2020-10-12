@@ -136,6 +136,7 @@ export class MailService {
         .catch(err => reject(err));
     });
   }
+  // eslint-disable-next-line @typescript-eslint/ban-types
   private sendMail(recipient: string, subject: string, text: string, html?: string): Promise<[request.Response, {}]> {
     return new Promise((resolve, reject) => {
       this.mailServer.send(
@@ -151,6 +152,7 @@ export class MailService {
           if (err) {
             return reject(err);
           }
+          // @ts-ignore
           resolve(response);
         },
       );

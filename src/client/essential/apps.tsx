@@ -74,7 +74,10 @@ if (!STATIC) {
 }
 installApp(FileExplorer);
 installApp(WebExplorer);
+
+
 installApp(VirtualCreate);
+
 installApp(MouseProperties);
 installApp(IDELide);
 if (DEVELOPMENT) {

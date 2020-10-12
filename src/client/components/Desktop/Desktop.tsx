@@ -287,6 +287,7 @@ export class Desktop extends React.Component<{}, IState> {
   }
 
   onWallpaperMouseDown = (event: React.MouseEvent<HTMLImageElement, MouseEvent>) => {
+    event.preventDefault();
     this.setState({
       selectionBox: {
         shown: true,

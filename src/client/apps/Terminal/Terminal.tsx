@@ -1,10 +1,18 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import { uniq } from 'lodash';
 import React from 'react';
-import './Terminal.scss';
 import { onTerminalCommand, onTab } from './commands';
 import { TerminalCommand } from './TerminalCommand';
 import { services } from '../../services/SystemService/ServiceHandler';
+import {
+  TerminalBlinkingCursor,
+  TerminalCommandContent,
+  TerminalContent,
+  TerminalInput,
+  TerminalLine,
+  TerminalName,
+  TerminalStyled,
+} from './TerminalStyled';
 //TODO: add html parser
 
 interface ITerminal {
@@ -44,7 +52,7 @@ export class Terminal extends BaseWindow<ITerminal> {
   constructor(props: IBaseWindowProps) {
     super(
       props,
-      { width: 500, showIcon: true},
+      { width: 500, showIcon: true },
       {
         afterCursor: '',
         beforeCursor: '',
@@ -56,38 +64,23 @@ export class Terminal extends BaseWindow<ITerminal> {
     );
   }
 
-  renderInside() {
-    return (
-      <div className='terminal'>
-        {this.history()}
-        {this.variables.active ? null : this.renderInputLine()}
-      </div>
-    );
-  }
-
   history() {
-    return this.variables.history.map((h, i) => (
-      <div key={i} className='terminal-command-content'>
-        {h.content}
-      </div>
-    ));
+    return this.variables.history.map((h, i) => <TerminalCommandContent key={i}>{h.content}</TerminalCommandContent>);
   }
 
   renderInputLine() {
-    return <div className='terminal-line'>{this.renderContentInputLine()}</div>;
+    return <TerminalLine>{this.renderContentInputLine()}</TerminalLine>;
   }
   renderContentInputLine() {
     return (
       <>
-        <span className='terminal-name'>
-        {this.variables.userName}@{this.variables.deviceInfo}
-        </span>
+        <TerminalName>
+          {this.variables.userName}@{this.variables.deviceInfo}
+        </TerminalName>
         <span>:</span>
-        <span className='terminal-input'>{this.variables.beforeCursor}</span>
-        <span className='terminal-blinking-cursor' hidden={!this.active}>
-          |
-        </span>
-        <span className='terminal-input'>{this.variables.afterCursor}</span>
+        <TerminalInput>{this.variables.beforeCursor}</TerminalInput>
+        <TerminalBlinkingCursor hidden={!this.active}>|</TerminalBlinkingCursor>
+        <TerminalInput>{this.variables.afterCursor}</TerminalInput>
       </>
     );
   }
@@ -95,11 +88,11 @@ export class Terminal extends BaseWindow<ITerminal> {
   renderContentEmpty(content: string) {
     return (
       <>
-        <span className='terminal-name'>
+        <TerminalName>
           {this.variables.userName}@{this.variables.deviceInfo}
-        </span>
+        </TerminalName>
         <span>:</span>
-        <span className='terminal-input'>{content}</span>
+        <TerminalInput>{content}</TerminalInput>
       </>
     );
   }
@@ -125,7 +118,7 @@ export class Terminal extends BaseWindow<ITerminal> {
       switch (event.key) {
         case 'Enter':
           const entry = `${variables.beforeCursor}${variables.afterCursor}`;
-          if(!entry) return;
+          if (!entry) return;
           if (entry === 'clear' || entry === 'cls') {
             variables.beforeCursor = '';
             variables.afterCursor = '';
@@ -209,7 +202,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           }
           break;
         default:
-         // console.log(event.key);
+          // console.log(event.key);
           break;
       }
 
@@ -220,5 +213,16 @@ export class Terminal extends BaseWindow<ITerminal> {
     if (this.variables.active) {
       this.variables.active._bounds = this.bounds;
     }
+  }
+
+  renderInside() {
+    return (
+      <TerminalStyled>
+        <TerminalContent>
+          {this.history()}
+          {this.variables.active ? null : this.renderInputLine()}
+        </TerminalContent>
+      </TerminalStyled>
+    );
   }
 }

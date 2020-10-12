@@ -2,7 +2,13 @@ import React from 'react';
 import { services } from '../../services/SystemService/ServiceHandler';
 import { SECOND } from '../../../shared/constants';
 import { launchApp } from '../../essential/apps';
-import { BootScreenStyled, BootScreenMiddle, BootScreenTop, BootScreenBottom, BootScreenInfo } from './bootScreenStyled';
+import {
+  BootScreenStyled,
+  BootScreenMiddle,
+  BootScreenTop,
+  BootScreenBottom,
+  BootScreenInfo,
+} from './bootScreenStyled';
 import { inIframe } from '../../utils/util';
 
 interface IBootScreenProps {
@@ -49,7 +55,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     else
       return (
         <span>
-          Press <b> DEL</b> to enter Setup, <b>ALT-F4</b> to force shutdown
+          Press <b> DEL</b> to enter Setup, <b>ALT+F4</b> to force shutdown
         </span>
       );
   }
@@ -106,7 +112,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   };
 
   allReady = () => {
-    const bootTime = inIframe() ? 5000 : 500;
+    const bootTime = inIframe() ? 5000 : STATIC ? 1000 : 500;
     setTimeout(() => {
       this.props.next(this.state.goToBios ? 'bios' : undefined);
     }, bootTime);

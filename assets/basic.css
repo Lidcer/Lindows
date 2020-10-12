@@ -1,7 +1,7 @@
 body, .terminal-background {
     background: #222;
     color: lime;
-    font-family: monospace;
+    font-family:  Roboto, 'Courier New', Courier, monospace;
 }
 .terminal-box{
     transition: background-color 0.15s, color 0.15s  ;

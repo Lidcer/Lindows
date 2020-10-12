@@ -34,11 +34,12 @@ export class Leofetch extends BaseCommand {
   }
 
   public onStart() {
-    const COPY_LIDCER_LOGO = [...LIDCER_LOGO];
+    //const COPY_LIDCER_LOGO = [...LIDCER_LOGO];
+    const COPY_LIDCER_LOGO = ['', '', '', '', '', '', ''];
     const name = `${services.processor.deviceName}@${services.processor.username}`;
     if (this.terminalCommand.bounds.width < 700) {
       for (const i in COPY_LIDCER_LOGO) {
-        const splitLine = Math.floor((this.terminalCommand.bounds.width / 700) * COPY_LIDCER_LOGO[i].length * 0.05);
+        const splitLine = Math.floor((this.terminalCommand.bounds.width / 700) * COPY_LIDCER_LOGO[i].length * 0.09);
         let line = COPY_LIDCER_LOGO[i].split('');
         line = line.filter((_, i) => {
           return (i + 1) % splitLine !== 0;

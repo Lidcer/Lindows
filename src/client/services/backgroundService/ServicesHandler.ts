@@ -105,7 +105,7 @@ class BackgroundServices extends EventEmitter {
   private loadAll() {
     return new Promise(async resolve => {
       for (const serviceName of startUp) {
-        await this.startOrGetService(serviceName).catch(err => console.error(err));
+        await this.startOrGetService(serviceName).catch(err => DEVELOPMENT && console.error(err));
       }
       resolve();
       this.isReady = true;

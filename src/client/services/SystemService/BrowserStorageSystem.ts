@@ -16,22 +16,12 @@ export class BrowserStorage extends BaseSystemService {
     const obsoleteBrowser = () => {
       location.href = 'unsupported-browser';
     };
-
-    const acceptTermsOfService = () => {
-      location.href = 'terms-of-service';
-    };
-
     const start = async () => {
       if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
       if (!localStorage) {
         obsoleteBrowser();
         this._status = SystemServiceStatus.Failed;
         throw new Error('Browser storage does not exist');
-      }
-
-      const accepted = localStorage.getItem('terms-of-policy');
-      if (accepted !== 'true') {
-        acceptTermsOfService();
       }
 
       if (inIframe()) {

@@ -19,17 +19,11 @@ export function pagesRouter() {
     }
 
     return res.render('page.ejs', { manifest });
-
   });
 
   router.get(`/unsupported-browser**`, async (_, res) => {
     const manifest = await getManifest();
     res.render('unsupported-browser.ejs', { manifest });
-  });
-
-  router.get(`/terms-of-service**`, async (_, res) => {
-    const manifest = await getManifest();
-    res.render('terms-of-service.ejs', { manifest });
   });
 
   router.get(`/**`, async (req, res) => {

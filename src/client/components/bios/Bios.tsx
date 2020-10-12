@@ -5,9 +5,28 @@ import { Keypress } from '../../essential/constants/Keypress';
 import { stat } from 'fs';
 import Axios from 'axios';
 import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
-import { BiosStyled, BiosTop, BiosTitle, BiosGradient, BiosNavBar, BiosButton, BiosMiddle, BiosSettings, BiosSystemInfo, BiosPopup,
-  BiosPopupInner, BiosPopupTitle, BiosPopupInnerContent, BiosPopupButtons, BiosInfo, BiosTopInfo, BiosBottomInfo, BiosBottom } from './BiosStyled';
+import {
+  BiosStyled,
+  BiosTop,
+  BiosTitle,
+  BiosGradient,
+  BiosNavBar,
+  BiosButton,
+  BiosMiddle,
+  BiosSettings,
+  BiosSystemInfo,
+  BiosPopup,
+  BiosPopupInner,
+  BiosPopupTitle,
+  BiosPopupInnerContent,
+  BiosPopupButtons,
+  BiosInfo,
+  BiosTopInfo,
+  BiosBottomInfo,
+  BiosBottom,
+} from './BiosStyled';
 import { inIframe } from '../../utils/util';
+import { BiosTermsAndPolicy } from './TermsAndPolicy';
 
 interface IBIOSProps {
   next: (type: WebpageType) => void;
@@ -81,7 +100,7 @@ const MAIN_TAB_INFO = 'This section is showing info about your system';
 
 export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   private readonly BROWSER_STORAGE_KEY = '__BIOS_STORAGE__';
-  private networkStatus: 'unknown' | 'fetched' | 'noConnection' | 'fetching' = 'unknown';
+  private networkStatus: 'unknown' | 'fetched' | 'noConnection' | 'fetching' | 'notAvailable' = 'unknown';
   private interval: NodeJS.Timeout;
 
   constructor(props: IBIOSProps) {
@@ -96,6 +115,30 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   }
 
   render() {
+    const footerText = 'V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Inc';
+    if (showTermsOfPolicy()) {
+      return (
+        <BiosStyled>
+          {this.popup}
+          <BiosTop>
+            <BiosTitle> BIOS SETUP UTILITY</BiosTitle>
+            <BiosGradient> {this.renderGradient}</BiosGradient>
+          </BiosTop>
+          <BiosNavBar>
+            <span>Main</span>
+            <span>Network</span>
+            <span className='active'>Terms and conditions</span>
+            <span>Exit</span>
+          </BiosNavBar>
+          <BiosMiddle>
+            {this.renderTab}
+            {this.info}
+          </BiosMiddle>
+          <BiosBottom>{footerText}</BiosBottom>
+        </BiosStyled>
+      );
+    }
+
     return (
       <BiosStyled>
         {this.popup}
@@ -107,10 +150,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           <span className={this.state.tab === 'main' ? 'active' : null} onClick={() => this.changeTab('main')}>
             Main
           </span>
-          <span
-            className={this.state.tab === 'network' ? 'active' : null}
-            onClick={() => this.changeTab('network')}
-          >
+          <span className={this.state.tab === 'network' ? 'active' : null} onClick={() => this.changeTab('network')}>
             Network
           </span>
           <span className={this.state.tab === 'exit' ? 'active' : null} onClick={() => this.changeTab('exit')}>
@@ -121,7 +161,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           {this.renderTab}
           {this.info}
         </BiosMiddle>
-        <BiosBottom>V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Inc</BiosBottom>
+        <BiosBottom>{footerText}</BiosBottom>
       </BiosStyled>
     );
   }
@@ -137,7 +177,44 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   }
 
   get renderTab() {
-    if (this.state.tab === 'main')
+    if (showTermsOfPolicy()) {
+      return (
+        <BiosTermsAndPolicy
+          onAcceptTermsOfPolicy={() => {
+            this.setState({
+              popup: {
+                title: 'Have you read it all?',
+                content: 'With this action you agreed that you have read everything that has been written on page',
+                firstButton: {
+                  content: 'Accept',
+                  selected: false,
+                  fun: () => {
+                    localStorage.setItem('terms-of-policy', 'true');
+                    location.reload();
+                    this.setState({ popup: undefined, tab: 'exit' });
+                  },
+                },
+                secondButton: {
+                  content: 'Read it again',
+                  selected: true,
+                  fun: () => {
+                    this.setState({ popup: undefined });
+                  },
+                },
+                thirdButton: {
+                  content: "I don't agree",
+                  selected: false,
+                  fun: () => {
+                    localStorage.clear();
+                    location.href = 'https://duckduckgo.com/';
+                  },
+                },
+              },
+            });
+          }}
+        />
+      );
+    } else if (this.state.tab === 'main')
       return (
         <BiosSettings>
           {this.systemInfo}
@@ -147,20 +224,30 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
               <tr>
                 <td>Reset storage:</td>
                 <td>
-                  <button onClick={this.resetStorage}>[ACTION]</button>
+                  <BiosButton onClick={this.resetStorage}>[ACTION]</BiosButton>
                 </td>
               </tr>
-              <tr>
+              {/* <tr>
                 <td>Boot options:</td>
                 <td>
                   <button onClick={this.bootOptionPopup}>[{this.bootOption}]</button>
                 </td>
-              </tr>
+              </tr> */}
             </tbody>
           </table>
         </BiosSettings>
       );
     else if (this.state.tab === 'network') {
+      if (STATIC) {
+        return (
+          <BiosSettings>
+            <BiosSystemInfo>
+              <span>Not available in demo version</span>
+            </BiosSystemInfo>
+          </BiosSettings>
+        );
+      }
+
       if (this.networkStatus === 'unknown') {
         this.networkStatus = 'fetching';
         Axios.get<IIPResponse>('/api/v1/ip')
@@ -200,26 +287,28 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
       return (
         <BiosSettings>
           <table>
-            <tr>
-              <td>
-                <BiosButton className={true ? '' : 'active'}>{'[Save changes & reboot]'}</BiosButton>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <BiosButton className={false ? '' : 'active'}>{'[Discard changes & reboot]'}</BiosButton>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <BiosButton className={false ? '' : 'active'}>{'[Discard changes]'}</BiosButton>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <BiosButton className={false ? '' : 'active'}>{'[Load defaults]'}</BiosButton>
-              </td>
-            </tr>
+            <tbody>
+              <tr>
+                <td>
+                  <BiosButton className={true ? '' : 'active'}>{'[Save changes & reboot]'}</BiosButton>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <BiosButton className={false ? '' : 'active'}>{'[Discard changes & reboot]'}</BiosButton>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <BiosButton className={false ? '' : 'active'}>{'[Discard changes]'}</BiosButton>
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <BiosButton className={false ? '' : 'active'}>{'[Load defaults]'}</BiosButton>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </BiosSettings>
       );
@@ -242,15 +331,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     const engine = userAgent.getEngine();
     return (
       <BiosSystemInfo>
-        <span>
-          OS: {inIframe() ? 'Lindows Alpha 1.0.0' : `${os.name} ${os.version}`}
-        </span>
-        <span>
-          Browser: {inIframe() ? 'Virtual crate(unknown)' : `${browser.name}(${browser.version})`}
-        </span>
-        <span>
-          Engine: {inIframe() ? 'Link(unknown)' : `${engine.name}(${engine.version})`}
-        </span>
+        <span>OS: {inIframe() ? 'Lindows Alpha 1.0.0' : `${os.name} ${os.version}`}</span>
+        <span>Browser: {inIframe() ? 'Virtual crate(unknown)' : `${browser.name}(${browser.version})`}</span>
+        <span>Engine: {inIframe() ? 'Link(unknown)' : `${engine.name}(${engine.version})`}</span>
         {cpu.architecture ? <span>CPU: {cpu.architecture}</span> : null}
         <span>Language: {systemInfo.language}</span>
         {this.getDevice(userAgent)}
@@ -274,17 +357,17 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
               <button
                 className={popup.firstButton.selected ? 'bios-active' : ''}
                 onMouseOver={() => this.selectHoverButtonPopup('first')}
-                onClick={() => popup.secondButton.fun()}
+                onClick={() => popup.firstButton.fun()}
               >
-                {popup.secondButton.content}
+                {popup.firstButton.content}
               </button>
               {popup.secondButton ? (
                 <button
                   className={popup.secondButton.selected ? 'bios-active' : ''}
                   onMouseOver={() => this.selectHoverButtonPopup('second')}
-                  onClick={() => popup.firstButton.fun()}
+                  onClick={() => popup.secondButton.fun()}
                 >
-                  {popup.firstButton.content}
+                  {popup.secondButton.content}
                 </button>
               ) : null}
               {popup.thirdButton ? (
@@ -308,7 +391,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
     state.popup = {
       title: 'Reset All settings',
-      content: 'Your are about to reset all the settings. Are you sure that you want to do that?',
+      content: 'You are about to reset all the settings. Are you sure that you want to do that?',
       firstButton: {
         content: 'Yes',
         selected: false,
@@ -335,11 +418,11 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   };
 
   get info() {
-    if (window.innerWidth > window.innerHeight) {
+    if (window.innerWidth > window.innerHeight && !showTermsOfPolicy()) {
       return (
         <BiosInfo>
           <BiosTopInfo>{this.state.rightSideInfo}</BiosTopInfo>
-          <BiosBottomInfo>test</BiosBottomInfo>
+          <BiosBottomInfo></BiosBottomInfo>
         </BiosInfo>
       );
     }
@@ -355,7 +438,6 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     //   this.props.next(data.bootInLindows ? 'lindows' : 'webpage');
     //   return;
     // }
-    this.props.next('lindows')
     document.addEventListener('keyup', this.keyboardListener, false);
   }
 
@@ -489,4 +571,8 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         break;
     }
   };
+}
+
+export function showTermsOfPolicy() {
+  return localStorage.getItem('terms-of-policy') !== 'true' && !STATIC;
 }

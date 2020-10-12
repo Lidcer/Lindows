@@ -2,7 +2,6 @@ import { IWindow, IBounds, BaseWindow } from '../BaseWindow/BaseWindow';
 
 import { random } from 'lodash';
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface TerminalCommand {
   onChange(result: JSX.Element | string);
   onFinish(result: JSX.Element | string);

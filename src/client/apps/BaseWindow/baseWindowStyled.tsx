@@ -47,7 +47,7 @@ export const LWindowContent = styled.div`
 
   &::-webkit-scrollbar-thumb {
     background-color: ${$thumbBG};
-    border-radius: 6px;
+    //border-radius: 6px;
     border: 3px solid ${$scrollbarBG};
   }
 `;
@@ -143,7 +143,7 @@ export const LWindowBottomRightHover = styled.div`
 //also modify navbar
 
 const buttons = `
-  padding: 5pt;
+  padding: 2pt 5px;
   display: inline-block;
 `;
 
@@ -169,7 +169,7 @@ export const TitleBarIcon = styled.img`
 export const TitleBarTitle = styled.div`
   position: absolute;
   left: 5pt;
-  top: 4pt;
+  top: 2pt;
   width: calc(100% - 60pt);
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -178,7 +178,7 @@ export const TitleBarTitle = styled.div`
 export const TitleBarTitleWithIcon = styled.span`
   position: absolute;
   left: 20pt;
-  top: 4pt;
+  top: 2pt;
   width: calc(100% - 80pt);
   white-space: nowrap;
   text-overflow: ellipsis;

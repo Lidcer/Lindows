@@ -3,20 +3,19 @@ import { BaseCommand } from './commands/BaseCommand';
 import { TerminalCommand } from './TerminalCommand';
 
 //Commands
-import * as neofetch from './commands/leofetch';
+import * as leofetch from './commands/leofetch';
 import * as terminal from './commands/terminal';
 import * as taskManager from './commands/taskManager';
 import * as take from './commands/take';
 import * as fileExplorerCommand from './commands/fileExplorer';
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 interface Commands {
   commands: string[];
   object: (tr: TerminalCommand) => BaseCommand;
 }
 
 export const COMMANDS: Commands[] = [
-  { commands: neofetch.COMMANDS, object: tr => new neofetch.Leofetch(tr) },
+  { commands: leofetch.COMMANDS, object: tr => new leofetch.Leofetch(tr) },
   { commands: terminal.COMMANDS, object: tr => new terminal.Terminal(tr) },
   { commands: taskManager.COMMANDS, object: tr => new taskManager.TaskManager(tr) },
   { commands: take.COMMANDS, object: tr => new take.Take(tr) },

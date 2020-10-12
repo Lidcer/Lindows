@@ -14,6 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCertificate, faCog, faStar, faArrowDown, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { VirtualOs } from './VirtualOs';
 import { WindowEvent } from '../BaseWindow/WindowEvent';
+import { inIframe } from '../../utils/util';
 
 export interface WebsiteOperationSystems {
   url: string;
@@ -24,7 +25,7 @@ export interface WebsiteOperationSystems {
 interface VirtualCreateState {
   selected?: number;
   os: Map<WebsiteOperationSystems, VirtualOs>;
-  freeze:boolean;
+  freeze: boolean;
 }
 
 export class VirtualCreate extends BaseWindow<VirtualCreateState> {
@@ -51,15 +52,14 @@ export class VirtualCreate extends BaseWindow<VirtualCreateState> {
     );
   }
 
-  onExit(event: WindowEvent){
-      if(this.variables.os.size) {
-          event.preventDefault();
-          if(!this.minimized){
-            this.minimize();
-          }
+  onExit(event: WindowEvent) {
+    if (this.variables.os.size) {
+      event.preventDefault();
+      if (!this.minimized) {
+        this.minimize();
       }
+    }
   }
-
 
   getOses() {
     return this.websiteOperationSystems.map((os, i) => {
@@ -81,63 +81,66 @@ export class VirtualCreate extends BaseWindow<VirtualCreateState> {
   }
 
   startButton = async () => {
-    if(this.variables.freeze) return;
-      if (this.variables.selected !== undefined) {
-        const wos = this.websiteOperationSystems[this.variables.selected];
-        const existingOs = this.variables.os.get(wos); 
-        if(existingOs) {
-            existingOs.focus();
-            return;
-        }
-        this.setVariables({freeze: true});
-        const os = await VirtualOs.New() as VirtualOs;
-        os.onExit = () => {
-            const vars = {...this.variables}
-            vars.os.delete(wos);
-            this.setVariables(vars);
-        }
-        this.variables.os.set(wos, os);
-        os.loadSystem(wos);
-        this.setVariables({freeze: false});
-
-
+    if (this.variables.freeze) return;
+    if (this.variables.selected !== undefined) {
+      if (inIframe()) {
+        await MessageBox.Show(this, 'This machine does not support hyper-L technology');
+        return;
       }
-  }
+
+      const wos = this.websiteOperationSystems[this.variables.selected];
+      const existingOs = this.variables.os.get(wos);
+      if (existingOs) {
+        existingOs.focus();
+        return;
+      }
+      this.setVariables({ freeze: true });
+      const os = (await VirtualOs.New()) as VirtualOs;
+      os.onExit = () => {
+        const vars = { ...this.variables };
+        vars.os.delete(wos);
+        this.setVariables(vars);
+      };
+      this.variables.os.set(wos, os);
+      os.loadSystem(wos);
+      this.setVariables({ freeze: false });
+    }
+  };
 
   newButton() {
-      const enabled = false; 
-    const style = enabled ? {color:'blue'} : {color:'gray'} ;
+    const enabled = false;
+    const style = enabled ? { color: 'blue' } : { color: 'gray' };
     return (
-     <OptionButton style={style} disabled={enabled}>
+      <OptionButton style={style} disabled={enabled}>
         <FontAwesomeIcon icon={faCertificate}></FontAwesomeIcon>
         <OptionCaption>New</OptionCaption>
       </OptionButton>
     );
   }
   settings() {
-    const enabled = false; 
-    const style = enabled ? {color:'blue'} : {color:'gray'} ;
+    const enabled = false;
+    const style = enabled ? { color: 'blue' } : { color: 'gray' };
     return (
-        <OptionButton style={style} disabled={enabled}>
+      <OptionButton style={style} disabled={enabled}>
         <FontAwesomeIcon icon={faCog}></FontAwesomeIcon>
         <OptionCaption>Settings</OptionCaption>
       </OptionButton>
     );
   }
   discard() {
-    const enabled = false; 
-    const style = enabled ? {color:'blue'} : {color:'gray'} ;
+    const enabled = false;
+    const style = enabled ? { color: 'blue' } : { color: 'gray' };
     return (
-        <OptionButton style={style} disabled={enabled}>
+      <OptionButton style={style} disabled={enabled}>
         <FontAwesomeIcon icon={faArrowDown}></FontAwesomeIcon>
         <OptionCaption>Discard</OptionCaption>
       </OptionButton>
     );
   }
   start() {
-    const enabled = this.variables.selected !== undefined; 
-    const style = enabled ? {color:'#98f145'} : {color:'gray'};
-    const owd = this.websiteOperationSystems[this.variables.selected]
+    const enabled = this.variables.selected !== undefined;
+    const style = enabled ? { color: '#98f145' } : { color: 'gray' };
+    const owd = this.websiteOperationSystems[this.variables.selected];
     const text = enabled && this.variables.os.get(owd) ? 'Show' : 'Start';
     return (
       <OptionButton onClick={this.startButton} style={style} disabled={enabled}>

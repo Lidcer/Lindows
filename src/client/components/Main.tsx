@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
 import { Desktop } from './Desktop/Desktop';
-import { Bios } from './bios/Bios';
+import { Bios, showTermsOfPolicy } from './bios/Bios';
 import { BootScreen } from './bootScreen/bootScreen';
 import { Webpage } from './webpage';
+import { attachDebugMethod } from '../essential/requests';
 
 //interface IProps { }
 
@@ -19,7 +20,28 @@ export class Main extends PureComponent<{} /*IProps*/, IState> {
     this.state = {
       display: 'bootscreen',
     };
+    attachDebugMethod('b', this);
   }
+
+  next = (boot?: 'lindows' | 'webpage' | 'bios') => {
+    if (boot === 'bios') this.shouldStayInBios = true;
+    switch (this.state.display) {
+      case 'bootscreen':
+        if (!boot && !showTermsOfPolicy()) {
+          this.setState({ display: 'lidnows' });
+        } else {
+          this.setState({ display: 'bios' });
+        }
+        break;
+      case 'bios':
+        if (boot !== 'bios' && !showTermsOfPolicy()) {
+          this.setState({ display: 'lidnows' });
+        } else this.setState({ display: 'bios' });
+        break;
+      default:
+        break;
+    }
+  };
 
   render() {
     if (this.state.display === 'lidnows') return <Desktop></Desktop>;
@@ -28,21 +50,4 @@ export class Main extends PureComponent<{} /*IProps*/, IState> {
       return <Bios next={this.next} shouldStayInBios={this.shouldStayInBios}></Bios>;
     else if (this.state.display === 'bootscreen') return <BootScreen next={this.next}> </BootScreen>;
   }
-
-  next = (boot?: 'lindows' | 'webpage' | 'bios') => {
-    if (boot === 'bios') this.shouldStayInBios = true;
-
-    switch (this.state.display) {
-      case 'bootscreen':
-        this.setState({ display: 'bios' });
-        break;
-      case 'bios':
-        if (boot === 'lindows') {
-          this.setState({ display: 'lidnows' });
-        } else this.setState({ display: 'webpage' });
-        break;
-      default:
-        break;
-    }
-  };
 }

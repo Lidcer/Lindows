@@ -8,7 +8,7 @@ $thumbBG: rgb(64, 64, 64);
     margin: 0;
     padding: 0;
     user-select: none;
-    font-family: monospace;
+    font-family: Roboto, 'Courier New', Courier, monospace;
 
     &::-webkit-scrollbar {
         width: 11px;
@@ -25,7 +25,7 @@ $thumbBG: rgb(64, 64, 64);
 
     &::-webkit-scrollbar-thumb {
         background-color: $thumbBG;
-        border-radius: 6px;
+        //border-radius: 6px;
         border: 3px solid $scrollbarBG;
     }
 

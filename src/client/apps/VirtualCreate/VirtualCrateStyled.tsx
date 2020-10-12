@@ -1,6 +1,9 @@
 import styled from 'styled-components';
 
 export const VirtualCrateWarper = styled.div`
+  position: absolute;
+  overflow: hidden;
+
   width: 100%;
   height: 100%;
   background-color: rgba(32, 32, 32, 1);
@@ -62,4 +65,6 @@ export const BrowserUrl = styled.input`
 export const Frame = styled.iframe`
   width: 100%;
   height: 100%;
+  outline: none;
+  border: none;
 `;

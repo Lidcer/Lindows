@@ -58,6 +58,7 @@ systemSymbol.getHash = symbol => {
   if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
   return rootHash;
 };
+
 everyone.getHash = symbol => {
   if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
   return everyoneHash;
@@ -625,4 +626,3 @@ export function requestSystemSymbol() {
   alreadyRequested = true;
   return systemSymbol;
 }
-
