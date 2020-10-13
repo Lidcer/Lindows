@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { SECOND } from '../../../../../dist/shared/constants';
+import { SECOND } from '../../../../shared/constants';
 import { MoneyClickerPictureReferences } from './ImageReferences';
 
 interface valuesShop {

@@ -153,7 +153,7 @@ export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IB
   // | 'resize'
   // | 'stateUpdate';
 
-  resize?(width: number, height: number): void;
+  onResize?(width: number, height: number): void;
 }
 
 const securityKeys = new WeakMap<BaseWindow, symbol>();
@@ -1088,7 +1088,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       height = clamp(height, this._minHeight, maxHeight);
 
       this.setState({ width, height, y, x });
-      if (this.resize) this.resize(this.state.width, this.state.height);
+      if (this.onResize) {
+        try {
+          this.onResize(this.state.width, this.state.height);
+        } catch (error) {
+          this.exit();
+          MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onResize() method')}`);
+        }
+      }
     }
 
     if (this._isWindowMoving) {

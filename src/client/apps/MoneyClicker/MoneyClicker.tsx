@@ -119,7 +119,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
     await this.setItem(this.storage);
   }
 
-  resize() {
+  onResize() {
     this.onResolutionUpdate();
   }
   onRestore() {
@@ -173,20 +173,24 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
   private pauseMenu = () => {
     this.setVariables({ paused: true, settings: false });
   };
-  private resetData = async () => {
-    const result = await MessageBox.Show(
-      this,
-      'Are you sure you want to reset game data this action is irreversible',
-      'Are you serious?',
-      MessageBoxButtons.YesNo,
-      MessageBoxIcon.Question,
-    );
-    if (result === DialogResult.Yes) {
-      this.storage.data = undefined;
-      await this.setItem(this.storage);
-      this.closing();
-      this.shown();
-    }
+  private resetData = () => {
+    this.changeOptions({ windowType: 'windowed' });
+    setTimeout(async () => {
+      const result = await MessageBox.Show(
+        this,
+        'Are you sure you want to reset game data this action is irreversible',
+        'Are you serious?',
+        MessageBoxButtons.YesNo,
+        MessageBoxIcon.Question,
+      );
+      if (result === DialogResult.Yes) {
+        this.storage.data = undefined;
+        await this.setItem(this.storage);
+        this.closing();
+        this.shown();
+      }
+      this.changeOptions({ windowType: this.storage.fullscreen ? 'fullscreen' : 'windowed' });
+    });
   };
 
   private enableDisableFullScreen = () => {
