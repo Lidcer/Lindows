@@ -1,4 +1,6 @@
 import { EventEmitter } from 'events';
+import { SECOND } from '../../../../../dist/shared/constants';
+import { MoneyClickerPictureReferences } from './ImageReferences';
 
 interface valuesShop {
   shopName: string;
@@ -6,6 +8,24 @@ interface valuesShop {
   cps: number[];
   price: number[];
   boughtElementIndex: number;
+}
+
+export interface MoneyClickerSaveGameData {
+  actualMoney: number;
+  counter: number;
+  moneyCounter: number;
+
+  vorlvl: number[];
+  vorCps: number[];
+  vorPrice: number[];
+
+  smallBanglvl: number[];
+  smallBangCps: number[];
+  smallBangPrice: number[];
+
+  upgradeslvl: number[];
+  upgradesCps: number[];
+  upgradesPrice: number[];
 }
 
 const templateGame = {
@@ -82,11 +102,10 @@ const templateGame = {
 };
 
 export class Values extends EventEmitter {
-  public money = 0;
   private actualMoney = 0;
   private counter = 0;
-  public cps = 0;
   private moneyCounter = 1;
+  private paused = false;
 
   private lastCPS = 0;
   public vorlvl: number[] = [];
@@ -100,41 +119,54 @@ export class Values extends EventEmitter {
   public upgradeslvl: number[] = [];
   public upgradesCps: number[] = [];
   public upgradesPrice: number[] = [];
+  public money = 0;
+  public cps = 0;
+  private interval: NodeJS.Timeout;
+  private updateInterval: NodeJS.Timeout;
+  private actualSave = 0;
+  private sound = true;
 
-  constructor(private setItem: (text: string) => void, private getItem: () => string) {
+  constructor(
+    private setItem: (data: MoneyClickerSaveGameData, quick: boolean) => Promise<void>,
+    private getItem: () => MoneyClickerSaveGameData | undefined,
+  ) {
     super();
     this.restoreFromBrowser();
 
     this.update();
     this.cpsCalculator();
     this.updateTimer();
+    this.interval = setInterval(this.cpsCalculator, SECOND);
+    this.updateInterval = setInterval(this.updateTimer, 100);
   }
 
-  public updateTimer(): any {
-    this.storageDataToBrowser();
-    setTimeout(() => {
+  destroy() {
+    clearInterval(this.interval);
+    clearInterval(this.updateInterval);
+  }
+
+  public updateTimer = () => {
+    if (!this.paused) {
       this.actualMoney += this.counter * this.moneyCounter * 0.1;
-      this.updateTimer();
-    }, 100);
-  }
-
-  //100
+      this.storageDataToBrowser();
+    }
+  };
 
   public isVorUnlocked() {
     if (this.upgradeslvl[0]) return true;
     else return false;
   }
 
-  public cpsCalculator() {
+  public cpsCalculator = () => {
     const moneyNow = this.money;
-    setTimeout(() => {
+
+    if (!this.paused) {
       let cps = this.money - moneyNow;
       if (cps < 0) cps = 0 + Math.floor(this.counter);
 
       this.cps = this.counter + (cps - this.counter);
-      this.cpsCalculator();
-    }, 1000);
-  }
+    }
+  };
 
   public update() {
     this.money = Math.floor(this.actualMoney);
@@ -171,9 +203,7 @@ export class Values extends EventEmitter {
     if (obj.shopName !== 'smallBang') return;
 
     if (this.smallBangPrice[obj.boughtElementIndex] <= this.actualMoney) {
-      const purchaseAudio = new Audio('sounds/ill With Bell.wav');
-      purchaseAudio.play();
-
+      this.playCashSound();
       this.actualMoney -= this.smallBangPrice[obj.boughtElementIndex];
       this.smallBanglvl[obj.boughtElementIndex]++;
 
@@ -185,7 +215,7 @@ export class Values extends EventEmitter {
       this.smallBangPrice[obj.boughtElementIndex] = Math.floor(this.smallBangPrice[obj.boughtElementIndex] * 1.01);
       this.counter += this.smallBangCps[obj.boughtElementIndex];
     } else if (this.smallBangPrice[obj.boughtElementIndex] > this.actualMoney) {
-      this.emit('failedToBought', 'Not Eught money');
+      this.emit('failedToBought', 'Not enough money');
     }
   }
 
@@ -197,12 +227,18 @@ export class Values extends EventEmitter {
       this.vorlvl[obj.boughtElementIndex]++;
       this.vorPrice[obj.boughtElementIndex] = Math.floor(this.vorPrice[obj.boughtElementIndex] * 1.01);
 
-      const purchaseAudio = new Audio('sounds/ill With Bell.wav');
-      purchaseAudio.play();
+      this.playCashSound();
     } else if (this.vorPrice[obj.boughtElementIndex] > this.actualMoney) {
       this.emit('failedToBought');
     }
   }
+  private playCashSound() {
+    if (this.sound) {
+      const purchaseAudio = new Audio(MoneyClickerPictureReferences.CashSound);
+      purchaseAudio.play();
+    }
+  }
+
   public upgradesBought(obj: valuesShop) {
     if (obj.shopName !== 'upgrades') return;
 
@@ -232,12 +268,12 @@ export class Values extends EventEmitter {
 
       this.emit('update', obj.boughtElementIndex);
     }
-    const purchaseAudio = new Audio('sounds/ill With Bell.wav');
-    purchaseAudio.play();
+    this.playCashSound();
   }
 
   private storageDataToBrowser() {
-    const dataToStore = {
+    this.actualSave++;
+    const dataToStore: MoneyClickerSaveGameData = {
       actualMoney: this.actualMoney,
       counter: this.counter,
       moneyCounter: this.moneyCounter,
@@ -254,14 +290,16 @@ export class Values extends EventEmitter {
       upgradesCps: this.upgradesCps,
       upgradesPrice: this.upgradesPrice,
     };
-    const dataToStoreString = JSON.stringify(dataToStore);
-
-    //console.log(dataToStoreString);
-    this.setItem(dataToStoreString);
+    if (this.actualSave > 50) {
+      this.setItem(dataToStore, false);
+      this.actualSave = 0;
+    } else {
+      this.setItem(dataToStore, true);
+    }
   }
 
   private restoreFromBrowser() {
-    const moneyClickerDataGame = this.getItem();
+    const moneyClickerData = this.getItem();
 
     const userData = null;
 
@@ -284,24 +322,22 @@ export class Values extends EventEmitter {
       this.upgradesCps = clickerData.upgradesCps;
       this.upgradesPrice = clickerData.upgradesPrice;
     }
-    if (moneyClickerDataGame) {
-      const clickerData = JSON.parse(moneyClickerDataGame);
+    if (moneyClickerData && typeof moneyClickerData === 'object') {
+      this.actualMoney = moneyClickerData.actualMoney;
+      this.counter = moneyClickerData.counter;
+      this.moneyCounter = moneyClickerData.moneyCounter;
 
-      this.actualMoney = clickerData.actualMoney;
-      this.counter = clickerData.counter;
-      this.moneyCounter = clickerData.moneyCounter;
+      this.vorlvl = moneyClickerData.vorlvl;
+      this.vorCps = moneyClickerData.vorCps;
+      this.vorPrice = moneyClickerData.vorPrice;
 
-      this.vorlvl = clickerData.vorlvl;
-      this.vorCps = clickerData.vorCps;
-      this.vorPrice = clickerData.vorPrice;
+      this.smallBanglvl = moneyClickerData.smallBanglvl;
+      this.smallBangCps = moneyClickerData.smallBangCps;
+      this.smallBangPrice = moneyClickerData.smallBangPrice;
 
-      this.smallBanglvl = clickerData.smallBanglvl;
-      this.smallBangCps = clickerData.smallBangCps;
-      this.smallBangPrice = clickerData.smallBangPrice;
-
-      this.upgradeslvl = clickerData.upgradeslvl;
-      this.upgradesCps = clickerData.upgradesCps;
-      this.upgradesPrice = clickerData.upgradesPrice;
+      this.upgradeslvl = moneyClickerData.upgradeslvl;
+      this.upgradesCps = moneyClickerData.upgradesCps;
+      this.upgradesPrice = moneyClickerData.upgradesPrice;
     } else {
       this.actualMoney = templateGame.actualMoney;
       this.counter = templateGame.counter;
@@ -324,7 +360,10 @@ export class Values extends EventEmitter {
     setTimeout(() => {
       this.emit('update', lvl.length - 1);
     }, 1);
-    this.actualMoney = 99999;
+  }
+
+  set audio(value: boolean) {
+    this.sound = value;
   }
 
   static templateGameJsonObject() {

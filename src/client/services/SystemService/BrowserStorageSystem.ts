@@ -2,6 +2,7 @@ import * as compress from 'compress-str';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { attachDebugMethod, isDev } from '../../essential/requests';
 import { inIframe } from '../../utils/util';
+import { faThermometerQuarter } from '@fortawesome/free-solid-svg-icons';
 
 export class BrowserStorage extends BaseSystemService {
   private readonly storageName = '__lindows__';
@@ -73,10 +74,13 @@ export class BrowserStorage extends BaseSystemService {
     return this._status;
   };
 
-  async setItem<V = any>(key: string, value: V): Promise<void> {
+  //This doesn't save
+  setItemQuick<V = any>(key: string, value: V) {
     if (key.length < 3) throw new Error('key must have more than 3 characters');
     this.data[key] = value;
-    if (inIframe()) return;
+  }
+  async setItem<V = any>(key: string, value: V): Promise<void> {
+    this.setItemQuick(key, value);
     await this.save();
   }
 
@@ -86,10 +90,11 @@ export class BrowserStorage extends BaseSystemService {
 
   getItemRaw(key: string) {
     if (this.status() !== SystemServiceStatus.Ready) return '';
+    if (inIframe()) return undefined;
     if (this.useSession && sessionStorage) {
-      sessionStorage.getItem(key);
+      return sessionStorage.getItem(key);
     } else {
-      localStorage.getItem(key);
+      return localStorage.getItem(key);
     }
   }
 
@@ -106,6 +111,7 @@ export class BrowserStorage extends BaseSystemService {
   }
 
   async save(): Promise<void> {
+    if (inIframe()) return;
     const data = JSON.stringify(this.data);
     const compressedData = await compress.gzip(data);
     if (this.useSession && sessionStorage) {

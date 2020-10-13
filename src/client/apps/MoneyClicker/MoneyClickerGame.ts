@@ -5,7 +5,7 @@ import { Money } from './src/Money';
 import { ShopIcon } from './src/ShopIcon';
 import { TextCounter } from './src/TextCounter';
 import { ShopInterface } from './src/ShopInterface';
-import { Values } from './src/Values';
+import { MoneyClickerSaveGameData, Values } from './src/Values';
 import { MoneyImages } from './src/MoneyImages';
 
 import { BlackHole } from './src/BlackHole';
@@ -60,11 +60,18 @@ export class MoneyClickerGame {
   private upBotL: HTMLImageElement;
   private upL: HTMLImageElement;
 
+  private paused = false;
+
   private blackHoleImg: HTMLImageElement;
 
   private imageError: ErrorEvent;
 
-  constructor(private canvas: HTMLCanvasElement, private moneyClickerWindow: MoneyClicker) {}
+  constructor(
+    private canvas: HTMLCanvasElement,
+    private moneyClickerWindow: MoneyClicker,
+    private getData: () => MoneyClickerSaveGameData | undefined,
+    private setData: (data: MoneyClickerSaveGameData, quick: boolean) => Promise<void>,
+  ) {}
 
   private addEventListeners() {
     // window.addEventListener('resize', () => {
@@ -93,8 +100,6 @@ export class MoneyClickerGame {
       'touchend',
       event => {
         const rect = this.canvas.getBoundingClientRect();
-        const clickAudio = new Audio('sounds/click.wav');
-        clickAudio.play();
 
         const t = event.touches.length - 1;
 
@@ -267,6 +272,18 @@ export class MoneyClickerGame {
     } else this.enableIconClicks();
   }
 
+  destroy() {
+    this.values.destroy();
+  }
+
+  pauseGame() {
+    this.paused = true;
+  }
+
+  resumeGame() {
+    this.paused = false;
+  }
+
   private enableIconClicks() {
     this.vorIcon.enableClicks();
     this.smallBangIcon.enableClicks();
@@ -292,45 +309,6 @@ export class MoneyClickerGame {
     else if (this.smallBang.isOpen) this.smallBangIcon.buttonPress();
     else if (this.upgrades.isOpen) this.upgradeIcon.buttonPress();
   }
-
-  private drawGame = () => {
-    this.values.update();
-    //this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-    //Draw elements
-    this.background.draw();
-    this.rotatingThing.setLeftLine(this.background.getLeftLineSettings());
-    this.rotatingThing.draw();
-
-    this.vorIcon.draw();
-    this.smallBangIcon.draw();
-    this.upgradeIcon.draw();
-
-    this.money.setLeftLine(this.background.getLeftLineSettings());
-    this.money.draw();
-
-    this.textLabel.setValue(this.values.money, this.values.cps);
-    this.textLabel.setLeftLine(this.background.getLeftLineSettings());
-    this.textLabel.draw();
-
-    this.vor.setValue(this.values.money);
-    this.vor.setRightLine(this.background.getRightLineSettings());
-    this.vor.draw();
-
-    this.smallBang.setValue(this.values.money);
-    this.smallBang.setRightLine(this.background.getRightLineSettings());
-    this.smallBang.draw();
-
-    this.upgrades.setValue(this.values.money);
-    this.upgrades.setRightLine(this.background.getRightLineSettings());
-    this.upgrades.draw();
-    if (!this.endGame) this.messageBox.draw();
-
-    if (this.endGame) this.blackHole.draw();
-    if (this.endGame) this.endGameMessageBox.draw();
-
-    requestAnimationFrame(this.drawGame);
-  };
 
   loadGame(callback: (percentage: number) => void): void {
     this.moneyPics = new MoneyImages();
@@ -391,14 +369,7 @@ export class MoneyClickerGame {
     //let boxThing = document.querySelector('.box') as HTMLElement;
     //boxThing.style.display = "none";
 
-    this.values = new Values(
-      text => {
-        this.moneyClickerWindow.setItem(text);
-      },
-      () => {
-        return this.moneyClickerWindow.getItem();
-      },
-    ); //__________>
+    this.values = new Values(this.setData, this.getData); //__________>
 
     this.vorIcon = new ShopIcon(ctx, this.canvas, this.vorPic, 10, 26, 50, 25, 85, 20);
     this.smallBangIcon = new ShopIcon(ctx, this.canvas, this.smallBangPic, 10, 26, 50, 50, 85, 50);
@@ -542,4 +513,48 @@ export class MoneyClickerGame {
     this.images.push(image);
     return image;
   }
+
+  set audio(value: boolean) {
+    this.values.audio = value;
+  }
+
+  private drawGame = () => {
+    this.values.update();
+    //this.canvas.getContext('2d').clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    //Draw elements
+    this.background.draw();
+    this.rotatingThing.setLeftLine(this.background.getLeftLineSettings());
+
+    this.rotatingThing.draw(!this.paused);
+
+    this.vorIcon.draw();
+    this.smallBangIcon.draw();
+    this.upgradeIcon.draw();
+
+    this.money.setLeftLine(this.background.getLeftLineSettings());
+    this.money.draw();
+
+    this.textLabel.setValue(this.values.money, this.values.cps);
+    this.textLabel.setLeftLine(this.background.getLeftLineSettings());
+    this.textLabel.draw();
+
+    this.vor.setValue(this.values.money);
+    this.vor.setRightLine(this.background.getRightLineSettings());
+    this.vor.draw();
+
+    this.smallBang.setValue(this.values.money);
+    this.smallBang.setRightLine(this.background.getRightLineSettings());
+    this.smallBang.draw();
+
+    this.upgrades.setValue(this.values.money);
+    this.upgrades.setRightLine(this.background.getRightLineSettings());
+    this.upgrades.draw();
+    if (!this.endGame) this.messageBox.draw();
+
+    if (this.endGame) this.blackHole.draw();
+    if (this.endGame) this.endGameMessageBox.draw();
+
+    requestAnimationFrame(this.drawGame);
+  };
 }

@@ -48,20 +48,19 @@ export class RotatingThing {
     this.rotation += (lag * 360) / this.drawInTime;
   }
 
-  //Check if canvas is in landsapce mode
   private landscapeCheck(): void {
     this.canvas.width >= this.canvas.height ? (this.isLandscape = true) : (this.isLandscape = false);
   }
 
-  //requed for landscape
   public setLeftLine(leftLine: number): void {
     this.leftLine = leftLine / 100;
   }
 
-  //draw on canvas
-  public draw(): void {
+  public draw(updateSpinner: boolean): void {
     const now = performance.now();
-    this.animate(now - this.performanceNow);
+    if (updateSpinner) {
+      this.animate(now - this.performanceNow);
+    }
     this.performanceNow = now;
 
     this.landscapeCheck();

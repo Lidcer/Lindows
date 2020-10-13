@@ -376,6 +376,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   getBoundingRect() {
+    if (this.state.options.windowType === 'fullscreen') {
+      return {
+        x: 0,
+        y: 0,
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+    }
     if (this.state.options.maximized) {
       const rect = this.reference.current && this.reference.current.getBoundingClientRect();
       return {
@@ -394,6 +402,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     };
   }
 
+  /** Internal function will throw an error!
+   *  Use load(ev:Window Event) or load(ev:Window Event) instead
+   * @deprecated
+   * @inheritdoc
+   */
   async componentDidMount() {
     if (this.load) {
       try {
@@ -456,6 +469,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     });
   }
 
+  /** Internal function will throw an error!
+   *  Use closing(ev:Window Event) or closed(ev:Window Event) instead
+   * @deprecated
+   * @inheritdoc
+   */
   async componentWillUnmount() {
     this._mounted = false;
     clearInterval(this._monitorInterval);
@@ -490,15 +508,27 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       }
     }
   }
-
+  /**
+   *  Returns window launch flags
+   * @returns {Object}
+   */
   get launchFlags() {
     return this._launchFlags;
   }
+  /**
+   *  return if window has launch flag
+   * @returns {boolean}
+   */
   hasLaunchFlag(flag: string) {
     if (this._launchFlags[flag] === null) return true;
     return !!this._launchFlags[flag];
   }
 
+  /** Internal function will throw an error!
+   *  Use renderInside()
+   * @deprecated
+   * @inheritdoc
+   */
   render() {
     if (!this._started || this._error) return null;
     let className = this._windowClass;
@@ -618,6 +648,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     this.changeActiveState(false);
     if (key === securityKeys.get(this)) {
       this._frozen = true;
+      this.forceUpdate();
     } else {
       MessageBox.Show(this, 'Invalid key');
     }
@@ -626,6 +657,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   unFreeze(key: symbol) {
     if (key === securityKeys.get(this)) {
       this._frozen = false;
+      this.forceUpdate();
     } else {
       MessageBox.Show(this, 'Invalid key');
     }
@@ -653,10 +685,24 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return services.network;
   }
 
-  setItem(value: string) {
+  /** Sets item in storage but doesn't save
+   * @param {object} value
+   */
+  setItemQuick<V = string>(value: V) {
+    return services.browserStorage.setItemQuick(this.getManifest().fullAppName, value);
+  }
+
+  /** Sets item in storage and saves it if save it
+   * @param {object} value
+   * @returns {Promise}
+   */
+  setItem<V = string>(value: V) {
     return services.browserStorage.setItem(this.getManifest().fullAppName, value);
   }
 
+  /** Gets set item
+   * @returns {object | undefined}
+   */
   getItem() {
     return services.browserStorage.getItem(this.getManifest().fullAppName);
   }
@@ -665,6 +711,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     return this._ref;
   }
 
+  /** Sets item in storage but doesn't save to reduce time of saving
+   * @param {object} value
+   */
   private _windowLoop = () => {
     if (!this._isWindowMoving) {
       const { x, y, corrected } = this._getFixedPos(this.state.x - this._speedX, this.state.y - this._speedY);
@@ -1245,6 +1294,10 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     this.timeouts.push(t);
   };
 
+  /** Internal function use setVariables()
+   * @deprecated
+   * @inheritdoc
+   */
   setState(
     state:
       | IBaseWindowState<B>
@@ -1435,7 +1488,7 @@ export enum MessageBoxButtons {
   YesNo,
   YesNoCancel,
 }
-enum DialogResult {
+export enum DialogResult {
   Cancel,
   Abort,
   Retry,
