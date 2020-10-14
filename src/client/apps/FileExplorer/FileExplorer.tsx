@@ -72,8 +72,6 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
     } else if (ev.key.toLowerCase() === 'escape') {
       this.setVariables({ renaming: undefined });
     }
-
-    console.log(ev);
   }
 
   private parseDirectory(path: string): FileSystemDirectory | null {
@@ -126,9 +124,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         this.setVariables({ directory });
       }
     } else {
-      const directory = this.parseDirectory(
-        `${services.fileSystem.home.path}/${sanitizeName(services.processor.username)}`,
-      );
+      const directory = services.fileSystem.userDirectory;
       if (directory) {
         this.setVariables({ directory });
       }

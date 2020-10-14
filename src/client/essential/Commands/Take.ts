@@ -1,3 +1,41 @@
+import { BaseCommand, ExecutionParameters } from './BaseCommand';
+import { services } from '../../services/SystemService/ServiceHandler';
+import { isDirectory, FileSystemDirectory, FileSystemFile } from '../../utils/FileSystemDirectory';
+
+export class TakeCommand extends BaseCommand {
+  public static help = ['killall, raiseinternalexception'].join('\n');
+  execute() {
+    const system = services.processor.symbol;
+    if (this.hasArg('help')) {
+      const content = [
+        'raiseinternalexception - throws error inside lindows core',
+        'killall - kills all running processes',
+      ].join('\n');
+
+      this.onFinish(content);
+      return;
+    } else if (this.hasArg('killall')) {
+      const processes = services.processor.processes;
+      const size = processes.length;
+      services.processor.processes.forEach(app => {
+        app.exit();
+      });
+
+      this.onFinish(`killed ${size} apps`);
+    } else if (this.hasArg('raiseinternalexception')) {
+      this.onFinish('done');
+      setTimeout(() => {
+        throw new Error(`Thrown by command ${this.args[0]}`);
+      }, 0);
+    } else {
+      const c = this.args[0];
+      this.onFinish(`${c}: missing operand\n Try '${c} help' for more information.`);
+    }
+  }
+  interrupt() {}
+}
+
+/*
 import { BaseCommand } from './BaseCommand';
 import { TerminalCommand } from '../TerminalCommand';
 import { services } from '../../../services/SystemService/ServiceHandler';
@@ -44,3 +82,6 @@ export class Take extends BaseCommand {
     this.terminalCommand.finish();
   }
 }
+
+
+*/

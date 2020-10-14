@@ -43,24 +43,26 @@ export function appConstructorGenerator(appName: string) {
   return null;
 }
 
-export function installApp(baseWindow: BaseWindow | any) {
-  if (!baseWindow) {
-    throw new Error('Failed to install passed empty app');
+//FIXME: find better type
+export function installApp(appWindow: BaseWindow | any) {
+  if (!appWindow) {
+    throw new Error('Failed to install, passed empty app!');
   }
-  if (!baseWindow.manifest) {
+
+  if (!appWindow.manifest) {
     throw new Error('Cannot install without manifest');
   }
 
-  if (!baseWindow.manifest.launchName) {
+  if (!appWindow.manifest.launchName) {
     throw new Error('Missing launch name');
   }
-  const Element = baseWindow as any;
+  const Element = appWindow as any;
 
-  const exist = allApps.find(a => a.manifest.launchName === baseWindow.manifest.launchName);
-  if (exist) throw new Error(`App under name ${baseWindow.manifest.launchName} is already installed`);
+  const exist = allApps.find(a => a.manifest.launchName === appWindow.manifest.launchName);
+  if (exist) throw new Error(`App under name ${appWindow.manifest.launchName} is already installed`);
   allApps.push({
-    manifest: baseWindow.manifest,
-    app: (id: number, props?: any) => <Element key={id} id={id} onlyOne={!!baseWindow.onlyOne} {...props}></Element>,
+    manifest: appWindow.manifest,
+    app: (id: number, props?: any) => <Element key={id} id={id} onlyOne={!!appWindow.onlyOne} {...props}></Element>,
   });
 }
 

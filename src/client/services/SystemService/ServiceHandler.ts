@@ -8,7 +8,7 @@ import { Account } from './AccountSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { attachDebugMethod } from '../../essential/requests';
 import { FileSystem } from './FileSystem';
-
+import { installPreInstalledCommands } from '../../essential/Commands/CommandHandler';
 export declare interface IServices {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
   on(event: 'onServiceFailed', listener: (name: string) => void): this;
@@ -63,6 +63,7 @@ export class IServices extends EventEmitter {
       'Processor',
     );
     this._fileSystem = await this.initService(new FileSystem(this.browserStorage, this.processor), 'FileSystem');
+    installPreInstalledCommands(); //TODO: move somewhere else?
     this.isReady = true;
     this.emit('allReady', this);
   }

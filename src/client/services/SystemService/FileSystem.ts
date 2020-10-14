@@ -1,4 +1,5 @@
 import {
+  everyone,
   FileSystemContent,
   FileSystemDirectory,
   FileSystemFile,
@@ -71,6 +72,9 @@ export class FileSystem extends BaseSystemService {
           homeDirectory = createdDirectory;
           this._home = homeDirectory;
         }
+        if (directory === 'usr') {
+          createdDirectory.createDirectory('bin', systemSymbol);
+        }
       }
       //homeDirector.createDirectory(this.username());
 
@@ -115,6 +119,63 @@ export class FileSystem extends BaseSystemService {
     };
   }
 
+  parseDirectory(path: string, owner = everyone): FileSystemDirectory | null {
+    path = path.replace(/\\/g, '/');
+    const folders = path.split('/');
+    let currentScanner = this.root;
+    for (const folderName of folders) {
+      if (currentScanner.name === folderName) {
+        continue;
+      } else {
+        const contents = currentScanner.contents(owner);
+        const find = contents.find(f => f.name === folderName);
+        if (find && isDirectory(find)) {
+          currentScanner = find;
+        } else {
+          return null;
+        }
+      }
+    }
+    try {
+      currentScanner.contents(owner);
+      return currentScanner;
+    } catch (error) {
+      return null;
+    }
+  }
+  parseDirectorRelative(current: FileSystemDirectory, path: string, owner = everyone) {
+    path = path.replace(/\\/g, '/');
+    const split = path.split('/');
+    if (path.startsWith('/')) {
+      current = this.root;
+    } else if (path.startsWith('.')) {
+      /* do nothing */
+    } else {
+      return null;
+    }
+
+    let looking = split.shift();
+    const systemSymbol = system.get(this);
+    while (looking) {
+      if (looking === '..') {
+        const newDirectoryPath = current.path.split('/');
+        newDirectoryPath.pop();
+        const dir = this.parseDirectory(newDirectoryPath.join('/'), systemSymbol);
+        if (!dir) {
+          return null;
+        }
+        current = dir;
+      } else if (looking !== '.') {
+        const dir = this.getDirectoryInDirectory(current, looking, systemSymbol);
+        if (!dir) {
+          return null;
+        }
+        current = dir;
+      }
+      looking = split.shift();
+    }
+    return current;
+  }
   status = () => {
     return this._status;
   };

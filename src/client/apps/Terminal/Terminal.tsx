@@ -1,4 +1,4 @@
-import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
+import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWindow/BaseWindow';
 import { uniq } from 'lodash';
 import React from 'react';
 import { onTerminalCommand, onTab } from './commands';
@@ -13,6 +13,9 @@ import {
   TerminalName,
   TerminalStyled,
 } from './TerminalStyled';
+import { getCommand } from '../../essential/Commands/CommandHandler';
+import { BaseCommand, ExecutionParameters } from '../../essential/Commands/BaseCommand';
+import { FileSystemDirectory, isDirectory, sanitizeName, StringSymbol } from '../../utils/FileSystemDirectory';
 //TODO: add html parser
 
 interface ITerminal {
@@ -20,15 +23,10 @@ interface ITerminal {
   afterCursor: string;
   userName: string;
   deviceInfo: string;
-  active: TerminalCommand;
-  history: TerminalCommand[];
+  active: BaseCommand | undefined;
+  history: JSX.Element[];
+  directory: FileSystemDirectory;
 }
-
-export const manifest: IManifest = {
-  fullAppName: 'Terminal',
-  launchName: 'lterminal',
-  icon: '/assets/images/appsIcons/Terminal.svg',
-};
 
 function terminalName() {
   if (services.account.account) return services.account.account.username;
@@ -37,7 +35,7 @@ function terminalName() {
 
 function deviceInfo() {
   const browser = services.fingerprinter.userAgent.getBrowser();
-  if (browser) return `${browser.name}${browser.version}`;
+  if (browser && (browser.name || browser.version)) return `${browser.name || ''}${browser.version || ''}`;
   return 'unknown';
 }
 
@@ -49,6 +47,7 @@ export class Terminal extends BaseWindow<ITerminal> {
   };
 
   private currentTabSuggestion: string[] = [];
+  folderPermission: import('c:/Users/Alpha/Desktop/dev/Lindows/src/client/utils/FileSystemDirectory').StringSymbol;
   constructor(props: IBaseWindowProps) {
     super(
       props,
@@ -60,53 +59,89 @@ export class Terminal extends BaseWindow<ITerminal> {
         userName: deviceInfo(),
         active: undefined,
         history: [],
+        directory: services.fileSystem.home,
       },
     );
   }
+  async shown() {
+    if (this.hasLaunchFlag('admin')) {
+      const processor = this.getProcessor();
+      if (!processor) {
+        const result = await this.requestAdmin();
+        if (!result) {
+          await MessageBox.Show(this, 'Unable to obtain admin permission', 'Failed');
+          this.exit();
+          return;
+        }
+        this.folderPermission = this.getProcessor().symbol;
+      }
+    } else if (services.processor.username) {
+      this.folderPermission = new StringSymbol(sanitizeName(services.processor.username));
+    }
+    const path = this.launchFlags.path;
+    if (path) {
+      const directory = this.parseDirectory(path);
+      if (directory) {
+        this.setVariables({ directory });
+      }
+    } else {
+      const directory = services.fileSystem.userDirectory;
+      if (directory) {
+        this.setVariables({ directory });
+      }
+    }
+  }
+  private parseDirectory(path: string) {
+    try {
+      const directory = services.fileSystem.parseDirectory(path, this.folderPermission);
+      return directory;
+    } catch (error) { /* ignored */ }
+    return null;
+  }
+
+  private get userDirectoryPath() {
+    return `${services.fileSystem.home.path}/${sanitizeName(services.processor.username)}`;
+  }
 
   history() {
-    return this.variables.history.map((h, i) => <TerminalCommandContent key={i}>{h.content}</TerminalCommandContent>);
+    return this.variables.history.map((h, i) => <TerminalCommandContent key={i}>{h}</TerminalCommandContent>);
   }
 
-  renderInputLine() {
-    return <TerminalLine>{this.renderContentInputLine()}</TerminalLine>;
+  renderInputLine(noCursor = false) {
+    return <TerminalLine>{this.renderContentInputLine(noCursor)}</TerminalLine>;
   }
-  renderContentInputLine() {
+  private get getPath() {
+    if (services.fileSystem.userDirectory.path === this.variables.directory.path) {
+      return '~';
+    }
+    return this.variables.directory.path;
+  }
+  get dollarOrHash() {
+    return this.getProcessor() ? '#' : '$';
+  }
+
+  renderContentInputLine(noCursor = false) {
     return (
       <>
         <TerminalName>
           {this.variables.userName}@{this.variables.deviceInfo}
         </TerminalName>
         <span>:</span>
+        <span>{this.getPath}</span>
+        <span>{this.dollarOrHash}</span>
         <TerminalInput>{this.variables.beforeCursor}</TerminalInput>
-        <TerminalBlinkingCursor hidden={!this.active}>|</TerminalBlinkingCursor>
+        {noCursor ? null : <TerminalBlinkingCursor hidden={!this.active}>|</TerminalBlinkingCursor>}
         <TerminalInput>{this.variables.afterCursor}</TerminalInput>
       </>
     );
   }
 
-  renderContentEmpty(content: string) {
-    return (
-      <>
-        <TerminalName>
-          {this.variables.userName}@{this.variables.deviceInfo}
-        </TerminalName>
-        <span>:</span>
-        <TerminalInput>{content}</TerminalInput>
-      </>
-    );
-  }
-
   fullscreenMode = () => {
-    const options = { ...this.state.options };
-    if (options.windowType === 'fullscreen') {
-      options.windowType = 'windowed';
+    if (this.options.windowType === 'fullscreen') {
+      this.changeOptions({ windowType: 'windowed' });
     } else {
-      options.windowType = 'fullscreen';
+      this.changeOptions({ windowType: 'fullscreen' });
     }
-    this.setState({
-      options,
-    });
   };
 
   onKeyDown = (event: KeyboardEvent) => {
@@ -126,23 +161,64 @@ export class Terminal extends BaseWindow<ITerminal> {
             this.setVariables(variables);
             return;
           }
-
-          const terminalCommand = new TerminalCommand(undefined, this.options, this.bounds);
-          terminalCommand.content = this.renderContentEmpty(entry);
-          terminalCommand.finish();
-          variables.history.push(terminalCommand);
-          variables.active = onTerminalCommand(this.options, this.bounds, entry, this);
-
-          variables.history.push(variables.active);
-          variables.active.onChange = () => {
+          const cmd = entry.split(' ')[0];
+          const Command = getCommand(cmd);
+          if (!Command) {
+            variables.history.push(this.renderInputLine(true));
+            variables.history.push(this.parseString(`${cmd}: command not found`));
             this.setVariables(variables);
-          };
+          } else {
+            variables.beforeCursor = '';
+            variables.afterCursor = '';
+            try {
+              variables.active = new Command(entry);
+            } catch (error) {
+              variables.history.push(this.renderInputLine(true));
+              variables.history.push(
+                this.parseString(`An error occurred while trying to execute this command! ${error.message}`),
+              );
+              this.setVariables(variables);
+              return;
+            }
+            const rect = this.getBoundingRect();
+            const object: ExecutionParameters = {
+              directory: this.variables.directory,
+              height: rect.height,
+              width: rect.width,
+              processor: this.getProcessor(),
+            };
 
-          variables.active.onFinish = () => {
-            variables.active = undefined;
+            variables.history.push(this.renderInputLine(true));
             this.setVariables(variables);
-          };
+            variables.active.onStatusUpdate = text => {
+              variables.history.push(this.parseString(text));
+              this.setVariables(variables);
+            };
+            variables.active.onFinish = text => {
+              if (object && object.directory && isDirectory(object.directory)) {
+                variables.directory = object.directory;
+              }
 
+              variables.history.push(this.parseString(text));
+              variables.active.onFinish = null;
+              variables.active.onStatusUpdate = null;
+              variables.active = undefined;
+              this.setVariables(variables);
+            };
+            (async () => {
+              try {
+                await variables.active.execute(object);
+              } catch (error) {
+                if (!this.destroyed) {
+                  variables.history.push(
+                    this.parseString(`An error occurred while trying to execute this command! ${error.message}`),
+                  );
+                }
+              }
+            })();
+            this.setVariables(variables);
+            return;
+          }
           variables.beforeCursor = '';
           variables.afterCursor = '';
           break;
@@ -209,7 +285,11 @@ export class Terminal extends BaseWindow<ITerminal> {
     this.setVariables(variables);
   };
 
-  resize(width: number, height: number) {
+  private parseString(text: string) {
+    return <span>{text}</span>;
+  }
+
+  onResize(width: number, height: number) {
     if (this.variables.active) {
       this.variables.active._bounds = this.bounds;
     }

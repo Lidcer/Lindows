@@ -13,7 +13,7 @@ export interface FileData<T = string> {
   name: string;
   permission: Permission;
   content: T;
-  type: 'text' | 'unknown' | 'json';
+  type: 'text' | 'unknown' | 'json' | 'lindowObject';
 }
 export enum FileSystemPermissions {
   None,
@@ -472,6 +472,10 @@ function isValidName(name: string) {
     return result(`Name cannot contain characters "${notValidCharacters}"!`);
   }
   return result();
+}
+
+export function isNameValid(name: string) {
+  return isValidName(name);
 }
 
 function result(error?: string) {

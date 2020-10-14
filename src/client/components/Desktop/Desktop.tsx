@@ -98,10 +98,6 @@ export class Desktop extends React.Component<{}, IState> {
     this.forceUpdate();
   };
 
-  openTerminal = () => {
-    launchApp('terminal');
-  };
-
   showBlueScreen = () => {
     this.setState({ blueScreen: 'CRASHED_BY_USER' });
   };
@@ -125,30 +121,30 @@ export class Desktop extends React.Component<{}, IState> {
     } else serviceReady();
 
     this.terminal = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.T], true);
-    this.terminal.on('combination', this.openTerminal);
+    this.terminal.onCombination = () => launchApp('lterminal');
     this.killActiveWindow = new HotKeyHandler([Keypress.Alt, Keypress.Four], true);
-    this.killActiveWindow.on('combination', () => {
+    this.killActiveWindow.onCombination = () => {
       const active = services.processor.processes.find(p => p.active);
       if (active) active.exit();
-    });
+    };
 
     this.taskManager = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.D]);
-    this.taskManager.on('combination', () => {
-      launchApp('taskManager');
-    });
-    this.blueScreen = new HotKeyHandler([
-      Keypress.ArrowUp,
-      Keypress.ArrowUp,
-      Keypress.ArrowDown,
-      Keypress.ArrowDown,
-      Keypress.ArrowLeft,
-      Keypress.ArrowRight,
-      Keypress.ArrowLeft,
-      Keypress.ArrowRight,
-      Keypress.B,
-      Keypress.A,
-    ]);
-    this.blueScreen.on('combination', this.showBlueScreen);
+    this.taskManager.onCombination = () => launchApp('taskmgr');
+    if (DEVELOPMENT) {
+      this.blueScreen = new HotKeyHandler([
+        Keypress.ArrowUp,
+        Keypress.ArrowUp,
+        Keypress.ArrowDown,
+        Keypress.ArrowDown,
+        Keypress.ArrowLeft,
+        Keypress.ArrowRight,
+        Keypress.ArrowLeft,
+        Keypress.ArrowRight,
+        Keypress.B,
+        Keypress.A,
+      ]);
+      this.blueScreen.onCombination = this.showBlueScreen;
+    }
     this.updateDimensions();
     window.addEventListener('resize', this.updateDimensions, false);
 

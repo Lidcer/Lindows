@@ -1,12 +1,10 @@
-import { EventEmitter } from 'events';
 import { Keypress } from './constants/Keypress';
 
 declare type KeyCombination = Keypress | Keypress[];
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface HotKeyHandler {
-  on(event: 'combination', listener: () => void): this;
+  onCombination();
 }
-export class HotKeyHandler extends EventEmitter {
+export class HotKeyHandler {
   private keySequence: KeyCombination[];
   private index = 0;
   private lastKey: Keypress;
@@ -14,7 +12,6 @@ export class HotKeyHandler extends EventEmitter {
   private enabled = true;
 
   constructor(keySequence: KeyCombination[], resetOnKeyUp = false) {
-    super();
     this.resetOnKeyUp = resetOnKeyUp;
     this.keySequence = keySequence;
 
@@ -45,7 +42,7 @@ export class HotKeyHandler extends EventEmitter {
       if (this.keySequence.length - 1 === this.index) {
         this.lastKey = null;
         if (!this.resetOnKeyUp) this.index = 0;
-        this.emit('combination');
+        if (this.onCombination) this.onCombination();
       }
 
       this.index++;
@@ -74,7 +71,6 @@ export class HotKeyHandler extends EventEmitter {
   }
 
   destroy() {
-    this.removeAllListeners();
     document.removeEventListener('keydown', this.onKeyDown, false);
     if (this.resetOnKeyUp) document.removeEventListener('keyup', this.onKeyUp, false);
   }

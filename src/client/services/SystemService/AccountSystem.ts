@@ -465,7 +465,7 @@ export class Account extends BaseSystemService {
     Object.freeze(accountInfo);
     return accountInfo;
   }
- 
+
   get ready() {
     return this.isReady;
   }
