@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import { BrowserStorage } from '../../services/SystemService/BrowserStorageSystem';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { BaseWindow, MessageBox } from '../../apps/BaseWindow/BaseWindow';
 import { attachDebugMethod } from '../../essential/requests';
 import { Processor } from '../../services/SystemService/ProcessorSystem';
@@ -21,8 +21,8 @@ export class NotificationSystem {
     private processor: Processor;
     constructor() {
         attachDebugMethod('notif', this);
-        this.browserStorage = services.browserStorage;
-        this.processor = services.processor;
+        this.browserStorage = internal.browserStorage;
+        this.processor = internal.processor;
         if (!this.browserStorage.ready) {
             throw new Error('BrowserStorage is not ready');
         }

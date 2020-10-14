@@ -1,4 +1,4 @@
-import { services } from '../SystemService/ServiceHandler';
+import { internal } from '../SystemService/ServiceHandler';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
 
@@ -14,10 +14,10 @@ export class TemplateService extends BaseService {
     this.eventEmitter.removeAllListeners();
   }
   actualStart = async () => {
-    if (!services.ready) {
-      services.on('allReady', this.actualStart);
+    if (!internal.ready) {
+      internal.on('allReady', this.actualStart);
       return;
     }
-    services.removeListener('allReady', this.actualStart);
+    internal.removeListener('allReady', this.actualStart);
   };
 }

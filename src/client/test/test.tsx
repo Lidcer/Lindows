@@ -11,7 +11,6 @@ import { WindowTester } from './WindowTester';
 import { PopupRenderer } from '../components/Popup/popupRenderer';
 
 export class Test extends React.Component {
-
   render() {
     return (
       <>

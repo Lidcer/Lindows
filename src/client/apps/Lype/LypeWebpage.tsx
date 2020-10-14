@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { launchApp } from '../../essential/apps';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -198,7 +198,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   }
 
   get connectAccount() {
-    const name = services.account.account ? services.account.account.username : '';
+    const name = internal.account.account ? internal.account.account.username : '';
     return (
       <Lype>
         <LypeLoginRequired>
@@ -695,9 +695,9 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   componentWillUnmount() {
     this.destroyed = true;
-    services.removeListener('allReady', this.startup);
-    services.account.removeListener('login', this.update);
-    services.account.removeListener('logout', this.update);
+    internal.removeListener('allReady', this.startup);
+    internal.account.removeListener('login', this.update);
+    internal.account.removeListener('logout', this.update);
     this.lypeService.removeListener('destroy', this.lypeServiceCrash);
     window.removeEventListener('resize', this.update);
   }

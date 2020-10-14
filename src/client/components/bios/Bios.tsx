@@ -1,5 +1,5 @@
 import React from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { UAParser } from 'ua-parser-js';
 import { Keypress } from '../../essential/constants/Keypress';
 import { stat } from 'fs';
@@ -67,7 +67,7 @@ interface IBIOSStorage {
 
 function initGradient() {
   const COLOUR = [25, 34, 253];
-  const RANGE = services.fingerprinter.mobile.mobile() ? 25 : 100;
+  const RANGE = internal.fingerprinter.mobile.mobile() ? 25 : 100;
   const HALF = Math.floor(RANGE * 0.5);
   const R_MULTIPLAYER = COLOUR[0] / HALF;
   const G_MULTIPLAYER = COLOUR[1] / HALF;
@@ -317,13 +317,13 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   }
 
   get bootOption() {
-    const data: IBIOSStorage = services.browserStorage.getItem(this.BROWSER_STORAGE_KEY);
+    const data: IBIOSStorage = internal.browserStorage.getItem(this.BROWSER_STORAGE_KEY);
     if (!data) return 'NONE';
     return data.bootInLindows ? 'Lindows' : 'WEBPAGE';
   }
 
   get systemInfo() {
-    const systemInfo = services.fingerprinter;
+    const systemInfo = internal.fingerprinter;
     const userAgent = systemInfo.userAgent;
     const browser = userAgent.getBrowser();
     const cpu = userAgent.getCPU();
@@ -396,7 +396,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         content: 'Yes',
         selected: false,
         fun: async () => {
-          services.browserStorage.clear();
+          internal.browserStorage.clear();
           this.closePopup();
         },
       },
@@ -509,7 +509,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
       bootInLindows: type === 'lindows',
     };
     this.closePopup();
-    await services.browserStorage.setItem(this.BROWSER_STORAGE_KEY, data);
+    await internal.browserStorage.setItem(this.BROWSER_STORAGE_KEY, data);
     if (!this.props.shouldStayInBios) this.props.next(type);
   };
 

@@ -1,11 +1,11 @@
 import React from 'react';
 import { appConstructorGenerator, allApps } from '../essential/apps';
-import { services } from '../services/SystemService/ServiceHandler';
+import { internal } from '../services/SystemService/ServiceHandler';
 import { BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
 import { pushUniqToArray, removeFromArray } from '../utils/util';
 interface IWindowTesterState {
   display: JSX.Element;
-  subWindow: BaseWindow<{}>[];
+  subWindow: BaseWindow[];
 }
 interface IConsoleHistory {
   level: 'log' | 'warn' | 'error' | 'debug';
@@ -67,7 +67,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
         return <span>{m}</span>;
 
       case 'function':
-        return <span>{(m as Function).name}()</span>;
+        return <span>{(m as any).name}()</span>;
       case 'object':
         if (Array.isArray(m)) {
           return m.map((e, i) => {
@@ -152,13 +152,13 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
     if ((window as any).app) {
       (window as any).apps = [];
     }
-    if (!services.ready) {
-      services.on('allReady', () => this.start());
-      services.on('onServiceReady', e => console.info(`ok ${e}`));
-      services.on('onServiceFailed', e => console.error(`nOk ${e}`));
+    if (!internal.ready) {
+      internal.on('allReady', () => this.start());
+      internal.on('onServiceReady', e => console.info(`ok ${e}`));
+      internal.on('onServiceFailed', e => console.error(`nOk ${e}`));
       return;
     }
-    services.processor.on('appAdd', e => {
+    internal.processor.on('appAdd', e => {
       pushUniqToArray((window as any).apps, e);
       if (e.props.id === -1) return;
       const urlParams = new URLSearchParams(window.location.search);
@@ -191,10 +191,10 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       }
     });
 
-    services.processor.on('appDisplayingAdd', app => {
+    internal.processor.on('appDisplayingAdd', app => {
       this.forceUpdate();
     });
-    services.processor.on('appRemove', app => {
+    internal.processor.on('appRemove', app => {
       removeFromArray((window as any).apps, app);
       //this.forceUpdate();
     });
@@ -214,8 +214,8 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
   }
 
   get subProcesses() {
-    if (!services.ready) return null;
-    return services.processor.runningApps.map((a, i) => {
+    if (!internal.ready) return null;
+    return internal.processor.runningApps.map((a, i) => {
       return a.app;
     });
   }

@@ -1,25 +1,27 @@
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { getCommand } from './CommandHandler';
 import { AdminPromp } from '../../apps/BaseWindow/BaseWindow';
 // import { Sudo } from './SudoHelperApp';
 
-export class SudoCommand extends BaseCommand {
+export class Sudo extends BaseCommand {
   public static help = 'shows help message';
   async execute(obj: ExecutionParameters) {
     if (this.args.length < 1) {
-      return this.onFinish(`${this.args[0]} command`);
+      this.finish(`${this.args[0]} command`);
+      return 1;
     }
     if (!obj) {
       obj.width = 0;
       obj.height = 0;
-      obj.directory = services.fileSystem.root;
+      obj.directory = internal.fileSystem.root;
     }
 
     const next = this.originalText.split(' ')[1];
     const Command = getCommand(next);
     if (!Command) {
-      return this.onFinish(`No such command ${next}`);
+      this.finish(`No such command ${next}`);
+      return 1;
     }
 
     if (!obj.processor) {
@@ -28,9 +30,11 @@ export class SudoCommand extends BaseCommand {
         unFreeze: () => {},
       } as any);
       if (result) {
-        obj.processor = services.processor;
+        obj.processor = internal.processor;
       } else {
-        return this.onFinish(`Administrator privileges was not obtained}`);
+        if (!this.finish) return;
+        this.finish(`Administrator privileges was not obtained}`);
+        return 1;
       }
     }
 
@@ -38,8 +42,8 @@ export class SudoCommand extends BaseCommand {
     arrayCommands.shift();
     const commandToExecute = arrayCommands.join(' ');
     const newCommands = new Command(commandToExecute);
-    newCommands.onFinish = this.onFinish;
-    newCommands.onStatusUpdate = this.onStatusUpdate;
-    newCommands.execute(obj);
+    newCommands.finish = this.finish;
+    newCommands.addHistory = this.addHistory;
+    return newCommands.execute(obj);
   }
 }

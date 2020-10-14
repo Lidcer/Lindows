@@ -73,7 +73,9 @@ export class FileSystem extends BaseSystemService {
           this._home = homeDirectory;
         }
         if (directory === 'usr') {
-          createdDirectory.createDirectory('bin', systemSymbol);
+          const bin = createdDirectory.createDirectory('bin', systemSymbol);
+          bin.createDirectory('cmd', systemSymbol);
+          bin.createDirectory('apps', systemSymbol);
         }
       }
       //homeDirector.createDirectory(this.username());
@@ -150,6 +152,8 @@ export class FileSystem extends BaseSystemService {
       current = this.root;
     } else if (path.startsWith('.')) {
       /* do nothing */
+    } else if (/^[a-z]/gi.test(path)) {
+      path = `./${path}`;
     } else {
       return null;
     }
@@ -225,6 +229,12 @@ export class FileSystem extends BaseSystemService {
     if (typeof arg === 'number') {
       return prettysize(arg, true);
     }
-    return prettysize(arg.size, true);
+    try {
+      const result = prettysize(arg.size, true);
+      return result;
+    } catch (error) {
+      DEVELOPMENT && console.error(error);
+      return '?';
+    }
   }
 }

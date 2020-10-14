@@ -86,7 +86,7 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
       const sameName = !!directory.contents.find(d => d.name === name);
@@ -106,7 +106,7 @@ export class FileSystemDirectory {
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
 
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
       const sameName = !!directory.contents.find(d => d.name === name);
@@ -130,7 +130,7 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       const result = isValidName(name);
       if (!result.valid) throw new Error(result.reason);
       const upper = directoriesMap.get(upperPath.get(this));
@@ -149,13 +149,13 @@ export class FileSystemDirectory {
     if (!data) throw new Error('Directory has been deleted!');
     const permission = data.permission.get(owner.getHash(verificationSymbol));
 
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       const pendingForDeletion: DirectoryData['contents'] = [];
       const upper = upperPath.get(this);
 
       const deepScanner = (contents: DirectoryData['contents']) => {
         for (const content of contents) {
-          if (!canModifyFileOrDirectory(content.getPermission(owner))) {
+          if (!_canModifyFileOrDirectory(content.getPermission(owner))) {
             throw new Error('You do not have permission to delete content of folder');
           }
           if (isDirectory(content)) {
@@ -200,7 +200,7 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
-    if (canReadFileOrDirectory(permission)) {
+    if (_canReadFileOrDirectory(permission)) {
       return directory.contents;
     }
     throw new Error('Missing permission to read');
@@ -229,7 +229,7 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const directoryPermission = directory.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(directoryPermission)) {
+    if (_canModifyFileOrDirectory(directoryPermission)) {
       directory.permission.set(target.getHash(verificationSymbol), permission);
       return;
     }
@@ -240,7 +240,7 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const directoryPermission = directory.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(directoryPermission)) {
+    if (_canModifyFileOrDirectory(directoryPermission)) {
       directory.permission.set(owner.getHash(verificationSymbol), permission);
       return;
     }
@@ -289,7 +289,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canReadFileOrDirectory(permission)) {
+    if (_canReadFileOrDirectory(permission)) {
       if (file.type === 'json') {
         return cloneDeep(file.content);
       }
@@ -302,7 +302,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       if (file.type === 'json') {
         try {
           JSON.stringify(content);
@@ -320,7 +320,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       return file.type;
     }
     throw new Error('Missing permission to read');
@@ -330,7 +330,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       file.type = type;
       return;
     }
@@ -341,7 +341,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has already been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       files.delete(this);
       const directory = directoryLink.get(this);
       const data = directoriesMap.get(directory);
@@ -369,7 +369,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('Directory has been deleted!');
     const directoryPermission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(directoryPermission)) {
+    if (_canModifyFileOrDirectory(directoryPermission)) {
       file.permission.set(target.getHash(verificationSymbol), permission);
       file.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
       return;
@@ -381,7 +381,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('Directory has been deleted!');
     const directoryPermission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(directoryPermission)) {
+    if (_canModifyFileOrDirectory(directoryPermission)) {
       file.permission.set(owner.getHash(verificationSymbol), permission);
       file.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
       return;
@@ -399,7 +399,7 @@ export class FileSystemFile<C = any> {
     const file = files.get(this);
     if (!file) throw new Error('File has been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
-    if (canModifyFileOrDirectory(permission)) {
+    if (_canModifyFileOrDirectory(permission)) {
       const directory = directoryLink.get(this);
       const upper = directoriesMap.get(directory);
       const sameNameFolder = !!upper.contents.find(d => d.name === name);
@@ -441,12 +441,20 @@ export function isDirectory(fileDirectory: any): fileDirectory is FileSystemDire
   );
 }
 
-function canModifyFileOrDirectory(permission: FileSystemPermissions) {
+function _canModifyFileOrDirectory(permission: FileSystemPermissions) {
   return permission === FileSystemPermissions.ReadAndWrite || permission === FileSystemPermissions.WriteOnly;
 }
 
-function canReadFileOrDirectory(permission: FileSystemPermissions) {
+function _canReadFileOrDirectory(permission: FileSystemPermissions) {
   return permission === FileSystemPermissions.ReadAndWrite || permission === FileSystemPermissions.ReadOnly;
+}
+
+export function canModifyFileOrDirectory(permission: FileSystemPermissions) {
+  return _canModifyFileOrDirectory(permission);
+}
+
+export function canReadFileOrDirectory(permission: FileSystemPermissions) {
+  return _canReadFileOrDirectory(permission);
 }
 
 const notValidCharacters = '\\/:*?"<>|';

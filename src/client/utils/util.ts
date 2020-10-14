@@ -65,3 +65,13 @@ export function pushUniqToArray<I = any>(array: I[], item: I): boolean {
   }
   return false;
 }
+
+export function createKeyboardEvent(key: string, type = 'keyup', ctrlKey = false, altKey = false) {
+  return new KeyboardEvent(type, {
+    bubbles: true,
+    cancelable: false,
+    ctrlKey,
+    altKey,
+    key,
+  });
+}

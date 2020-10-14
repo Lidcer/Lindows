@@ -32,6 +32,9 @@ export const EditorArea = styled.div`
   width: 100%;
   display: flex;
   flex-flow: column;
+  * {
+    font-family: monospace, 'Courier New', Courier;
+  }
 `;
 
 export const ButtonIDE = styled.button`

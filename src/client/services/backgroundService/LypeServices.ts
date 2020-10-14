@@ -1,5 +1,5 @@
 
-import { services } from '../SystemService/ServiceHandler';
+import { internal } from '../SystemService/ServiceHandler';
 import { BaseService } from './BaseService';
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TOKEN_HEADER } from '../../../shared/constants';
@@ -58,15 +58,15 @@ export class LypeService extends BaseService {
   };
 
   destroy() {
-    services.account.removeListener('login', this.login);
-    services.account.removeListener('logout', this.logout);
+    internal.account.removeListener('login', this.login);
+    internal.account.removeListener('logout', this.logout);
 
-    services.network.socket.removeListener('lype-friend-request', this.socketFriendRequestAdd);
-    services.network.socket.removeListener('lype-friend-remove', this.socketFriendRemove);
-    services.network.socket.removeListener('lype-friend-add', this.socketFriendAdd);
+    internal.network.socket.removeListener('lype-friend-request', this.socketFriendRequestAdd);
+    internal.network.socket.removeListener('lype-friend-remove', this.socketFriendRemove);
+    internal.network.socket.removeListener('lype-friend-add', this.socketFriendAdd);
 
     for (const thing in LypeServiceState) {
-      services.broadcaster.removeListener(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
+      internal.broadcaster.removeListener(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
     }
     this.emit('destroy');
     this.eventEmitter.removeAllListeners();
@@ -106,23 +106,23 @@ export class LypeService extends BaseService {
   };
 
   actualStart = async () => {
-    if (!services.ready) {
-      services.on('allReady', this.actualStart);
+    if (!internal.ready) {
+      internal.on('allReady', this.actualStart);
       return;
     }
-    services.removeListener('allReady', this.actualStart);
+    internal.removeListener('allReady', this.actualStart);
 
-    services.account.on('login', this.login);
-    services.account.on('logout', this.logout);
+    internal.account.on('login', this.login);
+    internal.account.on('logout', this.logout);
     for (const thing in LypeServiceState) {
-      services.broadcaster.on(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
+      internal.broadcaster.on(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
     }
 
-    services.network.socket.on('lype-friend-request', this.socketFriendRequestAdd);
-    services.network.socket.on('lype-friend-remove', this.socketFriendRemove);
-    services.network.socket.on('lype-friend-add', this.socketFriendAdd);
+    internal.network.socket.on('lype-friend-request', this.socketFriendRequestAdd);
+    internal.network.socket.on('lype-friend-remove', this.socketFriendRemove);
+    internal.network.socket.on('lype-friend-add', this.socketFriendAdd);
 
-    const token = services.account.token;
+    const token = internal.account.token;
     if (!token) {
       return this.setState(LypeServiceState.NotLogined);
     }
@@ -139,7 +139,7 @@ export class LypeService extends BaseService {
   };
 
   private async checkAccount(): Promise<ILypeAccountResponse> {
-    const token = services.account.token;
+    const token = internal.account.token;
     if (!token) throw new Error('Missing token');
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -164,7 +164,7 @@ export class LypeService extends BaseService {
         switch (error.response.status) {
           case 400:
           case 401:
-            services.account.logout();
+            internal.account.logout();
             this.setState(LypeServiceState.NotLogined);
             break;
         }
@@ -173,7 +173,7 @@ export class LypeService extends BaseService {
   }
 
   async createLypeUser() {
-    const token = services.account.token;
+    const token = internal.account.token;
     if (!token) throw new Error('Missing token');
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -198,7 +198,7 @@ export class LypeService extends BaseService {
         switch (error.response.status) {
           case 401:
           case 400:
-            services.account.logout();
+            internal.account.logout();
             this.setState(LypeServiceState.NotLogined);
             return;
         }
@@ -209,7 +209,7 @@ export class LypeService extends BaseService {
   }
 
   async findUsers(query: string) {
-    const token = services.account.token;
+    const token = internal.account.token;
     if (!token) throw new Error('Missing token');
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -240,7 +240,7 @@ export class LypeService extends BaseService {
   };
 
   async addOrRemoveFriend(userID: string, add: boolean) {
-    const token = services.account.token;
+    const token = internal.account.token;
     if (!token) throw new Error('Missing token');
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -313,7 +313,7 @@ export class LypeService extends BaseService {
       this._pendingRequest = response.data.success.pendingRequest;
       this._blocked = response.data.success.blocked;
 
-      services.broadcaster.emit(`${this.SERVICE_NAME}-login`, this.account);
+      internal.broadcaster.emit(`${this.SERVICE_NAME}-login`, this.account);
     } else return false;
     return true;
   }
@@ -322,7 +322,7 @@ export class LypeService extends BaseService {
     if (this._state === state) return;
     if (this._state !== 'error') this.errMessage = '';
     this._state = state;
-    services.broadcaster.emit(`${this.SERVICE_NAME}-${state}`);
+    internal.broadcaster.emit(`${this.SERVICE_NAME}-${state}`);
     this.emit('stateChange', this._state);
   }
 

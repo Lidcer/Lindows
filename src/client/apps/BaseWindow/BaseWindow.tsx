@@ -9,7 +9,7 @@ import {
   faFile,
 } from '@fortawesome/free-solid-svg-icons';
 import { navBarPos } from '../../components/TaskBar/TaskBar';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { random, clamp } from 'lodash';
 import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
 import { EventEmitter } from 'events';
@@ -302,7 +302,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     securityKeys.set(this, Symbol());
 
-    this._phone = services.fingerprinter.mobile.phone();
+    this._phone = internal.fingerprinter.mobile.phone();
     this._minWidth = options && options.minWidth ? options.minWidth : this._minWidth;
     this._minHeight = options && options.minHeight ? options.minHeight : this._minHeight;
 
@@ -361,7 +361,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (manifest) {
       const generator = appConstructorGenerator(manifest.launchName);
       if (generator) {
-        const app = await services.processor.addApp<BaseWindow>(generator, manifest.launchName);
+        const app = await internal.processor.addApp<BaseWindow>(generator, manifest.launchName);
         return app.object;
       }
     }
@@ -371,7 +371,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const mockGenerator: ReactGeneratorFunction = (id: number, props?) => <App key={id} id={id} {...props}></App>;
     anonymous = true;
 
-    const app = await services.processor.addApp<BaseWindow>(mockGenerator, name);
+    const app = await internal.processor.addApp<BaseWindow>(mockGenerator, name);
     return app.object;
   }
 
@@ -439,9 +439,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     window.addEventListener('keypress', this._keyboard);
     window.addEventListener('keyup', this._keyboard);
 
-    services.processor.startProcess(this);
+    internal.processor.startProcess(this);
     this.changeActiveState(true);
-    services.processor.makeActive(this);
+    internal.processor.makeActive(this);
     this.setState({ animate: 'in' });
     const t = setTimeout(() => {
       this._removeTimeout(t);
@@ -492,7 +492,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       this._removeTimeout(timeout);
     }
 
-    services.processor.killProcess(this);
+    internal.processor.killProcess(this);
     if (this.closed) {
       try {
         const promise = this.closed();
@@ -623,7 +623,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       }
       this.setState({ active });
     }
-    if (active && doProcess) services.processor.makeActive(this);
+    if (active && doProcess) internal.processor.makeActive(this);
   }
 
   focus() {
@@ -665,7 +665,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   getProcessor() {
     if (adminAllowed.get(this)) {
-      return services.processor;
+      return internal.processor;
     }
     return null;
   }
@@ -678,18 +678,18 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   getAccount(password: string) {
-    return services.account;
+    return internal.account;
   }
 
   get network() {
-    return services.network;
+    return internal.network;
   }
 
   /** Sets item in storage but doesn't save
    * @param {object} value
    */
   setItemQuick<V = string>(value: V) {
-    return services.browserStorage.setItemQuick(this.getManifest().fullAppName, value);
+    return internal.browserStorage.setItemQuick(this.getManifest().fullAppName, value);
   }
 
   /** Sets item in storage and saves it if save it
@@ -697,14 +697,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
    * @returns {Promise}
    */
   setItem<V = string>(value: V) {
-    return services.browserStorage.setItem(this.getManifest().fullAppName, value);
+    return internal.browserStorage.setItem(this.getManifest().fullAppName, value);
   }
 
   /** Gets set item
    * @returns {object | undefined}
    */
   getItem() {
-    return services.browserStorage.getItem(this.getManifest().fullAppName);
+    return internal.browserStorage.getItem(this.getManifest().fullAppName);
   }
 
   get reference() {
@@ -816,7 +816,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (this._frozen) return;
     this._buttonMinimize();
     try {
-      await services.processor.saveState();
+      await internal.processor.saveState();
       document.location.href = this.state.options.redirectToWebpageButton;
     } catch (error) {
       MessageBox.Show(this, `Unable to launch application ${error.message}`);
@@ -1237,7 +1237,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         animate: 'out',
       });
       const t = setTimeout(() => {
-        services.processor.killProcess(this);
+        internal.processor.killProcess(this);
         this._destroyed = true;
         this._removeTimeout(t);
         resolve();
@@ -1569,7 +1569,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const messageBox = await services.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
+      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
 
       const onClick = (dialogResult: DialogResult) => {
         messageBox.object.msgBoxEmitter.removeListener('onClick', onClick);
@@ -1608,7 +1608,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       <MessageBox key={id} id={id} {...props}></MessageBox>
     );
     setTimeout(async () => {
-      const messageBox = await services.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
+      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
       messageBox.object.message = message || '';
       messageBox.object.caption = caption || 'Message box';
       messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
@@ -1765,7 +1765,7 @@ export class AdminPromp extends BaseWindow {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const adminPromp = await services.processor.addApp<AdminPromp>(reactGeneratorFunction, 'msgBox');
+      const adminPromp = await internal.processor.addApp<AdminPromp>(reactGeneratorFunction, 'msgBox');
 
       const onClick = (bool: boolean) => {
         adminPromp.object.adminPrompEmitter.removeListener('onClick', onClick);

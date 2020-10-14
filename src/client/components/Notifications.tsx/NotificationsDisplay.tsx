@@ -1,5 +1,5 @@
 import React from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { popup } from '../Popup/popupRenderer';

@@ -1,18 +1,17 @@
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { services } from '../../services/SystemService/ServiceHandler';
-import { isDirectory, FileSystemDirectory, FileSystemFile } from '../../utils/FileSystemDirectory';
+import { BaseCommand } from './BaseCommand';
 import { launchApp } from '../apps';
 
-export class StartCommand extends BaseCommand {
+export class Start extends BaseCommand {
   public static help = 'appname [flags...]';
   execute() {
     const appName = this.args[1];
     const flags = this.args.slice(2).join(' ');
     if (launchApp(appName, flags)) {
-      this.onFinish(`App ${appName} launched`);
+      this.finish(`App ${appName} launched`);
+      return 0;
     } else {
-      this.onFinish(`Unable to launch ${appName}`);
+      this.finish(`Unable to launch ${appName}`);
+      return 1;
     }
   }
-  interrupt() {}
 }

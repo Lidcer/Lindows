@@ -18,7 +18,7 @@ import safeEval from 'safer-eval';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/theme-dracula';
 import './IDE-Lide.scss';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { templateProject } from './template';
 import { IExplorerFile, IExplorerFolder, getFolder, IDEFileExplorer, isFolder } from './FileExplorer';
 import styled from 'styled-components';
@@ -222,10 +222,10 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
   };
 
   removeFromProcessor(appID: number) {
-    const anApp = services.processor.runningApps.find(a => a.processID === appID);
+    const anApp = internal.processor.runningApps.find(a => a.processID === appID);
     if (anApp) {
-      const indexOf = services.processor.runningApps.indexOf(anApp);
-      services.processor.runningApps.splice(indexOf, 0);
+      const indexOf = internal.processor.runningApps.indexOf(anApp);
+      internal.processor.runningApps.splice(indexOf, 0);
     }
   }
 

@@ -10,8 +10,9 @@ import {
   FileExplorerUrlBar,
   FileExplorerWarper,
 } from './FileExplorerStyled';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import {
+  canReadFileOrDirectory,
   everyone,
   FileSystemContent,
   FileSystemDirectory,
@@ -32,6 +33,7 @@ interface IFileExplorerState {
 export class FileExplorer extends BaseWindow<IFileExplorerState> {
   private readonly folderImage = './assets/images/folderIcon.svg';
   private readonly fileImage = './assets/images/fileIcon.svg';
+  private readonly folderSize = 15;
   private folderPermission = everyone;
   public static manifest: IManifest = {
     fullAppName: 'File Explorer',
@@ -50,7 +52,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
       },
       {
         path: '',
-        directory: services.fileSystem.home,
+        directory: internal.fileSystem.home,
         renaming: undefined,
       },
     );
@@ -77,12 +79,12 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   private parseDirectory(path: string): FileSystemDirectory | null {
     path = path.replace(/\\/g, '/');
     const folders = path.split('/');
-    let currentScanner = services.fileSystem.root;
+    let currentScanner = internal.fileSystem.root;
     for (const folderName of folders) {
       if (currentScanner.name === folderName) {
         continue;
       } else {
-        const contents = currentScanner.contents(services.processor.symbol);
+        const contents = currentScanner.contents(internal.processor.symbol);
         const find = contents.find(f => f.name === folderName);
         if (find && isDirectory(find)) {
           currentScanner = find;
@@ -113,8 +115,8 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           }
           this.folderPermission = this.getProcessor().symbol;
         }
-      } else if (services.processor.username) {
-        this.folderPermission = new StringSymbol(sanitizeName(services.processor.username));
+      } else if (internal.processor.username) {
+        this.folderPermission = new StringSymbol(sanitizeName(internal.processor.username));
       }
     }
     const path = this.launchFlags.path;
@@ -124,7 +126,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         this.setVariables({ directory });
       }
     } else {
-      const directory = services.fileSystem.userDirectory;
+      const directory = internal.fileSystem.userDirectory;
       if (directory) {
         this.setVariables({ directory });
       }
@@ -144,23 +146,23 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
       return <div> {error.message} </div>;
     }
     return contents.map((c, i) => {
-      const folderSize = 15;
       let image = (
         <img
           src={this.fileImage}
           onMouseDown={e => e.preventDefault()}
-          width={folderSize}
-          height={folderSize}
+          width={this.folderSize}
+          height={this.folderSize}
           draggable='false'
         />
       );
+
       if (isDirectory(c)) {
         image = (
           <img
             src={this.folderImage}
             onMouseDown={e => e.preventDefault()}
-            width={folderSize}
-            height={folderSize}
+            width={this.folderSize}
+            height={this.folderSize}
             draggable='false'
           />
         );
@@ -232,27 +234,68 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           {image}
           {name}
 
-          {services.fileSystem.size(c)}
+          {internal.fileSystem.size(c)}
         </FileExplorerFileOrDirectory>
       );
     });
   }
 
   createNewDirectory = () => {
-    const newName = services.fileSystem.getUniqueName(
+    const newName = internal.fileSystem.getUniqueName(
       this.variables.directory,
       'New folder',
-      services.processor.symbol,
+      internal.processor.symbol,
     );
     this.variables.directory.createDirectory(newName, this.folderPermission);
     this.forceUpdate();
   };
 
   createNewFile = () => {
-    const newName = services.fileSystem.getUniqueName(this.variables.directory, 'New File', services.processor.symbol);
+    const newName = internal.fileSystem.getUniqueName(this.variables.directory, 'New File', internal.processor.symbol);
     this.variables.directory.createFile(newName, 'text', '', this.folderPermission);
     this.forceUpdate();
   };
+
+  get parentFolder() {
+    if (this.variables.directory === internal.fileSystem.root) return null;
+    const folders = this.variables.directory.path.split('/');
+    folders.pop();
+    const directory = this.parseDirectory(folders.join('/'));
+    if (!directory) return null;
+    const perms = directory.getPermission(this.folderPermission);
+    if (!canReadFileOrDirectory(perms)) return null;
+
+    const onContext = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+      ev.preventDefault();
+
+      const elements: IElement[] = [];
+      elements.push({
+        content: 'goto Parent folder',
+        onClick: () => {
+          const folders = this.variables.directory.path.split('/');
+          folders.pop();
+          const directory = this.parseDirectory(folders.join('/'));
+          if (directory) {
+            this.setVariables({ directory });
+          }
+        },
+      });
+      showContext(elements, ev.clientX, ev.clientY);
+    };
+
+    return (
+      <FileExplorerFileOrDirectory onContextMenu={onContext}>
+        <img
+          src={this.folderImage}
+          onMouseDown={e => e.preventDefault()}
+          width={this.folderSize}
+          height={this.folderSize}
+          draggable='false'
+        />
+        {'...'}
+      </FileExplorerFileOrDirectory>
+    );
+  }
 
   onContextMenu = (cm: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     cm.preventDefault();
@@ -294,7 +337,10 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         <FileExplorerUrlBar>{this.variables.directory.path}</FileExplorerUrlBar>
         <FileExplorerContent>
           {this.renderFileExplorer}
-          <FileExplorerContents onContextMenu={this.onContextMenu}>{this.folderContent}</FileExplorerContents>
+          <FileExplorerContents onContextMenu={this.onContextMenu}>
+            {this.parentFolder}
+            {this.folderContent}
+          </FileExplorerContents>
         </FileExplorerContent>
         <FileExploreBottom></FileExploreBottom>
       </FileExplorerWarper>

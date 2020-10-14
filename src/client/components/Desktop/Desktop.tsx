@@ -7,7 +7,7 @@ import Axios from 'axios';
 import { launchApp } from '../../essential/apps';
 import { HotKeyHandler } from '../../essential/apphotkeys';
 import { BlueScreen } from '../BlueScreen/BlueScreen';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { Keypress } from '../../essential/constants/Keypress';
 import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
 import { ActivationWatermark } from '../activationWatermark/activationWatermark';
@@ -75,7 +75,7 @@ export class Desktop extends React.Component<{}, IState> {
     super(props);
     this.state = {
       blueScreen: '',
-      ready: services.ready,
+      ready: internal.ready,
       landscape: true,
       selectionBox: {
         shown: false,
@@ -110,8 +110,8 @@ export class Desktop extends React.Component<{}, IState> {
       this.setState({
         ready: true,
       });
-      services.processor.on('appDisplayingAdd', this.updateView);
-      services.processor.on('appRemove', this.updateView);
+      internal.processor.on('appDisplayingAdd', this.updateView);
+      internal.processor.on('appRemove', this.updateView);
 
       backgroundServices().removeListener('ready', serviceReady);
 
@@ -126,7 +126,7 @@ export class Desktop extends React.Component<{}, IState> {
     this.terminal.onCombination = () => launchApp('lterminal');
     this.killActiveWindow = new HotKeyHandler([Keypress.Alt, Keypress.Four], true);
     this.killActiveWindow.onCombination = () => {
-      const active = services.processor.processes.find(p => p.active);
+      const active = internal.processor.processes.find(p => p.active);
       if (active) active.exit();
     };
 
@@ -175,8 +175,8 @@ export class Desktop extends React.Component<{}, IState> {
     this.terminal.destroy();
     this.killActiveWindow.destroy();
     this.blueScreen.destroy();
-    services.processor.removeListener('appDisplayingAdd', this.updateView);
-    services.processor.removeListener('appRemove', this.updateView);
+    internal.processor.removeListener('appDisplayingAdd', this.updateView);
+    internal.processor.removeListener('appRemove', this.updateView);
   }
 
   showError = (error: ErrorEvent) => {
@@ -197,12 +197,12 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   createNewFolder = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const usr = services.fileSystem.userSymbol;
-    const userDirectory = services.fileSystem.userDirectory;
-    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
-    const uniqueName = services.fileSystem.getUniqueName(desktop, 'New folder', services.processor.symbol);
-    services.fileSystem.saveHome();
-    const file = desktop.createDirectory(uniqueName, new StringSymbol(services.fileSystem.cleanName));
+    const usr = internal.fileSystem.userSymbol;
+    const userDirectory = internal.fileSystem.userDirectory;
+    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New folder', internal.processor.symbol);
+    internal.fileSystem.saveHome();
+    const file = desktop.createDirectory(uniqueName, new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
       x: ev.clientX,
       y: ev.clientY,
@@ -211,27 +211,27 @@ export class Desktop extends React.Component<{}, IState> {
     this.refresh();
   };
   createNewFile = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const usr = services.fileSystem.userSymbol;
-    const userDirectory = services.fileSystem.userDirectory;
-    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
-    const uniqueName = services.fileSystem.getUniqueName(desktop, 'New File', services.processor.symbol);
-    const file = desktop.createFile(uniqueName, 'text', '', new StringSymbol(services.fileSystem.cleanName));
+    const usr = internal.fileSystem.userSymbol;
+    const userDirectory = internal.fileSystem.userDirectory;
+    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New File', internal.processor.symbol);
+    const file = desktop.createFile(uniqueName, 'text', '', new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
       x: ev.clientX,
       y: ev.clientY,
       file,
     };
-    services.fileSystem.saveHome();
+    internal.fileSystem.saveHome();
     this.refresh();
   };
 
   refresh = () => {
-    const sys = services.processor.symbol;
+    const sys = internal.processor.symbol;
 
-    const userDirectory = services.fileSystem.userDirectory;
-    const desktop = services.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', sys);
+    const userDirectory = internal.fileSystem.userDirectory;
+    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', sys);
     const contents = desktop.contents(sys);
-    const userSymbol = services.fileSystem.userSymbol;
+    const userSymbol = internal.fileSystem.userSymbol;
     const icons = (
       <DesktopIcons
         desktop={desktop}
@@ -248,7 +248,7 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   get processApps() {
-    return services.processor.runningApps.map((a, i) => {
+    return internal.processor.runningApps.map((a, i) => {
       return a.app;
     });
   }

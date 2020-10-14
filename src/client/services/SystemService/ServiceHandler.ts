@@ -9,7 +9,7 @@ import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { attachDebugMethod } from '../../essential/requests';
 import { FileSystem } from './FileSystem';
 import { installPreInstalledCommands } from '../../essential/Commands/CommandHandler';
-export declare interface IServices {
+export declare interface Internal {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
   on(event: 'onServiceFailed', listener: (name: string) => void): this;
   on(event: 'allReady', listener: () => void): this;
@@ -24,7 +24,7 @@ interface Service<T> {
   service: T;
 }
 
-export class IServices extends EventEmitter {
+export class Internal extends EventEmitter {
   private _broadcaster: Service<Broadcaster>;
   private _storage: Service<BrowserStorage>;
   private _account: Service<Account>;
@@ -124,5 +124,5 @@ export class IServices extends EventEmitter {
   }
 }
 
-export const services = new IServices();
-services.init();
+export const internal = new Internal();
+internal.init();

@@ -6,7 +6,7 @@ import { MouseProperties } from '../apps/MouseProperties/MouseProperties';
 import { GroupViewer } from '../apps/GroupViewer/GroupViewer';
 import React from 'react';
 import { IManifest, BaseWindow } from '../apps/BaseWindow/BaseWindow';
-import { services } from '../services/SystemService/ServiceHandler';
+import { internal } from '../services/SystemService/ServiceHandler';
 import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
 import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
 import { attachDebugMethod, isDev } from './requests';
@@ -28,7 +28,7 @@ export const allApps: AllApps[] = [];
 export function launchApp(appName: string, flags?: string) {
   const app = appConstructorGenerator(appName);
   if (app) {
-    services.processor.addApp(app, appName, flags);
+    internal.processor.addApp(app, appName, flags);
     return true;
   }
   return false;

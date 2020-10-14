@@ -1,5 +1,5 @@
 import React from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { SECOND } from '../../../shared/constants';
 import { launchApp } from '../../essential/apps';
 import {
@@ -66,20 +66,20 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     });
   }
   componentDidMount() {
-    if (services.ready) {
+    if (internal.ready) {
       this.allReady();
     }
-    services.on('allReady', this.allReady);
-    services.on('onServiceReady', this.onServiceReady);
-    services.on('onServiceFailed', this.onServiceFailed);
+    internal.on('allReady', this.allReady);
+    internal.on('onServiceReady', this.onServiceReady);
+    internal.on('onServiceFailed', this.onServiceFailed);
     document.addEventListener('keydown', this.keypress, false);
     document.addEventListener('touchstart', this.onTouchStart, false);
     document.addEventListener('touchend', this.onTouchEnd, false);
   }
   componentWillUnmount() {
-    services.removeListener('allReady', this.allReady);
-    services.removeListener('onServiceReady', this.onServiceReady);
-    services.removeListener('onServiceFailed', this.onServiceFailed);
+    internal.removeListener('allReady', this.allReady);
+    internal.removeListener('onServiceReady', this.onServiceReady);
+    internal.removeListener('onServiceFailed', this.onServiceFailed);
     document.removeEventListener('keydown', this.keypress, false);
     document.removeEventListener('touchstart', this.onTouchStart, false);
     document.removeEventListener('touchend', this.onTouchEnd, false);

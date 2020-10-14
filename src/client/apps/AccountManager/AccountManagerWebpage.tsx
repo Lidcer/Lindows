@@ -1,5 +1,5 @@
 import React from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { IAccountInfo } from '../../services/SystemService/AccountSystem';
 import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
 import { OpenFileDialog } from '../../essential/FileDialog';
@@ -278,7 +278,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   get settingsTab() {
-    const ac = services.account.account;
+    const ac = internal.account.account;
     if (!ac) {
       this.switchTab(Tab.Login);
       return null;
@@ -409,7 +409,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const pass = state.settings.password;
     state.settings.password = '';
     const ap = state.settings.alteringProfile;
-    const ac = services.account;
+    const ac = internal.account;
 
     const goBack = () => {
       state.settings.alteringProfile = [];
@@ -479,14 +479,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   };
 
   logout = () => {
-    services.account.logout();
+    internal.account.logout();
     this.resetWarnings();
   };
 
   get changes() {
     const changes: string[] = [];
     const st = this.state.settings;
-    const ac = services.account.account;
+    const ac = internal.account.account;
     if (st.displayedName !== ac.displayedName)
       changes.push(`Displayed name: ${ac.displayedName} => ${st.displayedName}`);
     if (st.newPassword) changes.push('Password: ******* => ********');
@@ -533,7 +533,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const state = { ...this.state };
     this.setState({ inProgress: true });
     try {
-      const msg = await services.account.login(this.state.login.usernameOrEmail, this.state.login.password);
+      const msg = await internal.account.login(this.state.login.usernameOrEmail, this.state.login.password);
       if (this.destroyed) return;
       const appName = this.redirectToApp;
       if (appName) {
@@ -555,7 +555,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   resetPassword = async (ev?: React.FormEvent) => {
     if (ev) ev.preventDefault();
-    services.account
+    internal.account
       .changePasswordWithTemporarilyToken(
         this.temporarilyToken,
         this.state.resetPassword.password,
@@ -576,7 +576,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const state = { ...this.state };
 
     try {
-      const response = await services.account.register(
+      const response = await internal.account.register(
         this.state.register.username,
         this.state.register.email,
         this.state.register.password,
@@ -601,7 +601,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   changePasswordForm = async (ev: React.FormEvent) => {
     ev.preventDefault();
     this.setState({ inProgress: true });
-    services.account
+    internal.account
       .resetPassword(this.state.forgetPassword.email)
       .then(msg => {
         if (this.destroyed) return;
@@ -662,14 +662,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       }, SECOND * 5);
     };
     try {
-      const tokenType = await services.account.checkOutTemporarilyToken(token);
+      const tokenType = await internal.account.checkOutTemporarilyToken(token);
       if (this.destroyed) return;
 
       if (tokenType === VerificationType.PasswordReset) {
         this.switchTab(Tab.ResetPassword);
       } else if (tokenType === VerificationType.ChangeEmail || tokenType === VerificationType.Verificaiton) {
         this.setState({ verifyResult: 'Validating...' });
-        services.account
+        internal.account
           .verifyEmail(token)
           .then(msg => {
             this.resetWarnings();
@@ -698,20 +698,20 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   componentDidMount() {
-    if (services.ready) return this.startup();
-    services.on('allReady', this.startup);
+    if (internal.ready) return this.startup();
+    internal.on('allReady', this.startup);
   }
 
   componentWillUnmount() {
     this.destroyed = true;
-    services.removeListener('allReady', this.startup);
-    services.account.removeListener('login', this.updateTabAccordingToUser);
-    services.account.removeListener('logout', this.updateTabAccordingToUser);
+    internal.removeListener('allReady', this.startup);
+    internal.account.removeListener('login', this.updateTabAccordingToUser);
+    internal.account.removeListener('logout', this.updateTabAccordingToUser);
   }
 
   startup = () => {
-    services.account.on('login', this.updateTabAccordingToUser);
-    services.account.on('logout', this.updateTabAccordingToUser);
+    internal.account.on('login', this.updateTabAccordingToUser);
+    internal.account.on('logout', this.updateTabAccordingToUser);
     this.updateTabAccordingToUser();
   };
 
@@ -721,7 +721,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       email: '',
     };
     state.settings = {
-      displayedName: services.account.account ? services.account.account.displayedName : '',
+      displayedName: internal.account.account ? internal.account.account.displayedName : '',
       newEmail: '',
       newPassword: '',
       password: '',
@@ -750,14 +750,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         this.verifyCode(verificationCode);
         return;
       }
-      if (services.account.account) {
+      if (internal.account.account) {
         const appName = this.redirectToApp;
         if (appName) {
           location.href = `${location.origin}/${appName}`;
         }
       }
     }
-    const ac = services.account.account;
+    const ac = internal.account.account;
     if (ac) {
       await this.switchTab(Tab.Settings);
       this.setState({

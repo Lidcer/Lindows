@@ -1,12 +1,12 @@
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { isDirectory, FileSystemDirectory, FileSystemFile } from '../../utils/FileSystemDirectory';
 
 export class HelpCommand extends BaseCommand {
   public static help = 'shows help message';
   execute() {
-    const system = services.processor.symbol;
-    const directories = services.fileSystem.root.contents(system);
+    const system = internal.processor.symbol;
+    const directories = internal.fileSystem.root.contents(system);
     const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
     if (!bin) throw new Error('Corrupted file system');
     const contents = bin.contents(system);
@@ -19,7 +19,7 @@ export class HelpCommand extends BaseCommand {
         helps.push(`${file.name} ${helpMessage}`);
       }
     }
-    this.onFinish(helps.join('\n'));
+    this.finish(helps.join('\n'));
+    return 0;
   }
-  interrupt() {}
 }

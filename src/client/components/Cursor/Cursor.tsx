@@ -1,6 +1,6 @@
 import React from 'react';
 import { EventEmitter } from 'events';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { CursorStyle } from './CursorStyled';
 interface IState {
   cursorType: CursorType;
@@ -49,7 +49,7 @@ class IMousePointer extends EventEmitter {
   }
 
   get enabled() {
-    return services.browserStorage.getItem(storageProperties.enabled);
+    return internal.browserStorage.getItem(storageProperties.enabled);
   }
 }
 export const mousePointer = new IMousePointer();
@@ -80,7 +80,7 @@ export class Cursor extends React.Component<{}, IState> {
     window.addEventListener('mousemove', this.mouseMove, false);
     mousePointer.on('change', this.onMouseChangeFixPos);   
     mousePointer.on('enableDisable', this.enableDisable);
-    const enabled = !!services.browserStorage.getItem(storageProperties.enabled);
+    const enabled = !!internal.browserStorage.getItem(storageProperties.enabled);
     this.setState({enabled});
     if(enabled) {
       document.body.style.cursor = 'none';
@@ -95,7 +95,7 @@ export class Cursor extends React.Component<{}, IState> {
   }
 
   enableDisable = async (bool:Boolean, callback: (result:boolean) => void) => {
-      await services.browserStorage.setItem(storageProperties.enabled, !!bool);
+      await internal.browserStorage.setItem(storageProperties.enabled, !!bool);
       this.setState({enabled:!!bool});
       if (bool) {
         document.body.style.cursor = 'none';

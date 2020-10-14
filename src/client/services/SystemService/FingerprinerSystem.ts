@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import fingerprintjs from 'fingerprintjs2';
 import { UAParser } from 'ua-parser-js';
 import MobileDetect from 'mobile-detect';
@@ -33,8 +32,8 @@ export class Fingerprinter extends BaseSystemService {
           }
         }, SECOND * 10);
       });
-    }
-  
+    };
+
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
@@ -43,18 +42,18 @@ export class Fingerprinter extends BaseSystemService {
       if (!/windows/i.test(navigator.userAgent)) {
         window.removeEventListener('touchstart', this.setTouch);
       }
-    }
+    };
 
     return {
       start: start,
       destroy: destroy,
       status: this.status,
-    }
+    };
   }
 
   status = () => {
     return this._status;
-  }
+  };
 
   private injectPlugin() {
     this.result.push({ key: 'usesTouch', value: false });
@@ -85,7 +84,7 @@ export class Fingerprinter extends BaseSystemService {
     const usesTouch = this.result.find(f => f.key === 'usesTouch');
     if (!usesTouch) this.result.push({ key: 'usesTouch', value: true });
     else usesTouch.value = true;
-  }
+  };
 
   get supportsLetAndConst() {
     try {

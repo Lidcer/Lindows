@@ -1,6 +1,6 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { TaskManagerStyle } from './taskManagerStyled';
 
 export class TaskManager extends BaseWindow {
@@ -24,11 +24,11 @@ export class TaskManager extends BaseWindow {
       image: TaskManager.manifest.icon,
     });
 
-    services.processor.on('appAdd', this.update);
+    internal.processor.on('appAdd', this.update);
   }
 
   onClose() {
-    services.processor.removeListener('appAdd', this.update);
+    internal.processor.removeListener('appAdd', this.update);
   }
 
   update = () => {
@@ -39,7 +39,7 @@ export class TaskManager extends BaseWindow {
     return (
       <TaskManagerStyle>
         <span>
-          {services.processor.processes.length} | {services.processor.processes.filter(e => e.minimized).length}
+          {internal.processor.processes.length} | {internal.processor.processes.filter(e => e.minimized).length}
         </span>
         <table>
           <tbody>
@@ -59,7 +59,7 @@ export class TaskManager extends BaseWindow {
   }
 
   killAll = () => {
-    services.processor.processes.forEach((e: any) => {
+    internal.processor.processes.forEach((e: any) => {
       if (e !== this) e.exit();
     });
     setTimeout(() => {
@@ -76,7 +76,7 @@ export class TaskManager extends BaseWindow {
   };
 
   get renderList() {
-    return services.processor.processes.map(this.getThing);
+    return internal.processor.processes.map(this.getThing);
   }
 
   getThing = (window: BaseWindow, index: number) => {

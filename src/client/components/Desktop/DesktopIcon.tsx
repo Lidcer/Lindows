@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { MessageBox, MessageBoxButtons, MessageBoxIcon } from '../../apps/BaseWindow/BaseWindow';
 import { launchApp } from '../../essential/apps';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from '../../utils/FileSystemDirectory';
 import { IElement, showContext } from '../ContextMenu/ContextMenu';
 import { DesktopIconCation, DesktopIconRenamingInput, DesktopIconStyle } from './DesktopStyled';
@@ -75,7 +75,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   componentDidMount() {
-    let desktopDes = services.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
+    let desktopDes = internal.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
     if (!desktopDes) {
       desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
     } else {
@@ -105,7 +105,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   };
 
   saveDotDesktop = () => {
-    let desktopDes = services.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
+    let desktopDes = internal.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
     if (!desktopDes) {
       desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
     } else {
@@ -115,7 +115,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       }
     }
     desktopDes.setContent(this.dotDesktop, this.sys);
-    services.fileSystem.saveHome();
+    internal.fileSystem.saveHome();
   };
 
   unselect = () => {
@@ -256,7 +256,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       const minY = Math.min(this.props.selectionBox.y, event.clientY);
       const maxX = Math.max(this.props.selectionBox.x + 75, event.clientX);
       const maxY = Math.max(this.props.selectionBox.y + 100, event.clientY);
-      const files = this.props.contents.map((f) => {
+      const files = this.props.contents.map(f => {
         return { name: f.name, ref: f };
       });
       const selected = [];
@@ -309,10 +309,10 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
 
       return (
         <DesktopIconRenamingInput
-          ref={(i) => i && i.focus()}
+          ref={i => i && i.focus()}
           value={this.state.renaming.value}
-          onChange={(e) => this.setState({ renaming: { ref: f, value: e.target.value } })}
-          onKeyUp={(e) => {
+          onChange={e => this.setState({ renaming: { ref: f, value: e.target.value } })}
+          onKeyUp={e => {
             if (e.key.toLowerCase() === 'enter') rename();
           }}
           onBlur={() => {
@@ -325,18 +325,18 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   getElement(f: FileSystemDirectory | FileSystemFile, key?: number) {
-    let image = <img src={this.fileImage} onMouseDown={(ev) => ev.preventDefault()} draggable='false' />;
+    let image = <img src={this.fileImage} onMouseDown={ev => ev.preventDefault()} draggable='false' />;
     if (isDirectory(f)) {
-      image = <img src={this.folderImage} onMouseDown={(ev) => ev.preventDefault()} draggable='false' />;
+      image = <img src={this.folderImage} onMouseDown={ev => ev.preventDefault()} draggable='false' />;
     }
 
     return (
       <DesktopIconStyle
         key={key}
         style={this.getStyle(f, key === undefined)}
-        onContextMenu={(e) => key !== undefined && this.onContext(e, f)}
-        onClick={(e) => key !== undefined && this.onClick(e, f)}
-        onMouseDown={(e) => key !== undefined && this.onMouseDown(e, f)}
+        onContextMenu={e => key !== undefined && this.onContext(e, f)}
+        onClick={e => key !== undefined && this.onClick(e, f)}
+        onMouseDown={e => key !== undefined && this.onMouseDown(e, f)}
       >
         {image}
         {this.getCaption(f)}
@@ -350,7 +350,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       <>
         {moving}
         {this.props.contents
-          .filter((f) => !f.deleted && !(f.name.startsWith('.') && !this.showHiddenFiles))
+          .filter(f => !f.deleted && !(f.name.startsWith('.') && !this.showHiddenFiles))
           .map((f, i) => {
             return this.getElement(f, i);
           })}

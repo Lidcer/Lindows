@@ -1,5 +1,5 @@
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { isDirectory, FileSystemDirectory, FileSystemFile, StringSymbol } from '../../utils/FileSystemDirectory';
 
 export class LsCommand extends BaseCommand {
@@ -13,27 +13,29 @@ export class LsCommand extends BaseCommand {
         path = `root/${path}`;
       }
 
-      const directory = services.fileSystem.parseDirectorRelative(parameters.directory, path);
+      const directory = internal.fileSystem.parseDirectorRelative(parameters.directory, path);
       if (!directory) {
-        return this.onFinish('No such file or directory');
+        this.finish('No such file or directory');
+        return 1;
       } /*else if (directory.getPermission(owner)) {
 
       } */ else {
         const text = this.listDirectoryContent(directory);
-        return this.onFinish(text);
+        this.finish(text);
+        return 0;
       }
     }
     if (!parameters.directory) {
-      return this.onFinish('Directory was not provided');
+      this.finish('Directory was not provided');
+      return 1;
     }
-    this.onFinish(this.listDirectoryContent(parameters.directory));
+    this.finish(this.listDirectoryContent(parameters.directory));
+    return 0;
   }
 
   listDirectoryContent(directory: FileSystemDirectory) {
-    const contents = directory.contents(services.processor.symbol);
-    const names = contents.map(d => d.name);
-    return names.join('\n');
+    const contents = directory.contents(internal.processor.symbol);
+    const names = contents.map(d => (isDirectory(d) ? `|${d.name}|` : d.name));
+    return names.join(' ');
   }
-
-  interrupt() {}
 }

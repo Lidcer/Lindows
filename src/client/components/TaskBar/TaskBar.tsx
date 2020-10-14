@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
 import { StartMenu } from '../StartMenu/StartMenu';
-import { services } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/SystemService/ServiceHandler';
 import { TaskBarNotificationHor, TaskBarNotificationVer, TaskBarExtended, TaskBarIcon, TaskBarOpenIcons,
    TaskBarClockHor, TaskBarClockVer, TaskBarShowDesktopHor, TaskBarShowDesktopVer, TaskBarStartBtnHor,
     TaskBarStartBtnVer, TaskBarGridHor, TaskBarGridVer, TaskBarBackground, Aero, TaskBarBottom, TaskBarTop,
@@ -44,16 +44,16 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   componentDidMount() {
-    services.processor.on('appAdd', this.updateTaskBar);
-    services.processor.on('appRemove', this.updateTaskBar);
-    services.processor.on('appAdd', this.onAppAdd);
-    services.processor.on('appRemove', this.onAppRemove);
+    internal.processor.on('appAdd', this.updateTaskBar);
+    internal.processor.on('appRemove', this.updateTaskBar);
+    internal.processor.on('appAdd', this.onAppAdd);
+    internal.processor.on('appRemove', this.onAppRemove);
     this.timeOutFunction = setInterval(this.updateTaskBar, 1000);
   }
 
   componentWillUnmount() {
-    services.processor.removeListener('appAdd', this.updateTaskBar);
-    services.processor.removeListener('appRemove', this.updateTaskBar);
+    internal.processor.removeListener('appAdd', this.updateTaskBar);
+    internal.processor.removeListener('appRemove', this.updateTaskBar);
     clearTimeout(this.timeOutFunction);
   }
 
@@ -175,7 +175,7 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   private showDesktop(event: React.MouseEvent) {
-    const pross = services.processor.processes.filter(a => !a.minimized);
+    const pross = internal.processor.processes.filter(a => !a.minimized);
   }
 
   get navBar() {
