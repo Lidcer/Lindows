@@ -1,4 +1,4 @@
-import { SECOND } from '../../../../dist/shared/constants';
+import { SECOND } from '../../../shared/constants';
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
 
 export class TestDelayCommand extends BaseCommand {
