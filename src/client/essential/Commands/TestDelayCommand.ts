@@ -1,7 +1,5 @@
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { services } from '../../services/SystemService/ServiceHandler';
-import { isDirectory, FileSystemDirectory, FileSystemFile } from '../../utils/FileSystemDirectory';
 import { SECOND } from '../../../../dist/shared/constants';
+import { BaseCommand, ExecutionParameters } from './BaseCommand';
 
 export class TestDelayCommand extends BaseCommand {
   public static help = 'time';

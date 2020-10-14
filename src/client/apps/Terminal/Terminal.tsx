@@ -95,7 +95,9 @@ export class Terminal extends BaseWindow<ITerminal> {
     try {
       const directory = services.fileSystem.parseDirectory(path, this.folderPermission);
       return directory;
-    } catch (error) { /* ignored */ }
+    } catch (error) {
+      /* ignored */
+    }
     return null;
   }
 
@@ -291,7 +293,7 @@ export class Terminal extends BaseWindow<ITerminal> {
 
   onResize(width: number, height: number) {
     if (this.variables.active) {
-      this.variables.active._bounds = this.bounds;
+      //   this.variables.active._bounds = this.bounds;
     }
   }
 

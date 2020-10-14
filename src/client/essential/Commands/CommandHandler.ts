@@ -9,9 +9,9 @@ import {
 } from '../../utils/FileSystemDirectory';
 import { BaseCommand } from './BaseCommand';
 import { CdCommand } from './Cd';
-import { HelpCommand } from './help';
+import { HelpCommand } from './Help';
 import { LsCommand } from './Ls';
-import { StartCommand } from './start';
+import { StartCommand } from './Start';
 import { SudoCommand } from './Sudo';
 import { TakeCommand } from './Take';
 import { TestDelayCommand } from './TestDelayCommand';
