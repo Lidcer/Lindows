@@ -93,7 +93,9 @@ export class Desktop extends React.Component<{}, IState> {
 
   updateView = () => {
     // this.terminal.reset();
-    this.blueScreen.reset();
+    if (DEVELOPMENT) {
+      this.blueScreen.reset();
+    }
     this.killActiveWindow.reset();
     this.forceUpdate();
   };
