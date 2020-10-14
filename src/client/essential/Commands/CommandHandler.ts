@@ -41,14 +41,16 @@ export function installCommand(command: BaseCommand, name: string, owner = every
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
   if (!bin) throw new Error('Corrupted file system');
-  const contents = bin.contents(system);
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
+  if (!cmd) throw new Error('Corrupted file system');
+  const contents = cmd.contents(system);
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (existing && !isDirectory(existing)) {
     throw new Error('Command already installed!');
   } else if (existing) {
     throw new Error('Failed to install command under this name!');
   }
-  bin.createFile(name.toLowerCase(), 'lindowObject', command, owner);
+  cmd.createFile(name.toLowerCase(), 'lindowObject', command, owner);
 }
 
 export function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
@@ -63,7 +65,9 @@ export function uninstallCommand(name: string, owner = everyone) {
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
   if (!bin) throw new Error('Corrupted file system');
-  const contents = bin.contents(system);
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
+  if (!cmd) throw new Error('Corrupted file system');
+  const contents = cmd.contents(system);
 
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (!existing) {
@@ -97,7 +101,9 @@ export function getCommand(commandName: string) {
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
   if (!bin) throw new Error('Corrupted file system');
-  const contents = bin.contents(system);
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
+  if (!cmd) throw new Error('Corrupted file system');
+  const contents = cmd.contents(system);
   const command = contents.find(c => !isDirectory(c) && c.name === commandName) as FileSystemFile;
   if (command) {
     return command.getContent(system) as typeof BaseCommand;

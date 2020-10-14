@@ -77,6 +77,10 @@ export class FileSystem extends BaseSystemService {
           bin.createDirectory('cmd', systemSymbol);
           bin.createDirectory('apps', systemSymbol);
         }
+        if (directory === 'bin') {
+          createdDirectory.createDirectory('cmd', systemSymbol);
+          createdDirectory.createDirectory('apps', systemSymbol);
+        }
       }
       //homeDirector.createDirectory(this.username());
 

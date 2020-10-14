@@ -8,8 +8,16 @@ export class HelpCommand extends BaseCommand {
     const system = internal.processor.symbol;
     const directories = internal.fileSystem.root.contents(system);
     const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
-    if (!bin) throw new Error('Corrupted file system');
-    const contents = bin.contents(system);
+    if (!bin) {
+      this.finish('Unable to get commands');
+      return 1;
+    }
+    const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
+    if (!cmd) {
+      this.finish('Unable to get commands');
+      return 1;
+    }
+    const contents = cmd.contents(system);
     const files = contents.filter(c => !isDirectory(c)) as FileSystemFile[];
     const helps: string[] = [];
     for (const file of files) {
