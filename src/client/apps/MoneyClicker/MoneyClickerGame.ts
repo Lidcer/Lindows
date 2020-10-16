@@ -12,6 +12,7 @@ import { BlackHole } from './src/BlackHole';
 import { MoneyClickerPictureReferences } from './src/ImageReferences';
 import { attachDebugMethod } from '../../essential/requests';
 import { MoneyClicker } from './MoneyClicker';
+import { ImageLoader } from './src/ImageLoader';
 
 export class MoneyClickerGame {
   private background: Background;
@@ -59,6 +60,8 @@ export class MoneyClickerGame {
   private upBotP: HTMLImageElement;
   private upBotL: HTMLImageElement;
   private upL: HTMLImageElement;
+
+  private imageLoader: ImageLoader;
 
   private paused = false;
 
@@ -273,6 +276,9 @@ export class MoneyClickerGame {
   }
 
   destroy() {
+    if (this.imageLoader) {
+      this.imageLoader.destroy();
+    }
     this.values.destroy();
   }
 
@@ -310,57 +316,142 @@ export class MoneyClickerGame {
     else if (this.upgrades.isOpen) this.upgradeIcon.buttonPress();
   }
 
-  loadGame(callback: (percentage: number) => void): void {
+  async loadGame(callback: (percentage: number) => void): Promise<void> {
+    this.imageLoader = new ImageLoader([
+      MoneyClickerPictureReferences.MessageBoxPic,
+      MoneyClickerPictureReferences.RotatingThingPic,
+
+      MoneyClickerPictureReferences.VorPic,
+      MoneyClickerPictureReferences.SmallBangPic,
+      MoneyClickerPictureReferences.UpgradePic,
+
+      MoneyClickerPictureReferences.VorTop,
+      MoneyClickerPictureReferences.VorMid,
+      MoneyClickerPictureReferences.VorBotP,
+      MoneyClickerPictureReferences.VorBotL,
+      MoneyClickerPictureReferences.VorL,
+
+      MoneyClickerPictureReferences.SBTop,
+      MoneyClickerPictureReferences.SlBMid,
+      MoneyClickerPictureReferences.SBBotP,
+      MoneyClickerPictureReferences.SBBotL,
+      MoneyClickerPictureReferences.SBL,
+
+      MoneyClickerPictureReferences.UpTop,
+      MoneyClickerPictureReferences.UpBMid,
+      MoneyClickerPictureReferences.UpBotP,
+      MoneyClickerPictureReferences.UpBotL,
+      MoneyClickerPictureReferences.UpL,
+      MoneyClickerPictureReferences.BlackHoleImg,
+
+      MoneyClickerPictureReferences.Money1,
+      MoneyClickerPictureReferences.Money5,
+      MoneyClickerPictureReferences.Money10,
+      MoneyClickerPictureReferences.Money20,
+      MoneyClickerPictureReferences.Money50,
+      MoneyClickerPictureReferences.Money100,
+      MoneyClickerPictureReferences.Money200,
+      MoneyClickerPictureReferences.Money500,
+    ]);
     this.moneyPics = new MoneyImages();
-
-    this.messageBoxPic = this.createImage(MoneyClickerPictureReferences.MessageBoxPic);
-    this.rotatingThingPic = this.createImage(MoneyClickerPictureReferences.RotatingThingPic);
-
-    this.vorPic = this.createImage(MoneyClickerPictureReferences.VorPic);
-    this.smallBangPic = this.createImage(MoneyClickerPictureReferences.SmallBangPic);
-    this.upgradePic = this.createImage(MoneyClickerPictureReferences.UpgradePic);
-
-    this.vorTop = this.createImage(MoneyClickerPictureReferences.VorTop);
-    this.vorMid = this.createImage(MoneyClickerPictureReferences.VorMid);
-    this.vorBotP = this.createImage(MoneyClickerPictureReferences.VorBotP);
-    this.vorBotL = this.createImage(MoneyClickerPictureReferences.VorBotL);
-    this.vorL = this.createImage(MoneyClickerPictureReferences.VorL);
-
-    this.sBTop = this.createImage(MoneyClickerPictureReferences.SBTop);
-    this.slBMid = this.createImage(MoneyClickerPictureReferences.SlBMid);
-    this.sBBotP = this.createImage(MoneyClickerPictureReferences.SBBotP);
-    this.sBBotL = this.createImage(MoneyClickerPictureReferences.SBBotL);
-    this.sBL = this.createImage(MoneyClickerPictureReferences.SBL);
-
-    this.upTop = this.createImage(MoneyClickerPictureReferences.UpTop);
-    this.upBMid = this.createImage(MoneyClickerPictureReferences.UpBMid);
-    this.upBotP = this.createImage(MoneyClickerPictureReferences.UpBotP);
-    this.upBotL = this.createImage(MoneyClickerPictureReferences.UpBotL);
-    this.upL = this.createImage(MoneyClickerPictureReferences.UpL);
-    this.blackHoleImg = this.createImage(MoneyClickerPictureReferences.BlackHoleImg);
-
-    const areAllImagesLoaded = () => {
-      const loaded = this.images.filter(i => i.complete);
-      const loadedLength = loaded.length + this.moneyPics.loaded;
-      const totalImage = this.images.length + this.moneyPics.totalImages;
-
-      const portent = (loadedLength / totalImage) * 100;
-
-      if (portent == 100) {
-        callback(100);
-      } else {
-        callback(portent);
-        requestAnimationFrame(areAllImagesLoaded);
+    this.imageLoader.onImageLoad = (image: HTMLImageElement, src: string, status: number) => {
+      switch (src) {
+        case MoneyClickerPictureReferences.MessageBoxPic:
+          this.messageBoxPic = image;
+          break;
+        case MoneyClickerPictureReferences.RotatingThingPic:
+          this.rotatingThingPic = image;
+          break;
+        case MoneyClickerPictureReferences.VorPic:
+          this.vorPic = image;
+          break;
+        case MoneyClickerPictureReferences.SmallBangPic:
+          this.smallBangPic = image;
+          break;
+        case MoneyClickerPictureReferences.UpgradePic:
+          this.upgradePic = image;
+          break;
+        case MoneyClickerPictureReferences.VorTop:
+          this.vorTop = image;
+          break;
+        case MoneyClickerPictureReferences.VorMid:
+          this.vorMid = image;
+          break;
+        case MoneyClickerPictureReferences.VorBotP:
+          this.vorBotP = image;
+          break;
+        case MoneyClickerPictureReferences.VorBotL:
+          this.vorBotL = image;
+          break;
+        case MoneyClickerPictureReferences.VorL:
+          this.vorL = image;
+          break;
+        case MoneyClickerPictureReferences.SBTop:
+          this.sBTop = image;
+          break;
+        case MoneyClickerPictureReferences.SlBMid:
+          this.slBMid = image;
+          break;
+        case MoneyClickerPictureReferences.SBBotP:
+          this.sBBotP = image;
+          break;
+        case MoneyClickerPictureReferences.SBBotL:
+          this.sBBotL = image;
+          break;
+        case MoneyClickerPictureReferences.SBL:
+          this.sBL = image;
+          break;
+        case MoneyClickerPictureReferences.UpTop:
+          this.upTop = image;
+          break;
+        case MoneyClickerPictureReferences.UpBMid:
+          this.upBMid = image;
+          break;
+        case MoneyClickerPictureReferences.UpBotP:
+          this.upBotP = image;
+          break;
+        case MoneyClickerPictureReferences.UpBotL:
+          this.upBotL = image;
+          break;
+        case MoneyClickerPictureReferences.UpL:
+          this.upL = image;
+          break;
+        case MoneyClickerPictureReferences.BlackHoleImg:
+          this.blackHoleImg = image;
+          break;
+        case MoneyClickerPictureReferences.Money1:
+          this.moneyPics.money1 = image;
+          break;
+        case MoneyClickerPictureReferences.Money5:
+          this.moneyPics.money5 = image;
+          break;
+        case MoneyClickerPictureReferences.Money10:
+          this.moneyPics.money10 = image;
+          break;
+        case MoneyClickerPictureReferences.Money20:
+          this.moneyPics.money20 = image;
+          break;
+        case MoneyClickerPictureReferences.Money50:
+          this.moneyPics.money50 = image;
+          break;
+        case MoneyClickerPictureReferences.Money100:
+          this.moneyPics.money100 = image;
+          break;
+        case MoneyClickerPictureReferences.Money200:
+          this.moneyPics.money200 = image;
+          break;
+        case MoneyClickerPictureReferences.Money500:
+          this.moneyPics.money500 = image;
+          break;
+        default:
+          break;
       }
+      callback(status);
     };
-    areAllImagesLoaded();
+    return this.imageLoader.loadAll();
   }
-  startGame() {
-    const someError = this.imageError || this.moneyPics.imageError;
-    if (someError) {
-      throw someError;
-    }
 
+  startGame() {
     this.addEventListeners();
     const ctx = this.canvas.getContext('2d');
     //navigation.startGame();

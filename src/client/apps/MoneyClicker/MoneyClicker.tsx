@@ -68,7 +68,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
     }
     this.storage = storage;
   }
-  shown() {
+  async shown() {
     if (this.storage.fullscreen) {
       this.changeOptions({ windowType: 'fullscreen' });
     }
@@ -92,7 +92,18 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
         sounds: this.storage.sounds,
       },
     });
-    this.moneyClicker.loadGame(this.loading);
+
+    try {
+      await this.moneyClicker.loadGame(this.loading);
+      this.changeOptions({ title: `Money Clicker` });
+      this.setVariables({ loading: 100 });
+      this.moneyClicker.startGame();
+      this.moneyClicker.pauseGame();
+      this.moneyClicker.audio = this.storage.sounds;
+    } catch (error) {
+      MessageBox._anonymousShow(error.messsage, 'An error occured');
+      this.exit();
+    }
   }
 
   onKeyDown(event: KeyboardEvent) {
@@ -140,26 +151,8 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
 
   loading = async (percentage: number) => {
     if (!this.destroyed) {
-      if (percentage === 100) {
-        this.changeOptions({ title: `Money Clicker` });
-        this.setVariables({ loading: percentage });
-        try {
-          this.moneyClicker.startGame();
-          this.moneyClicker.pauseGame();
-          this.moneyClicker.audio = this.storage.sounds;
-        } catch (error) {
-          DEVELOPMENT && console.error(error);
-          await MessageBox.Show(
-            this,
-            'An error occurred. Money clicker was unable to load game files',
-            'Unable to load',
-          );
-          this.exit();
-        }
-      } else {
-        this.setVariables({ loading: percentage });
-        this.changeOptions({ title: `Money Clicker loading ${Math.round(percentage)}%` });
-      }
+      this.setVariables({ loading: percentage });
+      this.changeOptions({ title: `Money Clicker loading ${Math.round(percentage)}%` });
     }
   };
 

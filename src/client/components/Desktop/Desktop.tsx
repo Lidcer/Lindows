@@ -16,6 +16,7 @@ import { NotificationsDisplay } from '../Notifications.tsx/NotificationsDisplay'
 import { ScreenStyled, Wallpaper } from './DesktopStyled';
 import { FileSystemDirectory, FileSystemFile, StringSymbol } from '../../utils/FileSystemDirectory';
 import { DesktopIcons } from './DesktopIcon';
+import { MessageBox } from '../../apps/BaseWindow/BaseWindow';
 
 interface IState {
   ready: boolean;
@@ -107,6 +108,9 @@ export class Desktop extends React.Component<{}, IState> {
   componentDidMount() {
     startBackgroundServices(true);
     const serviceReady = () => {
+      (alert as any) = (message: any) => {
+        MessageBox._anonymousShow(message.toString(), 'Alert');
+      };
       this.setState({
         ready: true,
       });
