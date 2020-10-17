@@ -95,13 +95,16 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
 
     try {
       await this.moneyClicker.loadGame(this.loading);
-      this.changeOptions({ title: `Money Clicker` });
-      this.setVariables({ loading: 100 });
-      this.moneyClicker.startGame();
-      this.moneyClicker.pauseGame();
-      this.moneyClicker.audio = this.storage.sounds;
+      if (this.moneyClicker) {
+        this.moneyClicker.startGame();
+        this.moneyClicker.pauseGame();
+        this.moneyClicker.audio = this.storage.sounds;
+        this.changeOptions({ title: `Money Clicker` });
+        this.setVariables({ loading: 100 });
+      }
     } catch (error) {
-      MessageBox._anonymousShow(error.messsage, 'An error occured');
+      const message = error.message || 'An unknown error occured while loading the game!';
+      MessageBox._anonymousShow(message, 'Failed to load');
       this.exit();
     }
   }

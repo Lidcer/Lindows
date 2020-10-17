@@ -279,7 +279,9 @@ export class MoneyClickerGame {
     if (this.imageLoader) {
       this.imageLoader.destroy();
     }
-    this.values.destroy();
+    if (this.values) {
+      this.values.destroy();
+    }
   }
 
   pauseGame() {
