@@ -37,7 +37,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   private folderPermission = everyone;
   public static manifest: IManifest = {
     fullAppName: 'File Explorer',
-    launchName: 'file-explorer',
+    launchName: 'fileExplorer',
     icon: '/assets/images/appsIcons/FileExplorerIcon.svg',
   };
 

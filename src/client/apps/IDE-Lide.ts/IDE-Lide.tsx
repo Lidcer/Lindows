@@ -176,17 +176,38 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
       ) {
         throw new Error('invalid app checking that your app had manifest variable!');
       }
-      const compiledApp = entry[1] as BaseWindow.BaseWindow;
+      const compiledApp = entry[1] as any;
 
       if (!compiledApp.onError) {
-        //@ts-ignore shut the fuck up
         compiledApp.prototype.onError = error => {
           BaseWindow.MessageBox.Show(this, `App crashed!\nReason: ${error.message}\nStack: ${error.stack}`);
           this.terminateApp();
         };
       }
       //@ts-ignore
-      const app = await compiledApp.New();
+      const desktop = internal.fileSystem.userDirectory.getDirectory('Desktop', internal.processor.symbol);
+      const fileName = compiledApp.manifest.launchName;
+      let file = desktop.getFile(compiledApp.manifest.launchName, internal.fileSystem.userSymbol);
+      if (!file) {
+        file = desktop.createFile(
+          fileName,
+          'lindowApp',
+          {
+            manifest: compiledApp.manifest,
+            app: compiledApp,
+          },
+          internal.fileSystem.userSymbol,
+        );
+      } else {
+        file.setContent(
+          {
+            manifest: compiledApp.manifest,
+            app: compiledApp,
+          },
+          internal.fileSystem.userSymbol,
+        );
+      }
+      const app = await compiledApp.New(file);
       this.setVariables({ app });
       this.appMonitor();
     } catch (error) {

@@ -31,7 +31,7 @@ interface VirtualCreateState {
 export class VirtualCreate extends BaseWindow<VirtualCreateState> {
   public static manifest: IManifest = {
     fullAppName: 'Virtual Crate',
-    launchName: 'virtualcrete',
+    launchName: 'VirtualCrate',
     icon: '/assets/images/appsIcons/VirtualCreate.svg',
   };
 
@@ -95,7 +95,7 @@ export class VirtualCreate extends BaseWindow<VirtualCreateState> {
         return;
       }
       this.setVariables({ freeze: true });
-      const os = (await VirtualOs.New()) as VirtualOs;
+      const os = (await VirtualOs.New(this.props.launchFile)) as VirtualOs;
       os.onExit = () => {
         const vars = { ...this.variables };
         vars.os.delete(wos);

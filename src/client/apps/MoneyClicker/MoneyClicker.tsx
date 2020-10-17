@@ -33,7 +33,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
 
   public static manifest: IManifest = {
     fullAppName: 'Money Clicker',
-    launchName: 'money-clicker',
+    launchName: 'moneyClicker',
     icon: '/assets/images/appsIcons/MoneyClicker.svg',
   };
 

@@ -9,6 +9,7 @@ import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
 import { attachDebugMethod } from '../../essential/requests';
 import { FileSystem } from './FileSystem';
 import { installPreInstalledCommands } from '../../essential/Commands/CommandHandler';
+import { installPreInstalledApps } from '../../essential/apps';
 export declare interface Internal {
   on(event: 'onServiceReady', listener: (name: string) => void): this;
   on(event: 'onServiceFailed', listener: (name: string) => void): this;
@@ -64,6 +65,7 @@ export class Internal extends EventEmitter {
     );
     this._fileSystem = await this.initService(new FileSystem(this.browserStorage, this.processor), 'FileSystem');
     installPreInstalledCommands(); //TODO: move somewhere else?
+    installPreInstalledApps();
     this.isReady = true;
     this.emit('allReady', this);
   }

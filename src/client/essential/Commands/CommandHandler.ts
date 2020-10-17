@@ -1,12 +1,4 @@
 import { internal } from '../../services/SystemService/ServiceHandler';
-import {
-  everyone,
-  FileSystemDirectory,
-  FileSystemFile,
-  isDirectory,
-  isNameValid,
-  StringSymbol,
-} from '../../utils/FileSystemDirectory';
 import { BaseCommand, ExecutionParameters as ExecutionData } from './BaseCommand';
 import { Cd } from './Cd';
 import { HelpCommand } from './Help';
@@ -20,6 +12,14 @@ import { createKeyboardEvent } from '../../utils/util';
 import { MkDir } from './Mkdir';
 import { EchoCommand } from './Echo';
 import { Cat } from './Cat';
+import {
+  everyone,
+  FileSystemDirectory,
+  FileSystemFile,
+  isDirectory,
+  isNameValid,
+  StringSymbol,
+} from '../../utils/FileSystemDirectory';
 
 export interface CommandForExecute {
   entry: string;

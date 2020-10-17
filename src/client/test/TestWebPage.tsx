@@ -1,9 +1,35 @@
 import React from 'react';
-import { allApps } from '../essential/apps';
+import { allInstalledApps, AppDescription, installApp, installPreInstalledApps } from '../essential/apps';
+import { internal } from '../services/SystemService/ServiceHandler';
 
-export class TestWebPage extends React.Component {
+interface State {
+  apps: AppDescription[];
+}
+
+export class TestWebPage extends React.Component<{}, State> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      apps: [],
+    };
+  }
+
+  componentDidMount = () => {
+    internal.removeListener('allReady', this.componentDidMount);
+    if (internal.ready) {
+      const apps = allInstalledApps();
+      this.setState({ apps });
+    } else {
+      internal.addListener('allReady', this.componentDidMount);
+    }
+  };
+
+  componentWillUnmount() {
+    internal.removeListener('allReady', this.componentDidMount);
+  }
+
   get links() {
-    return allApps.map((a, i) => {
+    return this.state.apps.map((a, i) => {
       return (
         <li key={i}>
           <div

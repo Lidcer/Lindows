@@ -13,7 +13,7 @@ export interface FileData<T = string> {
   name: string;
   permission: Permission;
   content: T;
-  type: 'text' | 'unknown' | 'json' | 'lindowObject';
+  type: 'text' | 'unknown' | 'json' | 'lindowObject' | 'lindowApp';
 }
 export enum FileSystemPermissions {
   None,
@@ -47,6 +47,15 @@ export class StringSymbol {
   getHash(symbol: symbol) {
     if (symbol !== verificationSymbol) throw new Error('Invalid symbol!');
     return hashMap.get(this);
+  }
+
+  requals(stringSymbol: StringSymbol) {
+    const hash = hashMap.get(this);
+    const hash2 = hashMap.get(stringSymbol);
+    return hash === hash2;
+  }
+  toString() {
+    return '[Object StringSymbol]';
   }
 }
 
@@ -205,6 +214,26 @@ export class FileSystemDirectory {
     }
     throw new Error('Missing permission to read');
   }
+  getFile<T = any>(name: string, owner = everyone): FileSystemFile<T> | null {
+    const directory = directoriesMap.get(this);
+    if (!directory) throw new Error('Directory has been deleted!');
+    const permission = directory.permission.get(owner.getHash(verificationSymbol));
+    if (_canReadFileOrDirectory(permission)) {
+      return (directory.contents.find(n => !isDirectory(n) && n.name === name) as FileSystemFile<T>) || null;
+    }
+    throw new Error('Missing permission to read');
+  }
+
+  getDirectory(name: string, owner = everyone): FileSystemDirectory | null {
+    const directory = directoriesMap.get(this);
+    if (!directory) throw new Error('Directory has been deleted!');
+    const permission = directory.permission.get(owner.getHash(verificationSymbol));
+    if (_canReadFileOrDirectory(permission)) {
+      return (directory.contents.find(n => isDirectory(n) && n.name === name) as FileSystemDirectory) || null;
+    }
+    throw new Error('Missing permission to read');
+  }
+
   get deleted() {
     return !directoriesMap.get(this);
   }

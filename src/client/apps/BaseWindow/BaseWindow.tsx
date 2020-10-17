@@ -11,7 +11,7 @@ import {
 import { navBarPos } from '../../components/TaskBar/TaskBar';
 import { internal } from '../../services/SystemService/ServiceHandler';
 import { random, clamp } from 'lodash';
-import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
+import { ReactGeneratorFunction, appConstructorGenerator, launchApp, AppDescription } from '../../essential/apps';
 import { EventEmitter } from 'events';
 import { cloneDeep, randomString } from '../../../shared/utils';
 import {
@@ -52,10 +52,12 @@ import { Network } from '../../services/SystemService/NetworkSystem';
 import { attachDebugMethod } from '../../essential/requests';
 import './baseWindows.scss';
 import { LindowError } from '../../utils/util';
+import { FileSystemFile } from '../../utils/FileSystemDirectory';
 const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
 
 export interface IBaseWindowProps {
   id: number;
+  launchFile: FileSystemFile<AppDescription>;
   flags?: string;
   onlyOne?: boolean;
   windowType?: 'borderless' | 'windowed' | 'fullscreen';
@@ -354,7 +356,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     });
   }
 
-  public static async New() {
+  public static async New(fileFile: FileSystemFile) {
     // @ts-ignore It does exist
     const manifest: IManifest = this.prototype.constructor.manifest;
 
@@ -368,7 +370,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const App = this.prototype.constructor;
 
     const name = manifest && manifest.launchName ? manifest.launchName : randomString(20);
-    const mockGenerator: ReactGeneratorFunction = (id: number, props?) => <App key={id} id={id} {...props}></App>;
+    const mockGenerator: ReactGeneratorFunction = (id: number, props?) => (
+      <App key={id} id={id} launchFile={fileFile} {...props}></App>
+    );
     anonymous = true;
 
     const app = await internal.processor.addApp<BaseWindow>(mockGenerator, name);
@@ -408,6 +412,15 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
    * @inheritdoc
    */
   async componentDidMount() {
+    const launchFile = this.props && this.props.launchFile && (this.props.launchFile as FileSystemFile<AppDescription>);
+    if (!launchFile || launchFile.deleted) {
+      this.exit();
+    } else if (launchFile.getType(internal.processor.symbol) !== 'lindowApp') {
+      this.exit();
+    } else if (!launchFile.getContent(internal.processor.symbol).app) {
+      this.exit();
+    }
+
     if (this.load) {
       try {
         const promise = this.load();
@@ -1188,6 +1201,10 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     };
   }
 
+  runningDirectory() {
+    return this.props.launchFile;
+  }
+
   private _buttonMinimize = () => {
     if (this._frozen) return;
     const we = new WindowEvent('minimize', this);
@@ -1315,6 +1332,24 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       | Pick<IBaseWindowProps, any>,
     callback?: () => void,
   ): void {
+    const launchFile = this.props && this.props.launchFile;
+    if (!launchFile || launchFile.deleted) {
+      setTimeout(() => {
+        this.exit();
+      });
+      return;
+    } else if (launchFile.getType(internal.processor.symbol) !== 'lindowApp') {
+      console.log('not not lindows app');
+      setTimeout(() => {
+        this.exit();
+      });
+      return;
+    } else if (!launchFile.getContent(internal.processor.symbol).app) {
+      setTimeout(() => {
+        this.exit();
+      });
+      return;
+    }
     if (!this._mounted) {
       if (!this._warnOnce) {
         MessageBox._anonymousShow('Trying to update not mounted or destroyed window', 'Crash prevention');
@@ -1564,7 +1599,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
   ) {
     return new Promise<DialogResult>(async resolve => {
       const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
-        <MessageBox key={id} id={id} {...props}></MessageBox>
+        <MessageBox key={id} id={id} launchFile={baseWindow.props.launchFile} {...props}></MessageBox>
       );
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
@@ -1604,8 +1639,16 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
     messageBoxButtons?: MessageBoxButtons,
     messageBoxIcon?: MessageBoxIcon,
   ) {
+    const system = internal.processor.symbol;
+    const apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+
     const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
-      <MessageBox key={id} id={id} {...props}></MessageBox>
+      <MessageBox
+        key={id}
+        id={id}
+        launchFile={apps.getFile(MessageBox.manifest.launchName, system)}
+        {...props}
+      ></MessageBox>
     );
     setTimeout(async () => {
       const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
@@ -1760,7 +1803,7 @@ export class AdminPromp extends BaseWindow {
   static requestAdmin(baseWindow: BaseWindow) {
     return new Promise<boolean>(async resolve => {
       const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
-        <AdminPromp key={id} id={id} {...props}></AdminPromp>
+        <AdminPromp key={id} id={id} launchFile={baseWindow.props.launchFile} {...props}></AdminPromp>
       );
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);

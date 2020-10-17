@@ -9,7 +9,7 @@ export class SnakeGame extends BaseWindow {
 
   public static manifest: IManifest = {
     fullAppName: 'Snake game',
-    launchName: 'web-gl-snake',
+    launchName: 'webGlSnake',
     icon: '/assets/images/appsIcons/SnakeGameIcon.svg',
   };
 
@@ -48,7 +48,7 @@ export class SnakeGame extends BaseWindow {
     this.snakeGameInput.destroy();
     this.snakeGame.destroy();
   }
-  onKeyDown(event){
+  onKeyDown(event) {
     if (this.snakeGameInput) {
       this.snakeGameInput.onKeypress(event);
     }

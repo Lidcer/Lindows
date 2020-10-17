@@ -1,6 +1,6 @@
 import React from 'react';
 import { navBarPos } from '../TaskBar/TaskBar';
-import { allApps, launchApp } from '../../essential/apps';
+import { allInstalledApps, AppDescription, launchApp } from '../../essential/apps';
 import { StartMenuStyled, TaskBarItem } from './StartMenuStyled';
 
 export interface IStartMenuProps {
@@ -9,6 +9,7 @@ export interface IStartMenuProps {
 
 interface IStartMenu {
   height: number;
+  apps: AppDescription[];
 }
 
 export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
@@ -16,6 +17,7 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
     super(props);
     this.state = {
       height: 0,
+      apps: [],
     };
   }
 
@@ -28,7 +30,7 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
   }
 
   renderApps() {
-    return allApps.map((e, i) => (
+    return this.state.apps.map((e, i) => (
       <div key={i}>
         <TaskBarItem key={i} onClick={() => this.runApp(e.manifest.launchName)}>
           <img src={e.manifest.icon} alt={e.manifest.launchName} />
@@ -49,6 +51,8 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
         height: 500,
       });
     });
+    const apps = allInstalledApps().filter(a => a.showInTaskBar);
+    this.setState({ apps });
   }
 
   get style() {
@@ -58,11 +62,9 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
           bottom: '30pt',
           transition: 'width 0.2s, height 0.2s',
           height: `${this.state.height}px`,
-        }
-    
+        };
       default:
         break;
     }
-
   }
 }

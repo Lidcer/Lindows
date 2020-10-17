@@ -169,6 +169,14 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
         onClick: () => {
           if (isDirectory(selected)) {
             launchApp('file-explorer', `path="${selected.path}"`);
+          } else if (selected.getType(this.sys) === 'lindowApp') {
+            try {
+              console.log(selected.getContent(this.sys));
+              selected.getContent(this.sys).app.New(selected);
+            } catch (error) {
+              DEVELOPMENT && console.error(error);
+              MessageBox._anonymousShow('Unable to open');
+            }
           }
         },
       },
