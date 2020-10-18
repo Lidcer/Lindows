@@ -20,6 +20,7 @@ import {
   isNameValid,
   StringSymbol,
 } from '../../utils/FileSystemDirectory';
+import { attachToWindowIfDev } from '../requests';
 
 export interface CommandForExecute {
   entry: string;
@@ -28,7 +29,7 @@ export interface CommandForExecute {
   pipes?: CommandForExecute[];
 }
 
-export function installCommand(command: BaseCommand, name: string, owner = everyone) {
+export async function installCommand(command: BaseCommand, name: string, owner = everyone) {
   const validName = isNameValid(name);
   if (!validName.valid) {
     throw new Error(validName.reason);
@@ -36,7 +37,6 @@ export function installCommand(command: BaseCommand, name: string, owner = every
   if (!/^[a-z]+$/gi.test(name)) {
     throw new Error('Invalid name');
   }
-
   const system = internal.processor.symbol;
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
@@ -50,10 +50,10 @@ export function installCommand(command: BaseCommand, name: string, owner = every
   } else if (existing) {
     throw new Error('Failed to install command under this name!');
   }
-  cmd.createFile(name.toLowerCase(), 'lindowObject', command, owner);
+  return await cmd.createFile(name.toLowerCase(), 'lindowObject', command, owner);
 }
 
-export function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
+export async function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
   if (system.getHash !== internal.processor.symbol.getHash) {
     throw new Error('You do not have admin permission to install this command');
   }
@@ -80,19 +80,19 @@ export function uninstallCommand(name: string, owner = everyone) {
   }
 }
 
-export function installPreInstalledCommands() {
-  installSystemCommand(HelpCommand, 'help', internal.processor.symbol);
-  installSystemCommand(Grep, 'grep', internal.processor.symbol);
-  installSystemCommand(Sudo, 'sudo', internal.processor.symbol);
-  installSystemCommand(Start, 'start', internal.processor.symbol);
-  installSystemCommand(LsCommand, 'ls', internal.processor.symbol);
-  installSystemCommand(Cd, 'cd', internal.processor.symbol);
-  installSystemCommand(MkDir, 'mkdir', internal.processor.symbol);
-  installSystemCommand(EchoCommand, 'echo', internal.processor.symbol);
-  installSystemCommand(Cat, 'cat', internal.processor.symbol);
-  if (DEVELOPMENT) {
-    installSystemCommand(CommandTester, 'dev', internal.processor.symbol);
-    installSystemCommand(Take, 'take', internal.processor.symbol);
+export async function installPreInstalledCommands() {
+  await installSystemCommand(HelpCommand, 'help', internal.processor.symbol);
+  await installSystemCommand(Grep, 'grep', internal.processor.symbol);
+  await installSystemCommand(Sudo, 'sudo', internal.processor.symbol);
+  await installSystemCommand(Start, 'start', internal.processor.symbol);
+  await installSystemCommand(LsCommand, 'ls', internal.processor.symbol);
+  await installSystemCommand(Cd, 'cd', internal.processor.symbol);
+  await installSystemCommand(MkDir, 'mkdir', internal.processor.symbol);
+  await installSystemCommand(EchoCommand, 'echo', internal.processor.symbol);
+  await installSystemCommand(Cat, 'cat', internal.processor.symbol);
+  if (DEV) {
+    await installSystemCommand(CommandTester, 'dev', internal.processor.symbol);
+    await installSystemCommand(Take, 'take', internal.processor.symbol);
   }
 }
 

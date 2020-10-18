@@ -51,8 +51,8 @@ export class Processor extends BaseSystemService {
   constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster, fingerpriner: Fingerprinter) {
     super();
     const storageKey = `${browserStorageKey}:__user`;
-    this.user = browserStorage.getItem(storageKey) || `Guest${random(1000, 9999)}`;
-    browserStorage.setItem(storageKey, this.user);
+    this.user = localStorage.getItem(storageKey) || `Guest${random(1000, 9999)}`;
+    localStorage.setItem(storageKey, this.user);
     const browser = fingerpriner.userAgent.getBrowser();
     if (browser) {
       this._deviceName = `${browser.name}${browser.version}`;

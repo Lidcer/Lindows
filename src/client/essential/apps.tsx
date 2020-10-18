@@ -9,7 +9,7 @@ import { IManifest, BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindo
 import { internal } from '../services/SystemService/ServiceHandler';
 import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
 import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
-import { attachDebugMethod, isDev } from './requests';
+import { attachToWindowIfDev, isDev } from './requests';
 import { AnApp } from '../apps/AnApp/AnApp';
 import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
 import { SnakeGame } from '../apps/SnakeGame/SnakeGame';
@@ -32,7 +32,7 @@ export interface AppDescription {
   showInTaskBar: boolean;
 }
 
-export function installApp(appWindow: BaseWindow | any, name: string, showInTaskBar = false, owner = everyone) {
+export async function installApp(appWindow: BaseWindow | any, name: string, showInTaskBar = false, owner = everyone) {
   if (!appWindow) {
     throw new Error('Failed to install, passed empty app!');
   }
@@ -60,6 +60,7 @@ export function installApp(appWindow: BaseWindow | any, name: string, showInTask
   } catch (error) {
     throw new Error('Corrupted file system');
   }
+
   const contents = apps.contents(system);
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (existing && !isDirectory(existing)) {
@@ -68,7 +69,7 @@ export function installApp(appWindow: BaseWindow | any, name: string, showInTask
     throw new Error('Failed to install command under this name!');
   }
 
-  const file = apps.createFile(name, 'lindowApp', undefined, owner);
+  const file = await apps.createFile(name, 'lindowApp', undefined, owner);
   const Element = appWindow as any;
   const app = (id: number, props?: any) => (
     <Element key={id} id={id} onlyOne={!!appWindow.onlyOne} launchFile={file} {...props}></Element>
@@ -137,33 +138,33 @@ export function appConstructorGenerator(appName: string) {
       const app = object.getContent(system).app;
       return app;
     } catch (error) {
-      DEVELOPMENT && console.error(error);
+      DEV && console.error(error);
       return null;
     }
   }
   return null;
 }
 
-export function installPreInstalledApps() {
-  installApp(MessageBox, MessageBox.manifest.launchName, false, internal.processor.symbol);
-  installApp(Terminal, Terminal.manifest.launchName, true, internal.processor.symbol);
-  installApp(TaskManager, TaskManager.manifest.launchName, true, internal.processor.symbol);
-  installApp(SnakeGame, SnakeGame.manifest.launchName, true, internal.processor.symbol);
-  installApp(MoneyClicker, MoneyClicker.manifest.launchName, true, internal.processor.symbol);
+export async function installPreInstalledApps() {
+  await installApp(MessageBox, MessageBox.manifest.launchName, false, internal.processor.symbol);
+  await installApp(Terminal, Terminal.manifest.launchName, true, internal.processor.symbol);
+  await installApp(TaskManager, TaskManager.manifest.launchName, true, internal.processor.symbol);
+  await installApp(SnakeGame, SnakeGame.manifest.launchName, true, internal.processor.symbol);
+  await installApp(MoneyClicker, MoneyClicker.manifest.launchName, true, internal.processor.symbol);
   if (!STATIC) {
-    installApp(AccountManager, AccountManager.manifest.launchName, true, internal.processor.symbol);
-    installApp(Lype, Lype.manifest.launchName, true, internal.processor.symbol);
-    installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.processor.symbol);
+    await installApp(AccountManager, AccountManager.manifest.launchName, true, internal.processor.symbol);
+    await installApp(Lype, Lype.manifest.launchName, true, internal.processor.symbol);
+    await installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.processor.symbol);
   }
-  installApp(FileExplorer, FileExplorer.manifest.launchName, true, internal.processor.symbol);
-  installApp(WebExplorer, WebExplorer.manifest.launchName, true, internal.processor.symbol);
+  await installApp(FileExplorer, FileExplorer.manifest.launchName, true, internal.processor.symbol);
+  await installApp(WebExplorer, WebExplorer.manifest.launchName, true, internal.processor.symbol);
 
-  installApp(VirtualCreate, VirtualCreate.manifest.launchName, true, internal.processor.symbol);
+  await installApp(VirtualCreate, VirtualCreate.manifest.launchName, true, internal.processor.symbol);
 
-  installApp(MouseProperties, MouseProperties.manifest.launchName, true, internal.processor.symbol);
-  installApp(IDELide, IDELide.manifest.launchName, true, internal.processor.symbol);
-  if (DEVELOPMENT) {
-    installApp(AnApp, AnApp.manifest.launchName, true, internal.processor.symbol);
+  await installApp(MouseProperties, MouseProperties.manifest.launchName, true, internal.processor.symbol);
+  await installApp(IDELide, IDELide.manifest.launchName, true, internal.processor.symbol);
+  if (DEV) {
+    await installApp(AnApp, AnApp.manifest.launchName, true, internal.processor.symbol);
   }
 }
 
@@ -173,7 +174,7 @@ export function allInstalledApps(): AppDescription[] {
   try {
     apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
   } catch (error) {
-    DEVELOPMENT && console.error(error);
+    DEV && console.error(error);
     return [];
   }
   const contents = apps.contents(system).filter(f => !isDirectory(f)) as FileSystemFile[];
@@ -182,4 +183,4 @@ export function allInstalledApps(): AppDescription[] {
   return lindowsApps;
 }
 
-attachDebugMethod('launchApp', launchApp);
+attachToWindowIfDev('launchApp', launchApp);

@@ -32,7 +32,7 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   }
 
   load() {
-    console.log('dev', DEVELOPMENT);
+    console.log('dev', DEV);
     console.log('function is called before app is ready');
   }
 

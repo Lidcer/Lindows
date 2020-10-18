@@ -94,7 +94,7 @@ export class Desktop extends React.Component<{}, IState> {
 
   updateView = () => {
     // this.terminal.reset();
-    if (DEVELOPMENT) {
+    if (DEV) {
       this.blueScreen.reset();
     }
     this.killActiveWindow.reset();
@@ -136,7 +136,7 @@ export class Desktop extends React.Component<{}, IState> {
 
     this.taskManager = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.D]);
     this.taskManager.onCombination = () => launchApp('taskmgr');
-    if (DEVELOPMENT) {
+    if (DEV) {
       this.blueScreen = new HotKeyHandler([
         Keypress.ArrowUp,
         Keypress.ArrowUp,
@@ -200,13 +200,17 @@ export class Desktop extends React.Component<{}, IState> {
     }
   };
 
-  createNewFolder = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  createNewFolder = async (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const usr = internal.fileSystem.userSymbol;
     const userDirectory = internal.fileSystem.userDirectory;
-    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    let desktop = userDirectory.getDirectory('Desktop', usr);
+    if (!desktop) {
+      desktop = await userDirectory.createDirectory('Desktop', usr);
+    }
+
     const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New folder', internal.processor.symbol);
     internal.fileSystem.saveHome();
-    const file = desktop.createDirectory(uniqueName, new StringSymbol(internal.fileSystem.cleanName));
+    const file = await desktop.createDirectory(uniqueName, new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
       x: ev.clientX,
       y: ev.clientY,
@@ -214,12 +218,12 @@ export class Desktop extends React.Component<{}, IState> {
     };
     this.refresh();
   };
-  createNewFile = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+  createNewFile = async (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const usr = internal.fileSystem.userSymbol;
     const userDirectory = internal.fileSystem.userDirectory;
-    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', usr);
+    const desktop = userDirectory.getDirectory('Desktop', usr);
     const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New File', internal.processor.symbol);
-    const file = desktop.createFile(uniqueName, 'text', '', new StringSymbol(internal.fileSystem.cleanName));
+    const file = await desktop.createFile(uniqueName, 'text', '', new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
       x: ev.clientX,
       y: ev.clientY,
@@ -229,11 +233,14 @@ export class Desktop extends React.Component<{}, IState> {
     this.refresh();
   };
 
-  refresh = () => {
+  refresh = async () => {
     const sys = internal.processor.symbol;
 
     const userDirectory = internal.fileSystem.userDirectory;
-    const desktop = internal.fileSystem.getDirectoryInDirectory(userDirectory, 'Desktop', sys);
+    let desktop = userDirectory.getDirectory('Desktop', sys);
+    if (!desktop) {
+      desktop = await userDirectory.createDirectory('Desktop', internal.fileSystem.userSymbol);
+    }
     const contents = desktop.contents(sys);
     const userSymbol = internal.fileSystem.userSymbol;
     const icons = (

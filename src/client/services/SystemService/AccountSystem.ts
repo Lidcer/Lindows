@@ -40,7 +40,7 @@ export class Account extends BaseSystemService {
 
   private imageMap = new Map<string, string>();
   private avatar: string = null;
-  private _status = SystemServiceStatus.Uninitialized
+  private _status = SystemServiceStatus.Uninitialized;
 
   constructor(private broadcaster: Broadcaster, private network: Network) {
     super();
@@ -50,14 +50,14 @@ export class Account extends BaseSystemService {
   init() {
     if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
     this._status = SystemServiceStatus.WaitingForStart;
-    
+
     const start = async () => {
       if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
-      if (STATIC) { 
+      if (STATIC) {
         this._status = SystemServiceStatus.Failed;
-        return
-      };
-  
+        return;
+      }
+
       try {
         await this.checkAccount();
         this.network.authenticate(this.token);
@@ -68,25 +68,24 @@ export class Account extends BaseSystemService {
       this.broadcaster.on(`${this.SERVICE_NAME}-logout`, this.logoutFromOtherSource);
       this._status = SystemServiceStatus.Ready;
     };
-  
+
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
       this.broadcaster.removeListener(`${this.SERVICE_NAME}-login`, this.loginFromOtherSources);
       this.broadcaster.removeListener(`${this.SERVICE_NAME}-logout`, this.logout);
-    }
-     
+    };
+
     return {
       start: start,
       destroy: destroy,
       status: this.status,
-    }
+    };
   }
 
   status = () => {
     return this._status;
-  }
-
+  };
 
   on(event: 'imageReady', listener: (accountInfo: IAccountInfo | null) => void): void;
   on(event: 'login', listener: (accountInfo: IAccountInfo) => void): void;
@@ -101,7 +100,7 @@ export class Account extends BaseSystemService {
     this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]);
   }
 
-  removeListener(event: string | symbol, listener: (...args: any[]) => void){
+  removeListener(event: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.removeListener(event, listener);
   }
 
@@ -396,7 +395,8 @@ export class Account extends BaseSystemService {
   }
 
   get token() {
-    if(!inIframe()) { //TODO replace with storage
+    if (!inIframe()) {
+      //TODO replace with storage
       this._token = localStorage.getItem('auth');
     }
     return this._token;

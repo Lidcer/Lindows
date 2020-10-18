@@ -8,15 +8,15 @@ export enum SystemServiceStatus {
 }
 
 export interface InitReturn {
-  start(): void | Promise<void>,
-  destroy(): void | Promise<void>,
+  start(): void | Promise<void>;
+  destroy(): void | Promise<void>;
   status(): SystemServiceStatus;
 }
 
 export abstract class BaseSystemService {
   init(): InitReturn {
     throw new Error('Not implemented!');
-  }  
+  }
   status() {
     return SystemServiceStatus.Uninitialized;
   }

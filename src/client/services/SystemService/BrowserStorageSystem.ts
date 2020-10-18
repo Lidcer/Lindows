@@ -1,8 +1,6 @@
 import * as compress from 'compress-str';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { attachDebugMethod, isDev } from '../../essential/requests';
 import { inIframe } from '../../utils/util';
-import { faThermometerQuarter } from '@fortawesome/free-solid-svg-icons';
 
 export class BrowserStorage extends BaseSystemService {
   private readonly storageName = '__lindows__';
@@ -50,7 +48,7 @@ export class BrowserStorage extends BaseSystemService {
         const parseData = JSON.parse(rawData);
         this.data = parseData;
       } catch (error) {
-        if (DEVELOPMENT) {
+        if (DEV) {
           console.error(error);
         }
         this.clear();

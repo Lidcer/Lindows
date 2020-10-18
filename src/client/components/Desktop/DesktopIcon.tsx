@@ -74,14 +74,14 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
     return this.props.userSymbol;
   }
 
-  componentDidMount() {
-    let desktopDes = internal.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
+  async componentDidMount() {
+    let desktopDes = this.desktop.getFile('.desktop', this.sys);
     if (!desktopDes) {
-      desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
+      desktopDes = await this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
     } else {
       if (desktopDes.getType(this.sys) !== 'json') {
         desktopDes.deleteFile(this.sys);
-        desktopDes = this.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
+        desktopDes = await this.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
       }
     }
     this.dotDesktop = desktopDes.getContent(this.sys);
@@ -104,14 +104,14 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
     this.forceUpdate();
   };
 
-  saveDotDesktop = () => {
-    let desktopDes = internal.fileSystem.getFileInDirectory(this.desktop, '.desktop', this.sys);
+  saveDotDesktop = async () => {
+    let desktopDes = this.desktop.getFile('.desktop', this.sys);
     if (!desktopDes) {
-      desktopDes = this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+      desktopDes = await this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
     } else {
       if (desktopDes.getType(this.sys) !== 'json') {
         desktopDes.deleteFile(this.sys);
-        desktopDes = this.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+        desktopDes = await this.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
       }
     }
     desktopDes.setContent(this.dotDesktop, this.sys);
@@ -174,7 +174,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
               console.log(selected.getContent(this.sys));
               selected.getContent(this.sys).app.New(selected);
             } catch (error) {
-              DEVELOPMENT && console.error(error);
+              DEV && console.error(error);
               MessageBox._anonymousShow('Unable to open');
             }
           }

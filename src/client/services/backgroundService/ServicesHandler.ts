@@ -1,7 +1,7 @@
 import { LypeService } from './LypeServices';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 
 interface IBackgroundServices {
   name: string;
@@ -105,7 +105,7 @@ class BackgroundServices extends EventEmitter {
   private loadAll() {
     return new Promise(async resolve => {
       for (const serviceName of startUp) {
-        await this.startOrGetService(serviceName).catch(err => DEVELOPMENT && console.error(err));
+        await this.startOrGetService(serviceName).catch(err => DEV && console.error(err));
       }
       resolve();
       this.isReady = true;
@@ -155,6 +155,6 @@ export function killBGService<T>(name: string): Promise<void> {
 export function startBackgroundServices(loadAllStartUpServices = false) {
   if (service) return service;
   service = new BackgroundServices(loadAllStartUpServices);
-  attachDebugMethod('service', service);
+  attachToWindowIfDev('service', service);
   return service;
 }

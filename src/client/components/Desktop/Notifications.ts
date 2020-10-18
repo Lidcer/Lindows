@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { BrowserStorage } from '../../services/SystemService/BrowserStorageSystem';
 import { internal } from '../../services/SystemService/ServiceHandler';
 import { BaseWindow, MessageBox } from '../../apps/BaseWindow/BaseWindow';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import { Processor } from '../../services/SystemService/ProcessorSystem';
 
 export interface INotification {
@@ -20,7 +20,7 @@ export class NotificationSystem {
   private browserStorage: BrowserStorage;
   private processor: Processor;
   constructor() {
-    attachDebugMethod('notif', this);
+    attachToWindowIfDev('notif', this);
     this.browserStorage = internal.browserStorage;
     this.processor = internal.processor;
     if (!this.browserStorage.ready) {

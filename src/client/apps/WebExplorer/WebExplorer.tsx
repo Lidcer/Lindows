@@ -10,7 +10,7 @@ import {
   Reload,
 } from './WebExplorerStyled';
 import * as Axios from 'axios';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import { WebExplorerDevTools } from './WebExplorerDevTools';
 import { faArrowLeft, faArrowRight, faSpinner, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -46,7 +46,7 @@ export class WebExplorer extends BaseWindow<WebExplorerState> {
         forwardHistory: [],
       },
     );
-    attachDebugMethod('webExplorer', this);
+    attachToWindowIfDev('webExplorer', this);
   }
 
   shown() {

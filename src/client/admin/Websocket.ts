@@ -4,7 +4,7 @@ import { IEventLog } from './AdminEventLogList';
 import { IAdminAccount } from './AdminAccountsList';
 import { SECOND } from '../../shared/constants';
 import fingerprintjs from 'fingerprintjs2';
-import { attachDebugMethod } from '../essential/requests';
+import { attachToWindowIfDev } from '../essential/requests';
 import { INotificationHandler } from './NotificationHandler';
 
 export declare interface IAdminWebSocket {
@@ -20,7 +20,7 @@ export class IAdminWebSocket extends EventEmitter {
 
   constructor(private notificationHandler: INotificationHandler) {
     super();
-    attachDebugMethod('websocket', this);
+    attachToWindowIfDev('websocket', this);
   }
 
   connect = async () => {

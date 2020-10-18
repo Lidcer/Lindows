@@ -21,7 +21,10 @@ interface IBootScreenState {
 }
 
 export class BootScreen extends React.Component<IBootScreenProps, IBootScreenState> {
+  private timeout: NodeJS.Timeout;
+  private takingToLong = false;
   onTouchTimeoutFunction: NodeJS.Timeout;
+
   constructor(props: IBootScreenProps) {
     super(props);
     this.state = {
@@ -66,6 +69,15 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     });
   }
   componentDidMount() {
+    if (this.timeout === undefined) {
+      this.timeout = setTimeout(() => {
+        this.state.messageToDisplay.push(
+          'This is taking to long! Your system might be broken you can try and reset browser storage!',
+        );
+        this.takingToLong = true;
+      }, SECOND * 15);
+    }
+
     if (internal.ready) {
       this.allReady();
     }
@@ -77,6 +89,9 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     document.addEventListener('touchend', this.onTouchEnd, false);
   }
   componentWillUnmount() {
+    if (this.timeout !== undefined) {
+      clearTimeout(this.timeout);
+    }
     internal.removeListener('allReady', this.allReady);
     internal.removeListener('onServiceReady', this.onServiceReady);
     internal.removeListener('onServiceFailed', this.onServiceFailed);
@@ -107,6 +122,9 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
 
   keypress = (ev: KeyboardEvent) => {
     if (ev.key.toLowerCase() === 'delete') {
+      if (this.takingToLong) {
+        return this.props.next('bios');
+      }
       this.setState({ goToBios: true });
     }
   };

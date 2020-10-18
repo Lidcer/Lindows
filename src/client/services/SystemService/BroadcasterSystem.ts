@@ -1,16 +1,16 @@
 import { EventEmitter } from 'events';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 
 export class Broadcaster extends BaseSystemService {
   private broadcastChannel: BroadcastChannel;
   private origin: string;
   private eventEmitter = new EventEmitter();
-  private _status = SystemServiceStatus.Uninitialized
+  private _status = SystemServiceStatus.Uninitialized;
 
   constructor() {
     super();
-    attachDebugMethod('BroadCaster', this);
+    attachToWindowIfDev('BroadCaster', this);
   }
 
   init() {
@@ -23,25 +23,24 @@ export class Broadcaster extends BaseSystemService {
       this.broadcastChannel = new BroadcastChannel('lindows-tab-emitter');
       this.broadcastChannel.addEventListener('message', this.onMessage);
       this._status = SystemServiceStatus.Ready;
-    }
-  
+    };
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
       if (!this.broadcastChannel) return;
       this.broadcastChannel.removeEventListener('message', this.onMessage);
-    }
+    };
 
     return {
       start: start,
       destroy: destroy,
       status: this.status,
-    }
+    };
   }
 
   status = () => {
     return this._status;
-  }
+  };
 
   on<T = any>(event: string | symbol, listener: (...args: T[]) => void) {
     this.eventEmitter.on(event, listener);

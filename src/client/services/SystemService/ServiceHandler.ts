@@ -6,7 +6,7 @@ import { Network } from './NetworkSystem';
 import { BrowserStorage } from './BrowserStorageSystem';
 import { Account } from './AccountSystem';
 import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import { FileSystem } from './FileSystem';
 import { installPreInstalledCommands } from '../../essential/Commands/CommandHandler';
 import { installPreInstalledApps } from '../../essential/apps';
@@ -37,7 +37,7 @@ export class Internal extends EventEmitter {
 
   constructor() {
     super();
-    attachDebugMethod('internal', this);
+    attachToWindowIfDev('internal', this);
   }
   private failedServiceInternals() {
     let _status = SystemServiceStatus.Failed;
@@ -64,8 +64,10 @@ export class Internal extends EventEmitter {
       'Processor',
     );
     this._fileSystem = await this.initService(new FileSystem(this.browserStorage, this.processor), 'FileSystem');
-    installPreInstalledCommands(); //TODO: move somewhere else?
-    installPreInstalledApps();
+    this._fileSystem.service._setSaving(false);
+    await installPreInstalledCommands(); //TODO: move somewhere else?
+    await installPreInstalledApps();
+    this._fileSystem.service._setSaving(true);
     this.isReady = true;
     this.emit('allReady', this);
   }
@@ -87,7 +89,7 @@ export class Internal extends EventEmitter {
       systemService.internalMethods = internal;
       await internal.start();
     } catch (error) {
-      DEVELOPMENT && console.error(error);
+      DEV && console.error(error);
     }
 
     this.emitServiceStatus(systemService, name);

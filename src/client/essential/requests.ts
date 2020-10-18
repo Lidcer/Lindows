@@ -32,12 +32,15 @@ export function fetchImage(imageUrl: string): Promise<string | null> {
   });
 }
 
-export function attachDebugMethod(value: string, method: any) {
-  if (DEVELOPMENT) {
-    (window as any)[value] = method;
+export function attachToWindowIfDev(value: string, method: any) {
+  if (DEV) {
+    attachToWindow(value, method);
   }
+}
+export function attachToWindow(value: string, method: any) {
+  (window as any)[value] = method;
 }
 
 export function isDev() {
-  return (window as any).DEVELOPMENT;
+  return (window as any).DEV;
 }

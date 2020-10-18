@@ -2,7 +2,7 @@ import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWind
 import React from 'react';
 import { random } from 'lodash';
 import { randomString } from '../../../shared/utils';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import { GroupViewerCanvas, ICanvasInteraction } from './GroupViewerCanvas';
 import { toPixelData } from '../../utils/screenshoter/src/index';
 import { GroupViewerStyled } from './GroupViewerStyled';
@@ -57,7 +57,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
     this.cursor.style.position = 'fixed';
     this.cursor.style.transform = 'rotate(-20deg)';
     this.cursor.height = 50;
-    attachDebugMethod('groupViewer', this);
+    attachToWindowIfDev('groupViewer', this);
   }
 
   async obtainId() {

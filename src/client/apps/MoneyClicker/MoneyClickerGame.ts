@@ -10,7 +10,7 @@ import { MoneyImages } from './src/MoneyImages';
 
 import { BlackHole } from './src/BlackHole';
 import { MoneyClickerPictureReferences } from './src/ImageReferences';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import { MoneyClicker } from './MoneyClicker';
 import { ImageLoader } from './src/ImageLoader';
 
@@ -497,7 +497,7 @@ export class MoneyClickerGame {
       bottomImgLandscape: this.upBotL,
       shopListImg: this.upL,
     });
-    attachDebugMethod('rotatingThingPic', this.rotatingThingPic);
+    attachToWindowIfDev('rotatingThingPic', this.rotatingThingPic);
     this.background = new Background(ctx, this.canvas, 37, 19, 8);
     this.rotatingThing = new RotatingThing(ctx, this.canvas, this.rotatingThingPic, 95);
     this.money = new Money(ctx, this.canvas, this.moneyPics.money1, 85);

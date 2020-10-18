@@ -3,7 +3,8 @@ import { Desktop } from './Desktop/Desktop';
 import { Bios, showTermsOfPolicy } from './bios/Bios';
 import { BootScreen } from './bootScreen/bootScreen';
 import { Webpage } from './webpage';
-import { attachDebugMethod } from '../essential/requests';
+import { attachToWindowIfDev } from '../essential/requests';
+import { SECOND } from '../../shared/constants';
 
 //interface IProps { }
 
@@ -13,14 +14,13 @@ interface IState {
 
 export class Main extends PureComponent<{} /*IProps*/, IState> {
   private shouldStayInBios = false;
-
   constructor(props) {
     super(props);
 
     this.state = {
       display: 'bootscreen',
     };
-    attachDebugMethod('b', this);
+    attachToWindowIfDev('b', this);
   }
 
   next = (boot?: 'lindows' | 'webpage' | 'bios') => {

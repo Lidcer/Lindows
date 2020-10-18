@@ -73,12 +73,15 @@ everyone.getHash = symbol => {
   return everyoneHash;
 };
 
-const directoriesMap = new WeakMap<FileSystemDirectory, DirectoryData>();
-const upperPath = new WeakMap<FileSystemFile | FileSystemDirectory, FileSystemDirectory>();
+type OnChange = () => Promise<void>;
+
 export type FileSystemContent = FileSystemDirectory | FileSystemFile<any>;
+const directoriesMap = new WeakMap<FileSystemDirectory, DirectoryData>();
+const upperPath = new WeakMap<FileSystemContent, FileSystemDirectory>();
+const rootMap = new WeakMap<FileSystemContent, OnChange>();
 
 export class FileSystemDirectory {
-  constructor(name: string, owner = everyone) {
+  constructor(name: string, owner = everyone, onChange: OnChange) {
     const result = isValidName(name);
     if (!result.valid) throw new Error(result.reason);
     const directoryData: DirectoryData = {
@@ -89,9 +92,10 @@ export class FileSystemDirectory {
     directoryData.permission.set(owner.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     directoryData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     directoriesMap.set(this, directoryData);
+    rootMap.set(this, onChange);
   }
 
-  createDirectory(name: string, owner = everyone) {
+  async createDirectory(name: string, owner = everyone) {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
@@ -102,15 +106,31 @@ export class FileSystemDirectory {
       if (sameName) {
         throw new Error('Duplicate name!');
       }
-      const newDirectory = new FileSystemDirectory(name, owner);
+      const onChange = rootMap.get(this);
+      if (!onChange) {
+        throw new Error('Missing root folder!');
+      }
+      const newDirectory = new FileSystemDirectory(name, owner, onChange);
       upperPath.set(newDirectory, this);
       directory.contents.push(newDirectory);
+      try {
+        await onChange();
+      } catch (error) {
+        upperPath.delete(newDirectory);
+        directoriesMap.delete(newDirectory);
+        rootMap.delete(newDirectory);
+        const index = directory.contents.indexOf(newDirectory);
+        if (index !== -1) {
+          directory.contents.splice(index, 1);
+        }
+        throw error;
+      }
       return newDirectory;
     }
     throw new Error('You do not have permission to edit this folder!');
   }
 
-  createFile<C = any>(name: string, type: FileData['type'], content: C, owner = everyone) {
+  async createFile<C = any>(name: string, type: FileData['type'], content: C, owner = everyone) {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error('Directory has been deleted!');
     const permission = directory.permission.get(owner.getHash(verificationSymbol));
@@ -122,8 +142,23 @@ export class FileSystemDirectory {
       if (sameName) {
         throw new Error('Duplicate name!');
       }
-      const file = new FileSystemFile(name, type, content, this, owner);
+      const onChange = rootMap.get(this);
+      if (!onChange) {
+        throw new Error('Missing root folder!');
+      }
+      const file = new FileSystemFile(name, type, content, this, onChange, owner);
       directory.contents.push(file);
+      try {
+        await onChange();
+      } catch (error) {
+        rootMap.delete(file);
+        directoryLink.delete(file);
+        const index = directory.contents.indexOf(file);
+        if (index !== -1) {
+          directory.contents.splice(index, 1);
+        }
+        throw error;
+      }
       return file;
     }
     throw new Error('You do not have permission to edit this folder!');
@@ -153,51 +188,34 @@ export class FileSystemDirectory {
     throw new Error('You don not have permission to rename this directory!');
   }
 
-  deleteDirectory(owner = everyone) {
+  async deleteDirectory(owner = everyone, recursive = false) {
     const data = directoriesMap.get(this);
     if (!data) throw new Error('Directory has been deleted!');
     const permission = data.permission.get(owner.getHash(verificationSymbol));
+    const onChange = rootMap.get(this);
+    if (!onChange) {
+      throw new Error('Missing root folder!');
+    }
 
     if (_canModifyFileOrDirectory(permission)) {
-      const pendingForDeletion: DirectoryData['contents'] = [];
       const upper = upperPath.get(this);
 
-      const deepScanner = (contents: DirectoryData['contents']) => {
-        for (const content of contents) {
-          if (!_canModifyFileOrDirectory(content.getPermission(owner))) {
-            throw new Error('You do not have permission to delete content of folder');
-          }
-          if (isDirectory(content)) {
-            const directory = directoriesMap.get(content);
-            pendingForDeletion.push(content);
-            directoriesMap.delete(content);
-            deepScanner(directory.contents);
-          } else {
-            pendingForDeletion.push(content);
-          }
-        }
-      };
-      pendingForDeletion.push(this);
-      deepScanner(data.contents);
-
-      for (const shouldDelete of pendingForDeletion) {
-        if (isDirectory(shouldDelete)) {
-          const directory = directoriesMap.get(shouldDelete);
-          directory.contents = [];
-          directoriesMap.delete(shouldDelete);
-        } else {
-          files.delete(shouldDelete);
-          upperPath.delete(shouldDelete);
-        }
+      if (upper.contents.length) {
+        throw new Error('Directory is not empty!');
       }
-      if (upper) {
-        const data = directoriesMap.get(upper);
-        if (data) {
-          const index = data.contents.indexOf(this);
-          if (index !== -1) {
-            data.contents.splice(index, 1);
-          }
-        }
+      const directoriesMapBackup = directoriesMap.get(this);
+      const rootMapBackup = rootMap.get(this);
+      const upperPathBackup = upperPath.get(this);
+      directoriesMap.delete(this);
+      rootMap.delete(this);
+      upperPath.delete(this);
+      try {
+        await onChange();
+      } catch (error) {
+        directoriesMap.set(this, directoriesMapBackup);
+        rootMap.set(this, rootMapBackup);
+        upperPath.set(this, upperPathBackup);
+        throw error;
       }
       return;
     }
@@ -300,6 +318,7 @@ export class FileSystemFile<C = any> {
     type: FileData['type'],
     content: C,
     fileSystemDirectory: FileSystemDirectory,
+    onChange: OnChange,
     owner = everyone,
   ) {
     const fileData: FileData<C> = {
@@ -312,6 +331,7 @@ export class FileSystemFile<C = any> {
     fileData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     files.set(this, fileData);
     directoryLink.set(this, fileSystemDirectory);
+    rootMap.set(this, onChange);
   }
 
   getContent<CC = C>(owner = everyone): CC {
@@ -366,7 +386,7 @@ export class FileSystemFile<C = any> {
     throw new Error('Missing permission to read');
   }
 
-  deleteFile(owner = everyone) {
+  async deleteFile(owner = everyone) {
     const file = files.get(this);
     if (!file) throw new Error('File has already been deleted!');
     const permission = file.permission.get(owner.getHash(verificationSymbol));
@@ -380,6 +400,14 @@ export class FileSystemFile<C = any> {
           data.contents.splice(index, 1);
         }
       }
+      const onChange = rootMap.get(this);
+      try {
+        await onChange();
+      } catch (error) {
+        data.contents.push(this);
+        throw error;
+      }
+      rootMap.delete(this);
       directoryLink.delete(this);
       return;
     }
@@ -548,7 +576,10 @@ export function objectifyDirectory(directory: FileSystemDirectory, systemPermiss
   const data = directoriesMap.get(directory);
   if (!data) throw new Error('Directory has been deleted!');
   const name = directory.name;
-  const contents = directory.contents(systemPermission).map(f => objectifyDirectoryFile(f, systemPermission));
+  const contents = directory
+    .contents(systemPermission)
+    .map(f => objectifyDirectoryFile(f, systemPermission))
+    .filter(e => e);
   const permission = objectifyPermission(data.permission);
 
   return { name, contents, permission };
@@ -559,6 +590,10 @@ function objectifyFile(file: FileSystemFile, systemPermission = everyone): Objec
   if (!data) throw new Error('File has been deleted!');
   const content = stringifyAnything(file.getContent(systemPermission));
   const type = file.getType(systemPermission);
+  if (type === 'lindowApp' || type === 'lindowObject') {
+    return null;
+  }
+
   const permission = objectifyPermission(data.permission);
   const name = data.name;
 
@@ -583,8 +618,8 @@ function objectifyDirectoryFile(obj: FileSystemFile | FileSystemDirectory, syste
   }
 }
 
-export function parseDirectory(root: FileSystemDirectory, objDir: ObjectDirectory, owner = everyone) {
-  const directory = root.createDirectory(objDir.name, owner);
+export async function parseDirectory(root: FileSystemDirectory, objDir: ObjectDirectory, owner = everyone) {
+  const directory = await root.createDirectory(objDir.name, owner);
   const data = directoriesMap.get(directory);
   if (!data) throw new Error('Something went horribly wrong!');
   const permissionsEntires = Object.entries(objDir.permission);
@@ -610,18 +645,18 @@ export function parseDirectoryOrFile(root: FileSystemDirectory, obj: ObjectDirec
   }
 }
 
-function parseFile(root: FileSystemDirectory, objFile: ObjectFile, owner = everyone) {
+async function parseFile(root: FileSystemDirectory, objFile: ObjectFile, owner = everyone) {
   let content = objFile.content;
   if (objFile.type === 'json') {
     try {
       const conContent = JSON.parse(content);
       content = conContent;
     } catch (error) {
-      DEVELOPMENT && console.error('Unable to parse JSON', content);
+      DEV && console.error('Unable to parse JSON', content);
     }
   }
 
-  const file = root.createFile(objFile.name, objFile.type, content, owner);
+  const file = await root.createFile(objFile.name, objFile.type, content, owner);
   const data = files.get(file);
   if (!data) throw new Error('Something went horribly wrong!');
   const permissionsEntires = Object.entries(objFile.permission);

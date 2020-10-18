@@ -49,7 +49,7 @@ import {
 import { alwaysOnTop as alwaysOnTopIndex } from '../../Constants';
 import { WindowEvent } from './WindowEvent';
 import { Network } from '../../services/SystemService/NetworkSystem';
-import { attachDebugMethod } from '../../essential/requests';
+import { attachToWindowIfDev } from '../../essential/requests';
 import './baseWindows.scss';
 import { LindowError } from '../../utils/util';
 import { FileSystemFile } from '../../utils/FileSystemDirectory';
@@ -1904,4 +1904,4 @@ export class AdminPromp extends BaseWindow {
     );
   }
 }
-attachDebugMethod('BaseWindow', BaseWindow);
+attachToWindowIfDev('BaseWindow', BaseWindow);
