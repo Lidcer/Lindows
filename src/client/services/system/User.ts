@@ -1,5 +1,5 @@
 import { random } from "lodash";
-import { StringSymbol } from "../../utils/FileSystemDirectory";
+import { sanitizeName, StringSymbol } from "../../utils/FileSystemDirectory";
 import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService";
 import { Internal } from "../internals/Internal";
 
@@ -47,8 +47,16 @@ export class User extends BaseService {
       status: this.status,
     };
   }
+  get userDirectory() {
+    const int = internal.get(this);
+    return int.fileSystem.home.getDirectory(this.userName);
+  }
+
   get userName() {
     return this._userName;
+  }
+  get cleanUserName() {
+    return sanitizeName(this._userName);
   }
 
   get userSymbol() {

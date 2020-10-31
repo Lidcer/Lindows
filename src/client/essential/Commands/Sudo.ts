@@ -30,7 +30,7 @@ export class Sudo extends BaseCommand {
         unFreeze: () => {},
       } as any);
       if (result) {
-        obj.processor = internal.processor;
+        obj.processor = internal.system.processor;
       } else {
         if (!this.finish) return;
         this.finish(`Administrator privileges was not obtained}`);

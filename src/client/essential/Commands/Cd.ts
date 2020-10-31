@@ -33,14 +33,14 @@ export class Cd extends BaseCommand {
   }
 
   listDirectoryContent(directory: FileSystemDirectory) {
-    const contents = directory.contents(internal.processor.symbol);
+    const contents = directory.contents(internal.systemSymbol);
     const names = contents.map(d => d.name);
     return names.join("\n");
   }
 
   suggest(entry: string, index: number, fullEntry: string, directory?: FileSystemDirectory) {
     if (!directory) return [];
-    const content = directory.contents(internal.processor.symbol);
+    const content = directory.contents(internal.systemSymbol);
     const directories = content.filter(c => isDirectory(c)).map(f => f.name);
     return directories;
   }

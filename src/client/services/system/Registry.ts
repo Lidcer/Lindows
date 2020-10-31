@@ -92,6 +92,14 @@ export class Registry extends BaseService {
     return { ...regData };
   }
 
+  getUserItemValue(key: string) {
+    const reg = this.getUserItem(key);
+    if (reg) {
+      return reg.data;
+    }
+    return null;
+  }
+
   getUserItem(key: string) {
     const int = internal.get(this);
     const user = int.system.user.userName;

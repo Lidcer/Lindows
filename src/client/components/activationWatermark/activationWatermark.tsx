@@ -4,12 +4,12 @@ import { ActivationWatermarkStyle } from "./activationWatermarkStyled";
 
 export class ActivationWatermark extends React.Component {
   componentDidMount() {
-    internal.account.on("login", this.refresh);
-    internal.account.on("logout", this.refresh);
+    internal.system.account.on("login", this.refresh);
+    internal.system.account.on("logout", this.refresh);
   }
   componentWillUnmount() {
-    internal.account.on("login", this.refresh);
-    internal.account.on("logout", this.refresh);
+    internal.system.account.on("login", this.refresh);
+    internal.system.account.on("logout", this.refresh);
   }
 
   refresh = () => {
@@ -25,7 +25,7 @@ export class ActivationWatermark extends React.Component {
         </ActivationWatermarkStyle>
       );
     }
-    if (internal.account.account) return null;
+    if (internal.system.account.account) return null;
     return (
       <ActivationWatermarkStyle>
         <h1>Activate Lindows</h1>

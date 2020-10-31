@@ -9,9 +9,7 @@ import {
   BrowserUrlInput,
   Reload,
 } from "./WebExplorerStyled";
-import * as Axios from "axios";
 import { attachToWindowIfDev } from "../../essential/requests";
-import { WebExplorerDevTools } from "./WebExplorerDevTools";
 import { faArrowLeft, faArrowRight, faSpinner, faUndo } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 

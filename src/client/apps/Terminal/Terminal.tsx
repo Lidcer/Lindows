@@ -40,8 +40,8 @@ interface OutputInFile {
 }
 
 function terminalName() {
-  if (internal.account.account) return internal.account.account.username;
-  return internal.processor.username;
+  if (internal.system.account.account) return internal.system.account.account.username;
+  return internal.system.processor.username;
 }
 
 function deviceInfo() {
@@ -86,8 +86,8 @@ export class Terminal extends BaseWindow<ITerminal> {
         }
         this.folderPermission = this.getProcessor().symbol;
       }
-    } else if (internal.processor.username) {
-      this.folderPermission = new StringSymbol(sanitizeName(internal.processor.username));
+    } else if (internal.system.processor.username) {
+      this.folderPermission = new StringSymbol(sanitizeName(internal.system.processor.username));
     }
     const path = this.launchFlags.path;
     if (path) {
@@ -96,7 +96,7 @@ export class Terminal extends BaseWindow<ITerminal> {
         this.setVariables({ directory });
       }
     } else {
-      const directory = internal.fileSystem.userDirectory;
+      const directory = internal.system.user.userDirectory;
       if (directory) {
         this.setVariables({ directory });
       }
@@ -113,7 +113,7 @@ export class Terminal extends BaseWindow<ITerminal> {
   }
 
   private get userDirectoryPath() {
-    return `${internal.fileSystem.home.path}/${sanitizeName(internal.processor.username)}`;
+    return `${internal.fileSystem.home.path}/${sanitizeName(internal.system.processor.username)}`;
   }
 
   history() {
@@ -125,8 +125,8 @@ export class Terminal extends BaseWindow<ITerminal> {
   }
   private get getPath() {
     const path = this.variables.directory.path;
-    if (path.startsWith(internal.fileSystem.userDirectory.path)) {
-      const h = path.slice(internal.fileSystem.userDirectory.path.length);
+    if (path.startsWith(internal.system.user.userDirectory.path)) {
+      const h = path.slice(internal.system.user.userDirectory.path.length);
       return `~${h ? h : ""}`;
     }
     if (path.startsWith("root/")) {

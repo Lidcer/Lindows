@@ -48,7 +48,7 @@ class IMousePointer extends EventEmitter {
   }
 
   get enabled() {
-    return internal.browserStorage.getItem(storageProperties.enabled);
+    return internal.system.registry.getUserItemValue(storageProperties.enabled);
   }
 }
 export const mousePointer = new IMousePointer();
@@ -79,7 +79,7 @@ export class Cursor extends React.Component<{}, IState> {
     window.addEventListener("mousemove", this.mouseMove, false);
     mousePointer.on("change", this.onMouseChangeFixPos);
     mousePointer.on("enableDisable", this.enableDisable);
-    const enabled = !!internal.browserStorage.getItem(storageProperties.enabled);
+    const enabled = !!internal.system.registry.getUserItemValue(storageProperties.enabled) as boolean;
     this.setState({ enabled });
     if (enabled) {
       document.body.style.cursor = "none";
@@ -94,7 +94,7 @@ export class Cursor extends React.Component<{}, IState> {
   }
 
   enableDisable = async (bool: boolean, callback: (result: boolean) => void) => {
-    await internal.browserStorage.setItem(storageProperties.enabled, !!bool);
+    await internal.system.registry.setUserItem(storageProperties.enabled, !!bool);
     this.setState({ enabled: !!bool });
     if (bool) {
       document.body.style.cursor = "none";

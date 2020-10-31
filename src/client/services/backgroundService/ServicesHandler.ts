@@ -19,7 +19,6 @@ if (!STATIC) {
 
 const startUp: string[] = ["lype"];
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 declare interface BackgroundServices {
   on(event: "ready", listener: () => void): this;
 }

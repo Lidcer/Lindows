@@ -5,7 +5,7 @@ import { isDirectory, FileSystemDirectory, FileSystemFile } from "../../utils/Fi
 export class HelpCommand extends BaseCommand {
   public static help = "shows help message";
   execute() {
-    const system = internal.processor.symbol;
+    const system = internal.systemSymbol;
     const directories = internal.fileSystem.root.contents(system);
     const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
     if (!bin) {

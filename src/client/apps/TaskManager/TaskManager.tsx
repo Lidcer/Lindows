@@ -24,11 +24,11 @@ export class TaskManager extends BaseWindow {
       image: TaskManager.manifest.icon,
     });
 
-    internal.processor.on("appAdd", this.update);
+    internal.system.processor.on("appAdd", this.update);
   }
 
   onClose() {
-    internal.processor.removeListener("appAdd", this.update);
+    internal.system.processor.removeListener("appAdd", this.update);
   }
 
   update = () => {
@@ -39,7 +39,8 @@ export class TaskManager extends BaseWindow {
     return (
       <TaskManagerStyle>
         <span>
-          {internal.processor.processes.length} | {internal.processor.processes.filter(e => e.minimized).length}
+          {internal.system.processor.processes.length} |
+          {internal.system.processor.processes.filter(e => e.minimized).length}
         </span>
         <table>
           <tbody>
@@ -59,7 +60,7 @@ export class TaskManager extends BaseWindow {
   }
 
   killAll = () => {
-    internal.processor.processes.forEach((e: any) => {
+    internal.system.processor.processes.forEach((e: any) => {
       if (e !== this) e.exit();
     });
     setTimeout(() => {
@@ -76,7 +77,7 @@ export class TaskManager extends BaseWindow {
   };
 
   get renderList() {
-    return internal.processor.processes.map(this.getThing);
+    return internal.system.processor.processes.map(this.getThing);
   }
 
   getThing = (window: BaseWindow, index: number) => {

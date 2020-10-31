@@ -198,7 +198,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   }
 
   get connectAccount() {
-    const name = internal.account.account ? internal.account.account.username : "";
+    const name = internal.system.account.account ? internal.system.account.account.username : "";
     return (
       <Lype>
         <LypeLoginRequired>
@@ -696,8 +696,8 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   componentWillUnmount() {
     this.destroyed = true;
     internal.removeListener("allReady", this.startup);
-    internal.account.removeListener("login", this.update);
-    internal.account.removeListener("logout", this.update);
+    internal.system.account.removeListener("login", this.update);
+    internal.system.account.removeListener("logout", this.update);
     this.lypeService.removeListener("destroy", this.lypeServiceCrash);
     window.removeEventListener("resize", this.update);
   }

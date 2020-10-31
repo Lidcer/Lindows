@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/camelcase */
 import { clamp, sample } from "lodash";
 import { Drawable } from "./Drawable";
 import { Snake } from "./Snake";

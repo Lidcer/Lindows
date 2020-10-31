@@ -84,7 +84,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
       if (currentScanner.name === folderName) {
         continue;
       } else {
-        const contents = currentScanner.contents(internal.processor.symbol);
+        const contents = currentScanner.contents(internal.systemSymbol);
         const find = contents.find(f => f.name === folderName);
         if (find && isDirectory(find)) {
           currentScanner = find;
@@ -115,8 +115,8 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           }
           this.folderPermission = this.getProcessor().symbol;
         }
-      } else if (internal.processor.username) {
-        this.folderPermission = new StringSymbol(sanitizeName(internal.processor.username));
+      } else if (internal.system.user.userName) {
+        this.folderPermission = new StringSymbol(sanitizeName(internal.system.user.userName));
       }
     }
     const path = this.launchFlags.path;
@@ -126,7 +126,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         this.setVariables({ directory });
       }
     } else {
-      const directory = internal.fileSystem.userDirectory;
+      const directory = internal.system.user.userDirectory;
       if (directory) {
         this.setVariables({ directory });
       }
@@ -241,17 +241,13 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   }
 
   createNewDirectory = () => {
-    const newName = internal.fileSystem.getUniqueName(
-      this.variables.directory,
-      "New folder",
-      internal.processor.symbol,
-    );
+    const newName = internal.fileSystem.getUniqueName(this.variables.directory, "New folder", internal.systemSymbol);
     this.variables.directory.createDirectory(newName, this.folderPermission);
     this.forceUpdate();
   };
 
   createNewFile = () => {
-    const newName = internal.fileSystem.getUniqueName(this.variables.directory, "New File", internal.processor.symbol);
+    const newName = internal.fileSystem.getUniqueName(this.variables.directory, "New File", internal.systemSymbol);
     this.variables.directory.createFile(newName, "text", "", this.folderPermission);
     this.forceUpdate();
   };

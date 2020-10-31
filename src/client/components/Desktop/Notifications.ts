@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { BrowserStorage } from "../../services/internals/__BrowserStorageSystem";
 import { internal } from "../../services/internals/Internal";
 import { BaseWindow, MessageBox } from "../../apps/BaseWindow/BaseWindow";
 import { attachToWindowIfDev } from "../../essential/requests";
@@ -17,15 +16,15 @@ export class NotificationSystem {
   private SERVICE_NAME = "__notification__";
   private eventEmitter = new EventEmitter();
   private blocks: string[] = [];
-  private browserStorage: BrowserStorage;
+  //private browserStorage: BrowserStorage;
   private processor: Processor;
   constructor() {
     attachToWindowIfDev("notif", this);
-    this.browserStorage = internal.browserStorage;
-    this.processor = internal.processor;
-    if (!this.browserStorage.ready) {
-      throw new Error("BrowserStorage is not ready");
-    }
+    //this.browserStorage = internal.browserStorage;
+    this.processor = internal.system.processor;
+    // if (!this.browserStorage.ready) {
+    //   throw new Error("BrowserStorage is not ready");
+    // }
     if (!this.processor.ready) {
       throw new Error("processor is not ready");
     }
@@ -36,7 +35,6 @@ export class NotificationSystem {
   on(event: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.on(event, listener);
   }
-
   removeListener(event: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.removeListener(event, listener);
   }
@@ -71,14 +69,14 @@ export class NotificationSystem {
     const indexOf = this.blocks.indexOf(sender);
     if (indexOf !== -1) return;
     this.blocks.push(sender);
-    this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
+    // this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
   }
 
   unblock(sender: string) {
     const indexOf = this.blocks.indexOf(sender);
     if (indexOf === -1) return;
     this.blocks.splice(indexOf, 1);
-    this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
+    //this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
   }
 
   destroy() {

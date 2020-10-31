@@ -34,7 +34,7 @@ export class LsCommand extends BaseCommand {
   }
 
   listDirectoryContent(directory: FileSystemDirectory) {
-    const contents = directory.contents(internal.processor.symbol);
+    const contents = directory.contents(internal.systemSymbol);
     const names = contents.map(d => (isDirectory(d) ? `|${d.name}|` : d.name));
     return names.join(" ");
   }

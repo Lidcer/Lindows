@@ -1,5 +1,5 @@
-import { Renderer } from "../Renderer";
 import { Drawable } from "./Drawable";
+import { Renderer } from "./SnakeRender";
 
 export class Square extends Drawable {
   time = 0;

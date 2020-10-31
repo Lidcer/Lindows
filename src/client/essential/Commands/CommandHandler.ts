@@ -37,7 +37,7 @@ export async function installCommand(command: BaseCommand, name: string, owner =
   if (!/^[a-z]+$/gi.test(name)) {
     throw new Error("Invalid name");
   }
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
   if (!bin) throw new Error("Corrupted file system");
@@ -54,14 +54,14 @@ export async function installCommand(command: BaseCommand, name: string, owner =
 }
 
 export async function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
-  if (system.getHash !== internal.processor.symbol.getHash) {
+  if (internal.systemSymbol.equals(system)) {
     throw new Error("You do not have admin permission to install this command");
   }
   return installCommand(command, name, system);
 }
 
 export function uninstallCommand(name: string, owner = everyone) {
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
   if (!bin) throw new Error("Corrupted file system");
@@ -81,23 +81,23 @@ export function uninstallCommand(name: string, owner = everyone) {
 }
 
 export async function installPreInstalledCommands() {
-  await installSystemCommand(HelpCommand, "help", internal.processor.symbol);
-  await installSystemCommand(Grep, "grep", internal.processor.symbol);
-  await installSystemCommand(Sudo, "sudo", internal.processor.symbol);
-  await installSystemCommand(Start, "start", internal.processor.symbol);
-  await installSystemCommand(LsCommand, "ls", internal.processor.symbol);
-  await installSystemCommand(Cd, "cd", internal.processor.symbol);
-  await installSystemCommand(MkDir, "mkdir", internal.processor.symbol);
-  await installSystemCommand(EchoCommand, "echo", internal.processor.symbol);
-  await installSystemCommand(Cat, "cat", internal.processor.symbol);
+  await installSystemCommand(HelpCommand, "help", internal.systemSymbol);
+  await installSystemCommand(Grep, "grep", internal.systemSymbol);
+  await installSystemCommand(Sudo, "sudo", internal.systemSymbol);
+  await installSystemCommand(Start, "start", internal.systemSymbol);
+  await installSystemCommand(LsCommand, "ls", internal.systemSymbol);
+  await installSystemCommand(Cd, "cd", internal.systemSymbol);
+  await installSystemCommand(MkDir, "mkdir", internal.systemSymbol);
+  await installSystemCommand(EchoCommand, "echo", internal.systemSymbol);
+  await installSystemCommand(Cat, "cat", internal.systemSymbol);
   if (DEV) {
-    await installSystemCommand(CommandTester, "dev", internal.processor.symbol);
-    await installSystemCommand(Take, "take", internal.processor.symbol);
+    await installSystemCommand(CommandTester, "dev", internal.systemSymbol);
+    await installSystemCommand(Take, "take", internal.systemSymbol);
   }
 }
 
 export function getCommand(commandName: string) {
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   const directories = internal.fileSystem.root.contents(system);
   const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
   if (!bin) throw new Error("Corrupted file system");

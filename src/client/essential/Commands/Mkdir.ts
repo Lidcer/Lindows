@@ -1,3 +1,4 @@
+import { internal } from "../../services/internals/Internal";
 import { BaseCommand, ExecutionParameters } from "./BaseCommand";
 
 export class MkDir extends BaseCommand {
@@ -6,7 +7,7 @@ export class MkDir extends BaseCommand {
     const name = this.args.splice(1).join().trim();
     try {
       if (parameters && parameters.processor) {
-        parameters.directory.createDirectory(name, parameters.processor.symbol);
+        parameters.directory.createDirectory(name, internal.systemSymbol);
       } else {
         parameters.directory.createDirectory(name);
       }

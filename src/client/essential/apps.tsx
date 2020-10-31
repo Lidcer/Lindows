@@ -53,7 +53,7 @@ export async function installApp(appWindow: BaseWindow | any, name: string, show
     throw new Error(`Invalid name: ${name}`);
   }
 
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   let apps: FileSystemDirectory;
   try {
     apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
@@ -88,14 +88,14 @@ export function installSystemCommand(
   showInTaskBar: boolean,
   system: StringSymbol,
 ) {
-  if (!system.requals(internal.processor.symbol)) {
+  if (!system.equals(internal.systemSymbol)) {
     throw new Error("You do not have admin permission to install this command");
   }
   return installApp(appWindow, name, showInTaskBar, system);
 }
 
 export function uninstallCommand(name: string, owner = everyone) {
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   let apps: FileSystemDirectory;
   try {
     apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
@@ -118,14 +118,14 @@ export function uninstallCommand(name: string, owner = everyone) {
 export function launchApp(appName: string, flags?: string) {
   const app = appConstructorGenerator(appName);
   if (app) {
-    internal.processor.addApp(app, appName, flags);
+    internal.system.processor.addApp(app, appName, flags);
     return true;
   }
   return false;
 }
 
 export function appConstructorGenerator(appName: string) {
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   let apps: FileSystemDirectory;
   try {
     apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
@@ -146,31 +146,31 @@ export function appConstructorGenerator(appName: string) {
 }
 
 export async function installPreInstalledApps() {
-  await installApp(MessageBox, MessageBox.manifest.launchName, false, internal.processor.symbol);
-  await installApp(Terminal, Terminal.manifest.launchName, true, internal.processor.symbol);
-  await installApp(TaskManager, TaskManager.manifest.launchName, true, internal.processor.symbol);
-  await installApp(SnakeGame, SnakeGame.manifest.launchName, true, internal.processor.symbol);
-  await installApp(MoneyClicker, MoneyClicker.manifest.launchName, true, internal.processor.symbol);
+  await installApp(MessageBox, MessageBox.manifest.launchName, false, internal.systemSymbol);
+  await installApp(Terminal, Terminal.manifest.launchName, true, internal.systemSymbol);
+  await installApp(TaskManager, TaskManager.manifest.launchName, true, internal.systemSymbol);
+  await installApp(SnakeGame, SnakeGame.manifest.launchName, true, internal.systemSymbol);
+  await installApp(MoneyClicker, MoneyClicker.manifest.launchName, true, internal.systemSymbol);
   if (!STATIC) {
-    await installApp(AccountManager, AccountManager.manifest.launchName, true, internal.processor.symbol);
-    await installApp(Lype, Lype.manifest.launchName, true, internal.processor.symbol);
-    await installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.processor.symbol);
+    await installApp(AccountManager, AccountManager.manifest.launchName, true, internal.systemSymbol);
+    await installApp(Lype, Lype.manifest.launchName, true, internal.systemSymbol);
+    await installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.systemSymbol);
   }
-  await installApp(FileExplorer, FileExplorer.manifest.launchName, true, internal.processor.symbol);
-  await installApp(WebExplorer, WebExplorer.manifest.launchName, true, internal.processor.symbol);
+  await installApp(FileExplorer, FileExplorer.manifest.launchName, true, internal.systemSymbol);
+  await installApp(WebExplorer, WebExplorer.manifest.launchName, true, internal.systemSymbol);
 
-  await installApp(VirtualCreate, VirtualCreate.manifest.launchName, true, internal.processor.symbol);
+  await installApp(VirtualCreate, VirtualCreate.manifest.launchName, true, internal.systemSymbol);
 
-  await installApp(MouseProperties, MouseProperties.manifest.launchName, true, internal.processor.symbol);
-  await installApp(IDELide, IDELide.manifest.launchName, true, internal.processor.symbol);
+  await installApp(MouseProperties, MouseProperties.manifest.launchName, true, internal.systemSymbol);
+  await installApp(IDELide, IDELide.manifest.launchName, true, internal.systemSymbol);
   if (DEV) {
-    await installApp(AnApp, AnApp.manifest.launchName, true, internal.processor.symbol);
+    await installApp(AnApp, AnApp.manifest.launchName, true, internal.systemSymbol);
   }
 }
 
 export function allInstalledApps(): AppDescription[] {
   let apps: FileSystemDirectory;
-  const system = internal.processor.symbol;
+  const system = internal.systemSymbol;
   try {
     apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
   } catch (error) {

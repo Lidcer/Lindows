@@ -387,7 +387,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         content: "Yes",
         selected: false,
         fun: async () => {
-          internal.browserStorage.clear();
+          localStorage.clear();
           this.closePopup();
         },
       },

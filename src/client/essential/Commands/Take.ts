@@ -4,7 +4,7 @@ import { internal } from "../../services/internals/Internal";
 export class Take extends BaseCommand {
   public static help = ["killall, raiseinternalexception"].join("\n");
   execute() {
-    const system = internal.processor.symbol;
+    const system = internal.systemSymbol;
     if (this.hasArg("help")) {
       const content = [
         "raiseinternalexception - throws error inside lindows core",
@@ -14,9 +14,9 @@ export class Take extends BaseCommand {
       this.finish(content);
       return;
     } else if (this.hasArg("killall")) {
-      const processes = internal.processor.processes;
+      const processes = internal.system.processor.processes;
       const size = processes.length;
-      internal.processor.processes.forEach(app => {
+      internal.system.processor.processes.forEach(app => {
         app.exit();
       });
 

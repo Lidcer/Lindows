@@ -287,7 +287,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   }
 
   get settingsTab() {
-    const ac = internal.account.account;
+    const ac = internal.system.account.account;
     if (!ac) {
       this.switchTab(Tab.Login);
       return null;
@@ -418,7 +418,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const pass = state.settings.password;
     state.settings.password = "";
     const ap = state.settings.alteringProfile;
-    const ac = internal.account;
+    const ac = internal.system.account;
 
     const goBack = () => {
       state.settings.alteringProfile = [];
@@ -488,14 +488,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   };
 
   logout = () => {
-    internal.account.logout();
+    internal.system.account.logout();
     this.resetWarnings();
   };
 
   get changes() {
     const changes: string[] = [];
     const st = this.state.settings;
-    const ac = internal.account.account;
+    const ac = internal.system.account.account;
     if (st.displayedName !== ac.displayedName)
       changes.push(`Displayed name: ${ac.displayedName} => ${st.displayedName}`);
     if (st.newPassword) changes.push("Password: ******* => ********");
@@ -542,7 +542,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const state = { ...this.state };
     this.setState({ inProgress: true });
     try {
-      const msg = await internal.account.login(this.state.login.usernameOrEmail, this.state.login.password);
+      const msg = await internal.system.account.login(this.state.login.usernameOrEmail, this.state.login.password);
       if (this.destroyed) return;
       const appName = this.redirectToApp;
       if (appName) {
@@ -564,7 +564,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   resetPassword = async (ev?: React.FormEvent) => {
     if (ev) ev.preventDefault();
-    internal.account
+    internal.system.account
       .changePasswordWithTemporarilyToken(
         this.temporarilyToken,
         this.state.resetPassword.password,
@@ -585,7 +585,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const state = { ...this.state };
 
     try {
-      const response = await internal.account.register(
+      const response = await internal.system.account.register(
         this.state.register.username,
         this.state.register.email,
         this.state.register.password,
@@ -610,7 +610,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   changePasswordForm = async (ev: React.FormEvent) => {
     ev.preventDefault();
     this.setState({ inProgress: true });
-    internal.account
+    internal.system.account
       .resetPassword(this.state.forgetPassword.email)
       .then(msg => {
         if (this.destroyed) return;
@@ -671,14 +671,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       }, SECOND * 5);
     };
     try {
-      const tokenType = await internal.account.checkOutTemporarilyToken(token);
+      const tokenType = await internal.system.account.checkOutTemporarilyToken(token);
       if (this.destroyed) return;
 
       if (tokenType === VerificationType.PasswordReset) {
         this.switchTab(Tab.ResetPassword);
       } else if (tokenType === VerificationType.ChangeEmail || tokenType === VerificationType.Verificaiton) {
         this.setState({ verifyResult: "Validating..." });
-        internal.account
+        internal.system.account
           .verifyEmail(token)
           .then(msg => {
             this.resetWarnings();
@@ -714,13 +714,13 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   componentWillUnmount() {
     this.destroyed = true;
     internal.removeListener("allReady", this.startup);
-    internal.account.removeListener("login", this.updateTabAccordingToUser);
-    internal.account.removeListener("logout", this.updateTabAccordingToUser);
+    internal.system.account.removeListener("login", this.updateTabAccordingToUser);
+    internal.system.account.removeListener("logout", this.updateTabAccordingToUser);
   }
 
   startup = () => {
-    internal.account.on("login", this.updateTabAccordingToUser);
-    internal.account.on("logout", this.updateTabAccordingToUser);
+    internal.system.account.on("login", this.updateTabAccordingToUser);
+    internal.system.account.on("logout", this.updateTabAccordingToUser);
     this.updateTabAccordingToUser();
   };
 
@@ -730,7 +730,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       email: "",
     };
     state.settings = {
-      displayedName: internal.account.account ? internal.account.account.displayedName : "",
+      displayedName: internal.system.account.account ? internal.system.account.account.displayedName : "",
       newEmail: "",
       newPassword: "",
       password: "",
@@ -759,14 +759,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         this.verifyCode(verificationCode);
         return;
       }
-      if (internal.account.account) {
+      if (internal.system.account.account) {
         const appName = this.redirectToApp;
         if (appName) {
           location.href = `${location.origin}/${appName}`;
         }
       }
     }
-    const ac = internal.account.account;
+    const ac = internal.system.account.account;
     if (ac) {
       await this.switchTab(Tab.Settings);
       this.setState({

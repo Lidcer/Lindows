@@ -61,16 +61,16 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   componentDidMount() {
-    internal.processor.on("appAdd", this.updateTaskBar);
-    internal.processor.on("appRemove", this.updateTaskBar);
-    internal.processor.on("appAdd", this.onAppAdd);
-    internal.processor.on("appRemove", this.onAppRemove);
+    internal.system.processor.on("appAdd", this.updateTaskBar);
+    internal.system.processor.on("appRemove", this.updateTaskBar);
+    internal.system.processor.on("appAdd", this.onAppAdd);
+    internal.system.processor.on("appRemove", this.onAppRemove);
     this.timeOutFunction = setInterval(this.updateTaskBar, 1000);
   }
 
   componentWillUnmount() {
-    internal.processor.removeListener("appAdd", this.updateTaskBar);
-    internal.processor.removeListener("appRemove", this.updateTaskBar);
+    internal.system.processor.removeListener("appAdd", this.updateTaskBar);
+    internal.system.processor.removeListener("appRemove", this.updateTaskBar);
     clearTimeout(this.timeOutFunction);
   }
 
@@ -193,7 +193,7 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   private showDesktop(event: React.MouseEvent) {
-    const pross = internal.processor.processes.filter(a => !a.minimized);
+    const pross = internal.system.processor.processes.filter(a => !a.minimized);
   }
 
   get navBar() {

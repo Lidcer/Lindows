@@ -185,9 +185,9 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
         };
       }
       //@ts-ignore
-      const desktop = internal.fileSystem.userDirectory.getDirectory("Desktop", internal.processor.symbol);
+      const desktop = internal.fileSystem.userDirectory.getDirectory("Desktop", internal.system.processor.symbol);
       const fileName = compiledApp.manifest.launchName;
-      let file = desktop.getFile(compiledApp.manifest.launchName, internal.fileSystem.userSymbol);
+      let file = desktop.getFile(compiledApp.manifest.launchName, internal.system.user.userSymbol);
       if (!file) {
         file = desktop.createFile(
           fileName,
@@ -196,7 +196,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
             manifest: compiledApp.manifest,
             app: compiledApp,
           },
-          internal.fileSystem.userSymbol,
+          internal.system.user.userSymbol,
         );
       } else {
         file.setContent(
@@ -204,7 +204,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
             manifest: compiledApp.manifest,
             app: compiledApp,
           },
-          internal.fileSystem.userSymbol,
+          internal.system.user.userSymbol,
         );
       }
       const app = await compiledApp.New(file);
@@ -243,10 +243,10 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
   };
 
   removeFromProcessor(appID: number) {
-    const anApp = internal.processor.runningApps.find(a => a.processID === appID);
+    const anApp = internal.system.processor.runningApps.find(a => a.processID === appID);
     if (anApp) {
-      const indexOf = internal.processor.runningApps.indexOf(anApp);
-      internal.processor.runningApps.splice(indexOf, 0);
+      const indexOf = internal.system.processor.runningApps.indexOf(anApp);
+      internal.system.processor.runningApps.splice(indexOf, 0);
     }
   }
 

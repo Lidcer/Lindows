@@ -57,12 +57,12 @@ export class LypeService extends BaseService {
   };
 
   destroy() {
-    internal.account.removeListener("login", this.login);
-    internal.account.removeListener("logout", this.logout);
+    internal.system.account.removeListener("login", this.login);
+    internal.system.account.removeListener("logout", this.logout);
 
-    internal.network.socket.removeListener("lype-friend-request", this.socketFriendRequestAdd);
-    internal.network.socket.removeListener("lype-friend-remove", this.socketFriendRemove);
-    internal.network.socket.removeListener("lype-friend-add", this.socketFriendAdd);
+    internal.system.network.socket.removeListener("lype-friend-request", this.socketFriendRequestAdd);
+    internal.system.network.socket.removeListener("lype-friend-remove", this.socketFriendRemove);
+    internal.system.network.socket.removeListener("lype-friend-add", this.socketFriendAdd);
 
     for (const thing in LypeServiceState) {
       internal.broadcaster.removeListener(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
@@ -111,17 +111,17 @@ export class LypeService extends BaseService {
     }
     internal.removeListener("allReady", this.actualStart);
 
-    internal.account.on("login", this.login);
-    internal.account.on("logout", this.logout);
+    internal.system.account.on("login", this.login);
+    internal.system.account.on("logout", this.logout);
     for (const thing in LypeServiceState) {
       internal.broadcaster.on(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
     }
 
-    internal.network.socket.on("lype-friend-request", this.socketFriendRequestAdd);
-    internal.network.socket.on("lype-friend-remove", this.socketFriendRemove);
-    internal.network.socket.on("lype-friend-add", this.socketFriendAdd);
+    internal.system.network.socket.on("lype-friend-request", this.socketFriendRequestAdd);
+    internal.system.network.socket.on("lype-friend-remove", this.socketFriendRemove);
+    internal.system.network.socket.on("lype-friend-add", this.socketFriendAdd);
 
-    const token = internal.account.token;
+    const token = internal.system.account.token;
     if (!token) {
       return this.setState(LypeServiceState.NotLogined);
     }
@@ -138,7 +138,7 @@ export class LypeService extends BaseService {
   };
 
   private async checkAccount(): Promise<ILypeAccountResponse> {
-    const token = internal.account.token;
+    const token = internal.system.account.token;
     if (!token) throw new Error("Missing token");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -163,7 +163,7 @@ export class LypeService extends BaseService {
         switch (error.response.status) {
           case 400:
           case 401:
-            internal.account.logout();
+            internal.system.account.logout();
             this.setState(LypeServiceState.NotLogined);
             break;
         }
@@ -172,7 +172,7 @@ export class LypeService extends BaseService {
   }
 
   async createLypeUser() {
-    const token = internal.account.token;
+    const token = internal.system.account.token;
     if (!token) throw new Error("Missing token");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -197,7 +197,7 @@ export class LypeService extends BaseService {
         switch (error.response.status) {
           case 401:
           case 400:
-            internal.account.logout();
+            internal.system.account.logout();
             this.setState(LypeServiceState.NotLogined);
             return;
         }
@@ -208,7 +208,7 @@ export class LypeService extends BaseService {
   }
 
   async findUsers(query: string) {
-    const token = internal.account.token;
+    const token = internal.system.account.token;
     if (!token) throw new Error("Missing token");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -239,7 +239,7 @@ export class LypeService extends BaseService {
   };
 
   async addOrRemoveFriend(userID: string, add: boolean) {
-    const token = internal.account.token;
+    const token = internal.system.account.token;
     if (!token) throw new Error("Missing token");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
