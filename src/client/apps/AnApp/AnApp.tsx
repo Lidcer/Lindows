@@ -1,8 +1,8 @@
-import { IManifest, BaseWindow, MessageBox } from '../BaseWindow/BaseWindow';
-import React from 'react';
-import { AnAppWarper } from './AnAppStyled';
-import { WindowEvent } from '../BaseWindow/WindowEvent';
-import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
+import { IManifest, BaseWindow, MessageBox } from "../BaseWindow/BaseWindow";
+import React from "react";
+import { AnAppWarper } from "./AnAppStyled";
+import { WindowEvent } from "../BaseWindow/WindowEvent";
+import { getNotification, NotificationSystem } from "../../components/Desktop/Notifications";
 
 interface WebExplorerState {
   message: string;
@@ -13,9 +13,9 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   public notification: NotificationSystem | undefined;
 
   public static manifest: IManifest = {
-    fullAppName: 'An app',
-    launchName: 'anapp',
-    icon: '/assets/images/unknown-app.svg',
+    fullAppName: "An app",
+    launchName: "anapp",
+    icon: "/assets/images/unknown-app.svg",
   };
 
   constructor(props) {
@@ -26,28 +26,28 @@ export class AnApp extends BaseWindow<WebExplorerState> {
         minWidth: 300,
       },
       {
-        message: '',
+        message: "",
       },
     );
   }
 
   load() {
-    console.log('dev', DEV);
-    console.log('function is called before app is ready');
+    console.log("dev", DEV);
+    console.log("function is called before app is ready");
   }
 
   shown() {
     this.notification = getNotification();
-    console.log('function is called after the app is shown');
+    console.log("function is called after the app is shown");
     // event listeners should be added here
   }
   closing() {
-    console.log('function is called after the app is about to close');
+    console.log("function is called after the app is about to close");
     // event listeners should be removed here
   }
 
   closed() {
-    console.log('function is called after the app is about to close');
+    console.log("function is called after the app is about to close");
   }
 
   onKeyDown?(event: KeyboardEvent) {
@@ -91,18 +91,18 @@ export class AnApp extends BaseWindow<WebExplorerState> {
   };
 
   openMessageBox = () => {
-    MessageBox.Show(this, this.variables.message || ' The message box', 'The message box');
+    MessageBox.Show(this, this.variables.message || " The message box", "The message box");
   };
 
   antonymousOpenMessageBox = () => {
-    MessageBox._anonymousShow(this.variables.message || ' The other message box', 'The message box');
+    MessageBox._anonymousShow(this.variables.message || " The other message box", "The message box");
   };
 
   adminButton = async () => {
     let processor = this.getProcessor();
     if (processor || (await this.requestAdmin())) {
       processor = this.getProcessor();
-      MessageBox.Show(this, 'You now have permission to access the processor');
+      MessageBox.Show(this, "You now have permission to access the processor");
     } else {
       MessageBox.Show(this, "You don't have permission to access the processor");
     }
@@ -110,7 +110,7 @@ export class AnApp extends BaseWindow<WebExplorerState> {
 
   raiseNotification = () => {
     if (this.notification) {
-      this.notification.raise(this, AnApp.manifest.fullAppName, this.variables.message || 'notification');
+      this.notification.raise(this, AnApp.manifest.fullAppName, this.variables.message || "notification");
     }
   };
 

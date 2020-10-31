@@ -1,5 +1,5 @@
-import { IManifest, BaseWindow } from '../BaseWindow/BaseWindow';
-import React from 'react';
+import { IManifest, BaseWindow } from "../BaseWindow/BaseWindow";
+import React from "react";
 import {
   Frame,
   BrowserUrl,
@@ -8,12 +8,12 @@ import {
   ForwardButton,
   BrowserUrlInput,
   Reload,
-} from './WebExplorerStyled';
-import * as Axios from 'axios';
-import { attachToWindowIfDev } from '../../essential/requests';
-import { WebExplorerDevTools } from './WebExplorerDevTools';
-import { faArrowLeft, faArrowRight, faSpinner, faUndo } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+} from "./WebExplorerStyled";
+import * as Axios from "axios";
+import { attachToWindowIfDev } from "../../essential/requests";
+import { WebExplorerDevTools } from "./WebExplorerDevTools";
+import { faArrowLeft, faArrowRight, faSpinner, faUndo } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface WebExplorerState {
   url: string;
@@ -24,9 +24,9 @@ interface WebExplorerState {
 
 export class WebExplorer extends BaseWindow<WebExplorerState> {
   public static manifest: IManifest = {
-    fullAppName: 'Web Explorer',
-    launchName: 'webexplorer',
-    icon: '/assets/images/appsIcons/WebExplorer.svg',
+    fullAppName: "Web Explorer",
+    launchName: "webexplorer",
+    icon: "/assets/images/appsIcons/WebExplorer.svg",
   };
   private doNotUpdateUrl = true;
 
@@ -40,24 +40,24 @@ export class WebExplorer extends BaseWindow<WebExplorerState> {
         minWidth: 850,
       },
       {
-        url: 'https://www.bing.com/',
-        urlLoaded: 'https://www.bing.com/',
+        url: "https://www.bing.com/",
+        urlLoaded: "https://www.bing.com/",
         backHistory: [],
         forwardHistory: [],
       },
     );
-    attachToWindowIfDev('webExplorer', this);
+    attachToWindowIfDev("webExplorer", this);
   }
 
   shown() {
-    this.iframe.addEventListener('load', this.oniFrameLoad);
+    this.iframe.addEventListener("load", this.oniFrameLoad);
   }
   closing() {
-    this.iframe.removeEventListener('load', this.oniFrameLoad);
+    this.iframe.removeEventListener("load", this.oniFrameLoad);
   }
 
   oniFrameLoad = ev => {
-    let url = '';
+    let url = "";
     try {
       url = this.iframe.contentWindow.location.href;
     } catch (_) {
@@ -88,7 +88,7 @@ export class WebExplorer extends BaseWindow<WebExplorerState> {
   };
 
   onKeyPressReact = (ev: React.KeyboardEvent<HTMLInputElement>) => {
-    if (ev.key === 'Enter') {
+    if (ev.key === "Enter") {
       this.enter();
     }
   };
@@ -124,7 +124,7 @@ export class WebExplorer extends BaseWindow<WebExplorerState> {
       vars.url = url;
       vars.urlLoaded = url;
       this.setVariables(vars);
-      this.reload()
+      this.reload();
     }
   };
 
@@ -137,7 +137,7 @@ export class WebExplorer extends BaseWindow<WebExplorerState> {
       vars.url = url;
       vars.urlLoaded = url;
       this.setVariables(vars);
-      this.reload()
+      this.reload();
     }
   };
 

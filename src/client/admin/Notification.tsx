@@ -1,15 +1,15 @@
-import React, { Component } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTimes } from '@fortawesome/free-solid-svg-icons';
-import { SECOND } from '../../shared/constants';
-import { INotificationHandler } from './NotificationHandler';
+import React, { Component } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTimes } from "@fortawesome/free-solid-svg-icons";
+import { SECOND } from "../../shared/constants";
+import { INotificationHandler } from "./NotificationHandler";
 
 interface IAdminNotificationState {
   notifications: INotificationState[];
 }
 
 interface INotificationState {
-  type: 'danger' | 'warning' | 'info';
+  type: "danger" | "warning" | "info";
   title: string;
   message: string;
   buttons?: IButton[];
@@ -35,7 +35,7 @@ export default class AdminNotification extends Component<IAdminNotificationProps
     };
   }
 
-  createNotification(type: INotificationState['type'], title: string, message: string) {
+  createNotification(type: INotificationState["type"], title: string, message: string) {
     const state = { ...this.state };
     const notification = { type, message, title };
 
@@ -55,41 +55,41 @@ export default class AdminNotification extends Component<IAdminNotificationProps
   }
 
   addInfoNotification = (title: string, message: string) => {
-    this.createNotification('warning', title, message);
+    this.createNotification("warning", title, message);
   };
 
   addWarnNotification = (title: string, message: string) => {
-    this.createNotification('warning', title, message);
+    this.createNotification("warning", title, message);
   };
 
   addDangerNotification = (title: string, message: string) => {
-    this.createNotification('danger', title, message);
+    this.createNotification("danger", title, message);
   };
 
   componentDidMount() {
-    this.props.notificationHandler.on('info', this.addInfoNotification);
-    this.props.notificationHandler.on('danger', this.addDangerNotification);
-    this.props.notificationHandler.on('warn', this.addWarnNotification);
+    this.props.notificationHandler.on("info", this.addInfoNotification);
+    this.props.notificationHandler.on("danger", this.addDangerNotification);
+    this.props.notificationHandler.on("warn", this.addWarnNotification);
   }
 
   componentWillUnmount() {
-    this.props.notificationHandler.removeListener('info', this.addInfoNotification);
-    this.props.notificationHandler.removeListener('danger', this.addDangerNotification);
-    this.props.notificationHandler.removeListener('warn', this.addWarnNotification);
+    this.props.notificationHandler.removeListener("info", this.addInfoNotification);
+    this.props.notificationHandler.removeListener("danger", this.addDangerNotification);
+    this.props.notificationHandler.removeListener("warn", this.addWarnNotification);
     for (const timeout of this.timeouts) {
       clearTimeout(timeout);
     }
     this.timeouts = [];
   }
 
-  getColour(type: INotificationState['type']) {
+  getColour(type: INotificationState["type"]) {
     switch (type) {
-      case 'danger':
-        return '#ff0000';
-      case 'warning':
-        return '#ff9601';
-      case 'info':
-        return '#01c0ff';
+      case "danger":
+        return "#ff0000";
+      case "warning":
+        return "#ff9601";
+      case "info":
+        return "#01c0ff";
     }
   }
 
@@ -123,7 +123,7 @@ export default class AdminNotification extends Component<IAdminNotificationProps
                 className='ml-2 mb-1 close'
                 data-dismiss='toast'
                 aria-label='Close'
-                style={{ color: 'white' }}
+                style={{ color: "white" }}
               >
                 <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
               </button>
@@ -138,8 +138,8 @@ export default class AdminNotification extends Component<IAdminNotificationProps
   render() {
     return (
       <>
-        <div aria-live='polite' aria-atomic='true' style={{ position: 'relative' }}>
-          <div style={{ position: 'fixed', top: '20', right: '0' }}>{this.notification}</div>
+        <div aria-live='polite' aria-atomic='true' style={{ position: "relative" }}>
+          <div style={{ position: "fixed", top: "20", right: "0" }}>{this.notification}</div>
         </div>
       </>
     );

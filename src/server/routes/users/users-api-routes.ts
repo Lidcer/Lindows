@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   registerUser,
   loginUser,
@@ -12,27 +12,27 @@ import {
   changeEmail,
   deleteAccount,
   logOutUser,
-} from './users-responses';
-import { imagesPath } from './users-database';
+} from "./users-responses";
+import { imagesPath } from "./users-database";
 
 export function setupUsersApi(router: Router) {
-  router.post('/api/v1/users/register', (req, res) => {
+  router.post("/api/v1/users/register", (req, res) => {
     registerUser(req, res);
   });
 
-  router.post('/api/v1/users/login', (req, res) => {
+  router.post("/api/v1/users/login", (req, res) => {
     loginUser(req, res);
   });
 
-  router.post('/api/v1/users/logout', (req, res) => {
+  router.post("/api/v1/users/logout", (req, res) => {
     logOutUser(req, res);
   });
 
-  router.get('/api/v1/users/check-account', (req, res) => {
+  router.get("/api/v1/users/check-account", (req, res) => {
     checkUser(req, res);
   });
 
-  router.put('/api/v1/users/change-avatar', (req, res) => {
+  router.put("/api/v1/users/change-avatar", (req, res) => {
     uploadImage(req, res);
   });
 
@@ -44,28 +44,27 @@ export function setupUsersApi(router: Router) {
     checkOutTemporarilyToken(req, res);
   });
 
-  router.put('/api/v1/users/reset-password', (req, res) => {
+  router.put("/api/v1/users/reset-password", (req, res) => {
     resetPasswordLink(req, res);
   });
 
-  router.put('/api/v1/users/change-password', (req, res) => {
+  router.put("/api/v1/users/change-password", (req, res) => {
     changePassword(req, res);
   });
 
-  router.put('/api/v1/users/change-displayed-name', (req, res) => {
+  router.put("/api/v1/users/change-displayed-name", (req, res) => {
     changeDisplayedName(req, res);
   });
 
-  router.put('/api/v1/users/change-email', (req, res) => {
+  router.put("/api/v1/users/change-email", (req, res) => {
     changeEmail(req, res);
   });
 
-  router.delete('/api/v1/users/delete-account', (req, res) => {
+  router.delete("/api/v1/users/delete-account", (req, res) => {
     deleteAccount(req, res);
   });
 
-  router.get(`/${imagesPath.join('/')}`, (req, res) => {
-    res.send(403).json({ error: 'Not Allowed' });
+  router.get(`/${imagesPath.join("/")}`, (req, res) => {
+    res.send(403).json({ error: "Not Allowed" });
   });
-
 }

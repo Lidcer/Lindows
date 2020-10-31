@@ -1,14 +1,14 @@
-import React from 'react';
-import { appConstructorGenerator, allApps } from '../essential/apps';
-import { internal } from '../services/internals/Internal';
-import { BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
-import { pushUniqToArray, removeFromArray } from '../utils/util';
+import React from "react";
+import { appConstructorGenerator, allApps } from "../essential/apps";
+import { internal } from "../services/internals/Internal";
+import { BaseWindow, MessageBox, AdminPromp } from "../apps/BaseWindow/BaseWindow";
+import { pushUniqToArray, removeFromArray } from "../utils/util";
 interface IWindowTesterState {
   display: JSX.Element;
   subWindow: BaseWindow[];
 }
 interface IConsoleHistory {
-  level: 'log' | 'warn' | 'error' | 'debug';
+  level: "log" | "warn" | "error" | "debug";
   message: any;
 }
 
@@ -24,28 +24,28 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
     const log = console.log;
     console.log = (...args: any[]) => {
-      consoleHistory.push({ level: 'log', message: args });
+      consoleHistory.push({ level: "log", message: args });
       log.apply(window, args);
       if (this.ready) this.update();
     };
 
     const warn = console.warn;
     console.warn = (...args: any[]) => {
-      consoleHistory.push({ level: 'warn', message: args });
+      consoleHistory.push({ level: "warn", message: args });
       warn.apply(window, args);
       if (this.ready) this.update();
     };
 
     const debug = console.debug;
     console.debug = (...args: any[]) => {
-      consoleHistory.push({ level: 'debug', message: args });
+      consoleHistory.push({ level: "debug", message: args });
       debug.apply(window, args);
       if (this.ready) this.update();
     };
 
     const error = console.error;
     console.error = (...args: any[]) => {
-      consoleHistory.push({ level: 'error', message: args });
+      consoleHistory.push({ level: "error", message: args });
       error.apply(window, args);
       if (this.ready) this.update();
     };
@@ -62,13 +62,13 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
     const type = typeof m;
     switch (type) {
-      case 'string':
-      case 'number':
+      case "string":
+      case "number":
         return <span>{m}</span>;
 
-      case 'function':
+      case "function":
         return <span>{(m as any).name}()</span>;
-      case 'object':
+      case "object":
         if (Array.isArray(m)) {
           return m.map((e, i) => {
             try {
@@ -84,9 +84,9 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
           for (const [string, a] of entries) {
             divs.push(
               <span>
-                {'{'}
+                {"{"}
                 {string}:{this.disassembleConsoleMessage(a)}
-                {'}'}
+                {"}"}
               </span>,
             );
           }
@@ -94,7 +94,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
             return <div key={i}>{d}</div>;
           });
         }
-      case 'symbol':
+      case "symbol":
         return <span>symbol</span>;
       default:
         try {
@@ -107,12 +107,12 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
   disassemble(c: IConsoleHistory) {
     switch (c.level) {
-      case 'log':
-      case 'debug':
+      case "log":
+      case "debug":
         return <div>{this.disassembleConsoleMessage(c.message)}</div>;
-      case 'warn':
+      case "warn":
         return <div className='text-warning'>{this.disassembleConsoleMessage(c.message)}</div>;
-      case 'error':
+      case "error":
         return <div className='text-danger'>{this.disassembleConsoleMessage(c.message)}</div>;
       default:
         return (
@@ -153,16 +153,16 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       (window as any).apps = [];
     }
     if (!internal.ready) {
-      internal.on('allReady', () => this.start());
-      internal.on('onServiceReady', e => console.info(`ok ${e}`));
-      internal.on('onServiceFailed', e => console.error(`nOk ${e}`));
+      internal.on("allReady", () => this.start());
+      internal.on("onServiceReady", e => console.info(`ok ${e}`));
+      internal.on("onServiceFailed", e => console.error(`nOk ${e}`));
       return;
     }
-    internal.processor.on('appAdd', e => {
+    internal.processor.on("appAdd", e => {
       pushUniqToArray((window as any).apps, e);
       if (e.props.id === -1) return;
       const urlParams = new URLSearchParams(window.location.search);
-      const override = urlParams.get('ignorenewwindows') !== null && e instanceof MessageBox && e instanceof AdminPromp;
+      const override = urlParams.get("ignorenewwindows") !== null && e instanceof MessageBox && e instanceof AdminPromp;
       if (override) {
         const renderInside = e.renderInside.bind(this);
 
@@ -171,13 +171,13 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
             <>
               <div
                 style={{
-                  position: 'absolute',
-                  padding: '5pt',
-                  textAlign: 'center',
-                  backgroundColor: 'orange',
-                  color: 'black',
-                  borderBottomRightRadius: '5pt',
-                  opacity: '0.75',
+                  position: "absolute",
+                  padding: "5pt",
+                  textAlign: "center",
+                  backgroundColor: "orange",
+                  color: "black",
+                  borderBottomRightRadius: "5pt",
+                  opacity: "0.75",
                 }}
               >
                 Running in test mode
@@ -191,16 +191,16 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       }
     });
 
-    internal.processor.on('appDisplayingAdd', app => {
+    internal.processor.on("appDisplayingAdd", app => {
       this.forceUpdate();
     });
-    internal.processor.on('appRemove', app => {
+    internal.processor.on("appRemove", app => {
       removeFromArray((window as any).apps, app);
       //this.forceUpdate();
     });
 
     const url = new URL(document.location.href);
-    const pathname = url.pathname.split('/').filter(e => !!e);
+    const pathname = url.pathname.split("/").filter(e => !!e);
     const appName = pathname[pathname.length - 1];
     const shouldBeApp = appConstructorGenerator(appName);
     if (!shouldBeApp) {

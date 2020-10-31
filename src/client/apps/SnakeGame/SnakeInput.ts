@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 export enum Controls {
   Up,
@@ -20,7 +20,7 @@ export class SnakeInput {
   private eventEmitter = new EventEmitter();
 
   on(listener: (control: Controls) => void) {
-    this.eventEmitter.on('keypress', listener);
+    this.eventEmitter.on("keypress", listener);
   }
 
   private touchStart = (ev: TouchEvent) => {
@@ -41,40 +41,40 @@ export class SnakeInput {
       const horizontal = Math.abs(this.lastTouch.x - this.moveTouch.x) > Math.abs(this.lastTouch.y - this.moveTouch.y);
 
       if (horizontal && this.lastTouch.x > this.moveTouch.x) {
-        this.eventEmitter.emit('keypress', Controls.Left);
+        this.eventEmitter.emit("keypress", Controls.Left);
       } else if (horizontal && this.lastTouch.x < this.moveTouch.x) {
-        this.eventEmitter.emit('keypress', Controls.Right);
+        this.eventEmitter.emit("keypress", Controls.Right);
       } else if (this.lastTouch.y < this.moveTouch.y) {
-        this.eventEmitter.emit('keypress', Controls.Down);
+        this.eventEmitter.emit("keypress", Controls.Down);
       } else if (this.lastTouch.y > this.moveTouch.y) {
-        this.eventEmitter.emit('keypress', Controls.Up);
+        this.eventEmitter.emit("keypress", Controls.Up);
       }
     } else {
-      this.eventEmitter.emit('keypress', Controls.Confirm);
+      this.eventEmitter.emit("keypress", Controls.Confirm);
     }
     this.lastTouch = undefined;
     this.moveTouch = undefined;
   };
   onKeypress = (ev: KeyboardEvent) => {
     switch (ev.key.toLowerCase()) {
-      case 'w':
-      case 'arrowup':
-        this.eventEmitter.emit('keypress', Controls.Up);
+      case "w":
+      case "arrowup":
+        this.eventEmitter.emit("keypress", Controls.Up);
         break;
-      case 's':
-      case 'arrowdown':
-        this.eventEmitter.emit('keypress', Controls.Down);
+      case "s":
+      case "arrowdown":
+        this.eventEmitter.emit("keypress", Controls.Down);
         break;
-      case 'a':
-      case 'arrowleft':
-        this.eventEmitter.emit('keypress', Controls.Left);
+      case "a":
+      case "arrowleft":
+        this.eventEmitter.emit("keypress", Controls.Left);
         break;
-      case 'd':
-      case 'arrowright':
-        this.eventEmitter.emit('keypress', Controls.Right);
+      case "d":
+      case "arrowright":
+        this.eventEmitter.emit("keypress", Controls.Right);
         break;
-      case ' ':
-        this.eventEmitter.emit('keypress', Controls.Confirm);
+      case " ":
+        this.eventEmitter.emit("keypress", Controls.Confirm);
         break;
     }
   };

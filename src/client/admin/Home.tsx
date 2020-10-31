@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { TOKEN_HEADER } from '../../shared/constants';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import { CpuInfo, UserInfo } from 'os';
-import * as pretty from 'prettysize';
-import ReactLoading from 'react-loading';
-import moment from 'moment';
+import React, { Component } from "react";
+import PropTypes from "prop-types";
+import Axios, { AxiosRequestConfig } from "axios";
+import { TOKEN_HEADER } from "../../shared/constants";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import { CpuInfo, UserInfo } from "os";
+import * as pretty from "prettysize";
+import ReactLoading from "react-loading";
+import moment from "moment";
 
 interface IServerInfo {
   memoryUsage: NodeJS.MemoryUsage;
@@ -58,16 +58,16 @@ export default class AdminHome extends Component<{}, IAdminState> {
 
   async getInfo() {
     this.setState({ refreshing: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
 
     try {
-      const response = await Axios.get<IResponse<IServerInfo>>('/api/v1/admin/server-info', axiosRequestConfig);
+      const response = await Axios.get<IResponse<IServerInfo>>("/api/v1/admin/server-info", axiosRequestConfig);
       const serverInfo = response.data.success;
-      if (!serverInfo) throw new Error('Missing data');
+      if (!serverInfo) throw new Error("Missing data");
       data = { ...serverInfo, date: new Date() };
     } catch (error) {
       console.error(error);
@@ -85,7 +85,7 @@ export default class AdminHome extends Component<{}, IAdminState> {
 
   render() {
     if (this.state.refreshing) {
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
     }
 
     if (!data) {
@@ -141,7 +141,7 @@ export default class AdminHome extends Component<{}, IAdminState> {
               <ul>
                 {data.os.disks.map((e, i) => {
                   return (
-                    <div className='card-body' style={{ display: 'inline-block' }} key={i}>
+                    <div className='card-body' style={{ display: "inline-block" }} key={i}>
                       <div>
                         <ul>
                           <li>filesystem: {e.filesystem}</li>
@@ -165,7 +165,7 @@ export default class AdminHome extends Component<{}, IAdminState> {
               <ul>
                 {data.os.cpus.map((e, i) => {
                   return (
-                    <div className='card-body' style={{ display: 'inline-block' }} key={i}>
+                    <div className='card-body' style={{ display: "inline-block" }} key={i}>
                       <span>{e.model}</span>
                       <div>
                         <ul>

@@ -1,11 +1,11 @@
-import { clamp } from 'lodash';
-import React from 'react';
-import { MessageBox, MessageBoxButtons, MessageBoxIcon } from '../../apps/BaseWindow/BaseWindow';
-import { launchApp } from '../../essential/apps';
-import { internal } from '../../services/internals/Internal';
-import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from '../../utils/FileSystemDirectory';
-import { IElement, showContext } from '../ContextMenu/ContextMenu';
-import { DesktopIconCation, DesktopIconRenamingInput, DesktopIconStyle } from './DesktopStyled';
+import { clamp } from "lodash";
+import React from "react";
+import { MessageBox, MessageBoxButtons, MessageBoxIcon } from "../../apps/BaseWindow/BaseWindow";
+import { launchApp } from "../../essential/apps";
+import { internal } from "../../services/internals/Internal";
+import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from "../../utils/FileSystemDirectory";
+import { IElement, showContext } from "../ContextMenu/ContextMenu";
+import { DesktopIconCation, DesktopIconRenamingInput, DesktopIconStyle } from "./DesktopStyled";
 
 interface IPropertyDesktopIcon {
   system: StringSymbol;
@@ -49,8 +49,8 @@ interface IDotDesktop {
 }
 
 export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDesktopIcon> {
-  private readonly folderImage = './assets/images/folderIcon.svg';
-  private readonly fileImage = './assets/images/fileIcon.svg';
+  private readonly folderImage = "./assets/images/folderIcon.svg";
+  private readonly fileImage = "./assets/images/fileIcon.svg";
 
   private dotDesktop: IDotDesktop = {};
   private doNotUnselect = false;
@@ -75,29 +75,29 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   }
 
   async componentDidMount() {
-    let desktopDes = this.desktop.getFile('.desktop', this.sys);
+    let desktopDes = this.desktop.getFile(".desktop", this.sys);
     if (!desktopDes) {
-      desktopDes = await this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
+      desktopDes = await this.props.desktop.createFile<IDotDesktop>(".desktop", "json", {}, this.sys);
     } else {
-      if (desktopDes.getType(this.sys) !== 'json') {
+      if (desktopDes.getType(this.sys) !== "json") {
         desktopDes.deleteFile(this.sys);
-        desktopDes = await this.desktop.createFile<IDotDesktop>('.desktop', 'json', {}, this.sys);
+        desktopDes = await this.desktop.createFile<IDotDesktop>(".desktop", "json", {}, this.sys);
       }
     }
     this.dotDesktop = desktopDes.getContent(this.sys);
     this.forceUpdate();
 
-    window.addEventListener('click', this.unselect);
-    window.addEventListener('mousemove', this.onMouseMove);
-    window.addEventListener('mouseup', this.onMouseUp);
-    window.addEventListener('resize', this.onResize);
+    window.addEventListener("click", this.unselect);
+    window.addEventListener("mousemove", this.onMouseMove);
+    window.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("resize", this.onResize);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('click', this.unselect);
-    window.removeEventListener('mousemove', this.onMouseMove);
-    window.removeEventListener('mouseup', this.onMouseUp);
-    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener("click", this.unselect);
+    window.removeEventListener("mousemove", this.onMouseMove);
+    window.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("resize", this.onResize);
   }
 
   onResize = () => {
@@ -105,13 +105,13 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
   };
 
   saveDotDesktop = async () => {
-    let desktopDes = this.desktop.getFile('.desktop', this.sys);
+    let desktopDes = this.desktop.getFile(".desktop", this.sys);
     if (!desktopDes) {
-      desktopDes = await this.props.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+      desktopDes = await this.props.desktop.createFile<IDotDesktop>(".desktop", "json", this.dotDesktop, this.sys);
     } else {
-      if (desktopDes.getType(this.sys) !== 'json') {
+      if (desktopDes.getType(this.sys) !== "json") {
         desktopDes.deleteFile(this.sys);
-        desktopDes = await this.desktop.createFile<IDotDesktop>('.desktop', 'json', this.dotDesktop, this.sys);
+        desktopDes = await this.desktop.createFile<IDotDesktop>(".desktop", "json", this.dotDesktop, this.sys);
       }
     }
     desktopDes.setContent(this.dotDesktop, this.sys);
@@ -138,8 +138,8 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
 
     if (this.state.selected.includes(file)) {
       return {
-        border: '1px solid white',
-        backgroundColor: 'rgba(255, 255, 255, 0.50)',
+        border: "1px solid white",
+        backgroundColor: "rgba(255, 255, 255, 0.50)",
         top: y,
         left: x,
       };
@@ -165,23 +165,23 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
     event.preventDefault();
     const elements: IElement[] = [
       {
-        content: 'Open',
+        content: "Open",
         onClick: () => {
           if (isDirectory(selected)) {
-            launchApp('file-explorer', `path="${selected.path}"`);
-          } else if (selected.getType(this.sys) === 'lindowApp') {
+            launchApp("file-explorer", `path="${selected.path}"`);
+          } else if (selected.getType(this.sys) === "lindowApp") {
             try {
               console.log(selected.getContent(this.sys));
               selected.getContent(this.sys).app.New(selected);
             } catch (error) {
               DEV && console.error(error);
-              MessageBox._anonymousShow('Unable to open');
+              MessageBox._anonymousShow("Unable to open");
             }
           }
         },
       },
       {
-        content: 'Delete',
+        content: "Delete",
         onClick: () => {
           try {
             if (isDirectory(selected)) {
@@ -192,12 +192,12 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
             this.props.onUpdate();
             this.doNotUnselect = true;
           } catch (error) {
-            MessageBox._anonymousShow(error.message, 'Cannot rename file', MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox._anonymousShow(error.message, "Cannot rename file", MessageBoxButtons.OK, MessageBoxIcon.Error);
           }
         },
       },
       {
-        content: 'Rename',
+        content: "Rename",
         onClick: () => {
           this.setState({
             renaming: {
@@ -207,7 +207,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
           });
         },
       },
-      { content: 'Properties', onClick: () => {} },
+      { content: "Properties", onClick: () => {} },
     ];
 
     if (isDirectory(selected)) {
@@ -308,7 +308,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
           delete this.dotDesktop[orgName];
           this.saveDotDesktop();
         } catch (error) {
-          MessageBox._anonymousShow(error.message, 'Cannot rename file', MessageBoxButtons.OK, MessageBoxIcon.Error);
+          MessageBox._anonymousShow(error.message, "Cannot rename file", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         this.props.onUpdate();
@@ -321,7 +321,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
           value={this.state.renaming.value}
           onChange={e => this.setState({ renaming: { ref: f, value: e.target.value } })}
           onKeyUp={e => {
-            if (e.key.toLowerCase() === 'enter') rename();
+            if (e.key.toLowerCase() === "enter") rename();
           }}
           onBlur={() => {
             rename();
@@ -358,7 +358,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       <>
         {moving}
         {this.props.contents
-          .filter(f => !f.deleted && !(f.name.startsWith('.') && !this.showHiddenFiles))
+          .filter(f => !f.deleted && !(f.name.startsWith(".") && !this.showHiddenFiles))
           .map((f, i) => {
             return this.getElement(f, i);
           })}

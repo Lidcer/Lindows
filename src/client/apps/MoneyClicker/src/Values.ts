@@ -1,6 +1,6 @@
-import { EventEmitter } from 'events';
-import { SECOND } from '../../../../shared/constants';
-import { MoneyClickerPictureReferences } from './ImageReferences';
+import { EventEmitter } from "events";
+import { SECOND } from "../../../../shared/constants";
+import { MoneyClickerPictureReferences } from "./ImageReferences";
 
 interface valuesShop {
   shopName: string;
@@ -200,7 +200,7 @@ export class Values extends EventEmitter {
   }
 
   public smallBangBought(obj: valuesShop) {
-    if (obj.shopName !== 'smallBang') return;
+    if (obj.shopName !== "smallBang") return;
 
     if (this.smallBangPrice[obj.boughtElementIndex] <= this.actualMoney) {
       this.playCashSound();
@@ -208,19 +208,19 @@ export class Values extends EventEmitter {
       this.smallBanglvl[obj.boughtElementIndex]++;
 
       if (obj.boughtElementIndex === this.smallBangPrice.length - 1) {
-        this.emit('endGame');
+        this.emit("endGame");
         return;
       }
 
       this.smallBangPrice[obj.boughtElementIndex] = Math.floor(this.smallBangPrice[obj.boughtElementIndex] * 1.01);
       this.counter += this.smallBangCps[obj.boughtElementIndex];
     } else if (this.smallBangPrice[obj.boughtElementIndex] > this.actualMoney) {
-      this.emit('failedToBought', 'Not enough money');
+      this.emit("failedToBought", "Not enough money");
     }
   }
 
   public vorBought(obj: valuesShop) {
-    if (obj.shopName !== 'vor') return;
+    if (obj.shopName !== "vor") return;
 
     if (this.vorPrice[obj.boughtElementIndex] <= this.actualMoney) {
       this.actualMoney -= this.vorPrice[obj.boughtElementIndex];
@@ -229,7 +229,7 @@ export class Values extends EventEmitter {
 
       this.playCashSound();
     } else if (this.vorPrice[obj.boughtElementIndex] > this.actualMoney) {
-      this.emit('failedToBought');
+      this.emit("failedToBought");
     }
   }
   private playCashSound() {
@@ -240,11 +240,11 @@ export class Values extends EventEmitter {
   }
 
   public upgradesBought(obj: valuesShop) {
-    if (obj.shopName !== 'upgrades') return;
+    if (obj.shopName !== "upgrades") return;
 
     for (let i = 0; i < obj.boughtElementIndex; i++) {
       if (this.upgradeslvl[i] == 0) {
-        this.emit('needAction');
+        this.emit("needAction");
         return;
       }
     }
@@ -264,9 +264,9 @@ export class Values extends EventEmitter {
       else if (obj.boughtElementIndex === 5) this.moneyCounter = 100;
       else if (obj.boughtElementIndex === 6) this.moneyCounter = 200;
       else if (obj.boughtElementIndex === 7) this.moneyCounter = 500;
-      else if (obj.boughtElementIndex !== 0) throw new Error('This value is not programed!!!');
+      else if (obj.boughtElementIndex !== 0) throw new Error("This value is not programed!!!");
 
-      this.emit('update', obj.boughtElementIndex);
+      this.emit("update", obj.boughtElementIndex);
     }
     this.playCashSound();
   }
@@ -322,7 +322,7 @@ export class Values extends EventEmitter {
       this.upgradesCps = clickerData.upgradesCps;
       this.upgradesPrice = clickerData.upgradesPrice;
     }
-    if (moneyClickerData && typeof moneyClickerData === 'object') {
+    if (moneyClickerData && typeof moneyClickerData === "object") {
       this.actualMoney = moneyClickerData.actualMoney;
       this.counter = moneyClickerData.counter;
       this.moneyCounter = moneyClickerData.moneyCounter;
@@ -358,7 +358,7 @@ export class Values extends EventEmitter {
 
     const lvl = this.upgradeslvl.filter(a => a);
     setTimeout(() => {
-      this.emit('update', lvl.length - 1);
+      this.emit("update", lvl.length - 1);
     }, 1);
   }
 

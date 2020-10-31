@@ -3,26 +3,26 @@ export class OpenFileDialog {
 
   public ShowDialog(): Promise<FileList> {
     return new Promise((resolve, reject) => {
-      const input = document.createElement('input');
-      input.type = 'file';
+      const input = document.createElement("input");
+      input.type = "file";
       if (this.acceptTypes) input.accept = this.acceptTypes;
 
       input.click();
 
       const fileSelected = () => {
-        input.removeEventListener('change', fileSelected);
+        input.removeEventListener("change", fileSelected);
         resolve(input.files);
       };
 
       const noFileSelected = () => {
-        document.body.removeEventListener('focus', noFileSelected);
-        document.body.removeEventListener('mousemove', noFileSelected);
-        reject(new Error('canceled'));
+        document.body.removeEventListener("focus", noFileSelected);
+        document.body.removeEventListener("mousemove", noFileSelected);
+        reject(new Error("canceled"));
       };
 
-      input.addEventListener('change', fileSelected);
-      document.body.addEventListener('focus', noFileSelected);
-      document.body.addEventListener('mousemove', noFileSelected);
+      input.addEventListener("change", fileSelected);
+      document.body.addEventListener("focus", noFileSelected);
+      document.body.addEventListener("mousemove", noFileSelected);
     });
   }
 

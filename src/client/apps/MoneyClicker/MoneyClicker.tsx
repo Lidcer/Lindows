@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   BaseWindow,
   DialogResult,
@@ -6,10 +6,10 @@ import {
   MessageBox,
   MessageBoxButtons,
   MessageBoxIcon,
-} from '../BaseWindow/BaseWindow';
-import { MoneyClickerGame } from './MoneyClickerGame';
-import { MenuButton, MoneyClickerMenuButtons, MoneyClickerSettings, MoneyClickerWarper } from './MoneyClickerStyled';
-import { MoneyClickerSaveGameData } from './src/Values';
+} from "../BaseWindow/BaseWindow";
+import { MoneyClickerGame } from "./MoneyClickerGame";
+import { MenuButton, MoneyClickerMenuButtons, MoneyClickerSettings, MoneyClickerWarper } from "./MoneyClickerStyled";
+import { MoneyClickerSaveGameData } from "./src/Values";
 interface IMoneyClickerState {
   paused: boolean;
   loading: number;
@@ -32,16 +32,16 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
   private storage: MoneyClickerStorage;
 
   public static manifest: IManifest = {
-    fullAppName: 'Money Clicker',
-    launchName: 'moneyClicker',
-    icon: '/assets/images/appsIcons/MoneyClicker.svg',
+    fullAppName: "Money Clicker",
+    launchName: "moneyClicker",
+    icon: "/assets/images/appsIcons/MoneyClicker.svg",
   };
 
   constructor(props) {
     super(
       props,
       {
-        title: 'Loading...',
+        title: "Loading...",
         minHeight: 500,
         minWidth: 700,
       },
@@ -70,7 +70,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
   }
   async shown() {
     if (this.storage.fullscreen) {
-      this.changeOptions({ windowType: 'fullscreen' });
+      this.changeOptions({ windowType: "fullscreen" });
     }
 
     this.moneyClicker = new MoneyClickerGame(
@@ -103,14 +103,14 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
         this.setVariables({ loading: 100 });
       }
     } catch (error) {
-      const message = error.message || 'An unknown error occured while loading the game!';
-      MessageBox._anonymousShow(message, 'Failed to load');
+      const message = error.message || "An unknown error occured while loading the game!";
+      MessageBox._anonymousShow(message, "Failed to load");
       this.exit();
     }
   }
 
   onKeyDown(event: KeyboardEvent) {
-    if (event.key.toLowerCase() === 'escape' && this.moneyClicker) {
+    if (event.key.toLowerCase() === "escape" && this.moneyClicker) {
       this.moneyClicker.pauseGame();
       this.setVariables({ paused: true });
     }
@@ -170,12 +170,12 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
     this.setVariables({ paused: true, settings: false });
   };
   private resetData = () => {
-    this.changeOptions({ windowType: 'windowed' });
+    this.changeOptions({ windowType: "windowed" });
     setTimeout(async () => {
       const result = await MessageBox.Show(
         this,
-        'Are you sure you want to reset game data this action is irreversible',
-        'Are you serious?',
+        "Are you sure you want to reset game data this action is irreversible",
+        "Are you serious?",
         MessageBoxButtons.YesNo,
         MessageBoxIcon.Question,
       );
@@ -185,7 +185,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
         this.closing();
         this.shown();
       }
-      this.changeOptions({ windowType: this.storage.fullscreen ? 'fullscreen' : 'windowed' });
+      this.changeOptions({ windowType: this.storage.fullscreen ? "fullscreen" : "windowed" });
     });
   };
 
@@ -195,9 +195,9 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
     this.setVariables({ actualSettings: settings });
     this.storage.fullscreen = settings.fullscreen;
     if (this.storage.fullscreen) {
-      this.changeOptions({ windowType: 'fullscreen' });
+      this.changeOptions({ windowType: "fullscreen" });
     } else {
-      this.changeOptions({ windowType: 'windowed' });
+      this.changeOptions({ windowType: "windowed" });
     }
     requestAnimationFrame(this.onResolutionUpdate);
     this.setItem(this.settings);
@@ -218,7 +218,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
       const percentage = this.variables.loading;
       return (
         <MoneyClickerSettings>
-          <div style={{ width: `${percentage}%`, height: '10px', bottom: '0', backgroundColor: 'white' }}></div>
+          <div style={{ width: `${percentage}%`, height: "10px", bottom: "0", backgroundColor: "white" }}></div>
         </MoneyClickerSettings>
       );
     }
@@ -228,10 +228,10 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
           <MoneyClickerSettings>
             <MoneyClickerMenuButtons>
               <MenuButton onClick={this.enableDisableSounds}>
-                {this.variables.actualSettings.sounds ? 'Sounds on' : 'Sounds off'}
+                {this.variables.actualSettings.sounds ? "Sounds on" : "Sounds off"}
               </MenuButton>
               <MenuButton onClick={this.enableDisableFullScreen}>
-                {this.variables.actualSettings.fullscreen ? 'Fullscreen' : 'Window'}
+                {this.variables.actualSettings.fullscreen ? "Fullscreen" : "Window"}
               </MenuButton>
               <MenuButton onClick={this.resetData}>Reset Game</MenuButton>
               <MenuButton onClick={this.pauseMenu}>Back</MenuButton>

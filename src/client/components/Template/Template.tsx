@@ -1,5 +1,5 @@
-import React from 'react';
-import './Template.scss';
+import React from "react";
+import "./Template.scss";
 
 export class Template extends React.Component {
   render() {

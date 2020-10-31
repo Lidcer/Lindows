@@ -1,7 +1,7 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
-const $biosMainColour = '#0f15b3';
-const $biosBackgroundColour = '#bababa';
+const $biosMainColour = "#0f15b3";
+const $biosBackgroundColour = "#bababa";
 
 export const BiosStyled = styled.div`
   position: absolute;

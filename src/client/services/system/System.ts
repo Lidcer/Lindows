@@ -1,10 +1,10 @@
-import { Service, SystemServiceStatus } from '../internals/BaseSystemService';
-import { Internal } from '../internals/Internal';
-import { Account } from './Account';
-import { Network } from './NetworkSystem';
-import { Processor } from './ProcessorSystem';
-import { Registry } from './Registry';
-import { User } from './User';
+import { Service, SystemServiceStatus } from "../internals/BaseSystemService";
+import { Internal } from "../internals/Internal";
+import { Account } from "./Account";
+import { Network } from "./NetworkSystem";
+import { Processor } from "./ProcessorSystem";
+import { Registry } from "./Registry";
+import { User } from "./User";
 
 const internal = new WeakMap<System, Internal>();
 export class System {
@@ -65,7 +65,7 @@ export class System {
 
   private failedServiceInternals() {
     let _status = SystemServiceStatus.Failed;
-    const mockInternal: Service<any>['internalMethods'] = {
+    const mockInternal: Service<any>["internalMethods"] = {
       start: () => {},
       destroy: () => {
         _status = SystemServiceStatus.Destroyed;

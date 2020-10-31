@@ -1,6 +1,6 @@
-import React, { Component } from 'react';
-import { IAccount } from '../../shared/ApiUsersRequestsResponds';
-import { IAdminWebSocket } from './Websocket';
+import React, { Component } from "react";
+import { IAccount } from "../../shared/ApiUsersRequestsResponds";
+import { IAdminWebSocket } from "./Websocket";
 
 interface IAAdminWebSocketStatusState {
   connected: boolean;
@@ -30,15 +30,15 @@ export default class AdminWebSocketStatus extends Component<IAdminWebSocketStatu
   };
 
   componentDidMount() {
-    this.props.adminWebSocket.socket.on('connect', this.connection);
-    this.props.adminWebSocket.socket.on('disconnect', this.disconnect);
-    this.props.adminWebSocket.on('ping', this.ping);
+    this.props.adminWebSocket.socket.on("connect", this.connection);
+    this.props.adminWebSocket.socket.on("disconnect", this.disconnect);
+    this.props.adminWebSocket.on("ping", this.ping);
   }
 
   componentWillUnmount() {
-    this.props.adminWebSocket.socket.removeListener('connect', this.connection);
-    this.props.adminWebSocket.socket.removeListener('disconnect', this.disconnect);
-    this.props.adminWebSocket.removeListener('ping', this.ping);
+    this.props.adminWebSocket.socket.removeListener("connect", this.connection);
+    this.props.adminWebSocket.socket.removeListener("disconnect", this.disconnect);
+    this.props.adminWebSocket.removeListener("ping", this.ping);
   }
 
   get webSocketId() {
@@ -52,10 +52,10 @@ export default class AdminWebSocketStatus extends Component<IAdminWebSocketStatu
     return (
       <div
         title={this.webSocketId}
-        className={`admin-websocket ${this.state.connected ? 'admin-websocket-online' : 'admin-websocket-offline'}`}
+        className={`admin-websocket ${this.state.connected ? "admin-websocket-online" : "admin-websocket-offline"}`}
       >
         <div>
-          <b>Websocket:</b> {this.state.connected ? 'Online' : 'Offline'}
+          <b>Websocket:</b> {this.state.connected ? "Online" : "Offline"}
         </div>
         {this.state.ping ? (
           <div>

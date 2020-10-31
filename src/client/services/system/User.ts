@@ -1,7 +1,7 @@
-import { random } from 'lodash';
-import { StringSymbol } from '../../utils/FileSystemDirectory';
-import { BaseService, SystemServiceStatus } from '../internals/BaseSystemService';
-import { Internal } from '../internals/Internal';
+import { random } from "lodash";
+import { StringSymbol } from "../../utils/FileSystemDirectory";
+import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService";
+import { Internal } from "../internals/Internal";
 
 const internal = new WeakMap<User, Internal>();
 export class User extends BaseService {
@@ -15,15 +15,15 @@ export class User extends BaseService {
   }
 
   init() {
-    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
 
     const start = async () => {
-      const regKey = '_defaultUser';
+      const regKey = "_defaultUser";
       this._status = SystemServiceStatus.Starting;
       const int = internal.get(this);
       const reg = int.system.registry.getRootItem(regKey, int.systemSymbol);
-      if (reg && typeof reg.data === 'string') {
+      if (reg && typeof reg.data === "string") {
         this._userName = reg.data;
       } else {
         this._userName = `Guest${random(4)}`;
@@ -36,7 +36,7 @@ export class User extends BaseService {
     };
 
     const destroy = () => {
-      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
       internal.delete(this);
     };

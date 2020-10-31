@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
-import { TOKEN_HEADER } from '../../shared/constants';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import Navigation from './AdminNavigation';
-import { IAdminWebSocket } from './Websocket';
-import { Link } from 'react-router-dom';
-import ReactLoading from 'react-loading';
-import moment from 'moment';
+import React, { Component } from "react";
+import { TOKEN_HEADER } from "../../shared/constants";
+import Axios, { AxiosRequestConfig } from "axios";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import Navigation from "./AdminNavigation";
+import { IAdminWebSocket } from "./Websocket";
+import { Link } from "react-router-dom";
+import ReactLoading from "react-loading";
+import moment from "moment";
 
 export interface IAdminAccount {
   id: string;
@@ -50,18 +50,18 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
     this.state = {
       accounts: accountsData.accounts,
       page: 0,
-      search: '',
+      search: "",
       refreshing: false,
     };
   }
 
   componentDidMount() {
     if (!accountsData.accounts.length) this.getInfo();
-    this.props.adminWebSocket.on('account', this.addAccountFromSocket);
+    this.props.adminWebSocket.on("account", this.addAccountFromSocket);
   }
 
   componentWillUnmount() {
-    this.props.adminWebSocket.removeListener('account', this.addAccountFromSocket);
+    this.props.adminWebSocket.removeListener("account", this.addAccountFromSocket);
   }
 
   addAccountFromSocket = (account: IAdminAccount) => {
@@ -78,16 +78,16 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
 
   async getInfo() {
     this.setState({ refreshing: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
 
     try {
-      const response = await Axios.get<IResponse<IAdminAccount[]>>('/api/v1/admin/accounts', axiosRequestConfig);
+      const response = await Axios.get<IResponse<IAdminAccount[]>>("/api/v1/admin/accounts", axiosRequestConfig);
       const accounts = response.data.success;
-      if (!accounts) throw new Error('Missing data');
+      if (!accounts) throw new Error("Missing data");
       accountsData = { accounts, date: new Date() };
       this.setState({ refreshing: false, accounts });
     } catch (error) {
@@ -98,15 +98,15 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
 
   getAccount(account: IAdminAccount) {
     return (
-      <Link className='router-link' to={`/admin/accounts/${account.id}`} style={{ textDecoration: 'none' }}>
-        <div className={`m-2 p-2 event-log admin-clickable border ${account.banned ? 'account-banned' : ''}`}>
+      <Link className='router-link' to={`/admin/accounts/${account.id}`} style={{ textDecoration: "none" }}>
+        <div className={`m-2 p-2 event-log admin-clickable border ${account.banned ? "account-banned" : ""}`}>
           <div>
             {account.avatar ? (
               <>
                 <img className='account-avatar' src={account.avatar} /> {account.avatar}
               </>
             ) : (
-              'Avatar: none'
+              "Avatar: none"
             )}
           </div>
           <div>Username: {account.username}</div>
@@ -138,9 +138,9 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
     const accounts = accountsData.accounts
       .filter(a => {
         const username = a.username;
-        const displayedName = a.displayedName || '';
-        const email = a.email || '';
-        const note = a.note || '';
+        const displayedName = a.displayedName || "";
+        const email = a.email || "";
+        const note = a.note || "";
         const msg = `${username}${displayedName}${email}${note}`.toLowerCase();
         return msg.includes(this.state.search.toLowerCase());
       })
@@ -151,7 +151,7 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
 
   render() {
     if (this.state.refreshing) {
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
     }
 
     const c = (ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,7 +159,7 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
     };
 
     const key = (ev: React.KeyboardEvent<HTMLInputElement>) => {
-      if (ev.key === 'Enter') {
+      if (ev.key === "Enter") {
         setTimeout(() => {
           this.updateList();
         });
@@ -167,7 +167,7 @@ export class AdminAccountsList extends Component<IAdminAccountsProps, IAdminAcco
     };
 
     const time = accountsData.date ? (
-      <span className='p-2'> {moment(accountsData.date).format('MMMM Do YYYY, HH:mm:ss')}</span>
+      <span className='p-2'> {moment(accountsData.date).format("MMMM Do YYYY, HH:mm:ss")}</span>
     ) : null;
 
     return (

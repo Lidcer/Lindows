@@ -1,19 +1,19 @@
-import React from 'react';
-import { mousePointer, CursorType } from '../../components/Cursor/Cursor';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React from "react";
+import { mousePointer, CursorType } from "../../components/Cursor/Cursor";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTimes,
   faWindowMaximize,
   faWindowMinimize,
   faWindowRestore,
   faFile,
-} from '@fortawesome/free-solid-svg-icons';
-import { navBarPos } from '../../components/TaskBar/TaskBar';
-import { internal } from '../../services/internals/Internal';
-import { random, clamp } from 'lodash';
-import { ReactGeneratorFunction, appConstructorGenerator, launchApp, AppDescription } from '../../essential/apps';
-import { EventEmitter } from 'events';
-import { cloneDeep, randomString } from '../../../shared/utils';
+} from "@fortawesome/free-solid-svg-icons";
+import { navBarPos } from "../../components/TaskBar/TaskBar";
+import { internal } from "../../services/internals/Internal";
+import { random, clamp } from "lodash";
+import { ReactGeneratorFunction, appConstructorGenerator, launchApp, AppDescription } from "../../essential/apps";
+import { EventEmitter } from "events";
+import { cloneDeep, randomString } from "../../../shared/utils";
 import {
   MsgBoxIcon,
   MsgBoxButton,
@@ -45,22 +45,22 @@ import {
   UserAdminMiddle,
   UserAdminBottom,
   MsgBoxWarper,
-} from './baseWindowStyled';
-import { alwaysOnTop as alwaysOnTopIndex } from '../../Constants';
-import { WindowEvent } from './WindowEvent';
-import { Network } from '../../services/system/NetworkSystem';
-import { attachToWindowIfDev } from '../../essential/requests';
-import './baseWindows.scss';
-import { LindowError } from '../../utils/util';
-import { FileSystemFile } from '../../utils/FileSystemDirectory';
-const DEFAULT_APP_IMAGE = '/assets/images/unknown-app.svg';
+} from "./baseWindowStyled";
+import { alwaysOnTop as alwaysOnTopIndex } from "../../Constants";
+import { WindowEvent } from "./WindowEvent";
+import { Network } from "../../services/system/NetworkSystem";
+import { attachToWindowIfDev } from "../../essential/requests";
+import "./baseWindows.scss";
+import { LindowError } from "../../utils/util";
+import { FileSystemFile } from "../../utils/FileSystemDirectory";
+const DEFAULT_APP_IMAGE = "/assets/images/unknown-app.svg";
 
 export interface IBaseWindowProps {
   id: number;
   launchFile: FileSystemFile<AppDescription>;
   flags?: string;
   onlyOne?: boolean;
-  windowType?: 'borderless' | 'windowed' | 'fullscreen';
+  windowType?: "borderless" | "windowed" | "fullscreen";
   sudo?: boolean;
 }
 
@@ -72,18 +72,18 @@ let lastX = random(0, window.innerWidth * 0.25);
 let lastY = random(0, window.innerHeight * 0.25);
 
 export interface IWindow {
-  startPos?: 'center' | 'random' | 'card';
+  startPos?: "center" | "random" | "card";
   width?: number;
   height?: number;
   minWidth?: number;
   minHeight?: number;
   maxWidth?: number;
   maxHeight?: number;
-  windowType?: 'borderless' | 'windowed' | 'fullscreen';
+  windowType?: "borderless" | "windowed" | "fullscreen";
   resizable?: boolean;
-  closeButton?: 'shown' | 'disabled' | 'hidden';
-  maximizeRestoreDownButton?: 'shown' | 'disabled' | 'hidden';
-  minimizeButton?: 'shown' | 'disabled' | 'hidden';
+  closeButton?: "shown" | "disabled" | "hidden";
+  maximizeRestoreDownButton?: "shown" | "disabled" | "hidden";
+  minimizeButton?: "shown" | "disabled" | "hidden";
   redirectToWebpageButton?: string;
   maximized?: boolean;
   minimized?: boolean;
@@ -95,7 +95,7 @@ export interface IWindow {
 
 export interface IBaseWindowState<A> {
   options: IWindow;
-  animate: 'none' | 'in' | 'out' | 'minimize' | 'unMinimize';
+  animate: "none" | "in" | "out" | "minimize" | "unMinimize";
   x: number;
   y: number;
   width: number;
@@ -118,15 +118,15 @@ export interface IBounds {
 }
 
 declare type ResizingType =
-  | 'none'
-  | 'left'
-  | 'right'
-  | 'up'
-  | 'bottom'
-  | 'left-up'
-  | 'right-up'
-  | 'left-bottom'
-  | 'right-bottom';
+  | "none"
+  | "left"
+  | "right"
+  | "up"
+  | "bottom"
+  | "left-up"
+  | "right-up"
+  | "left-bottom"
+  | "right-bottom";
 
 // eslint-disable-next-line
 export interface BaseWindow<B = {}> extends React.Component<IBaseWindowProps, IBaseWindowState<B>> {
@@ -166,7 +166,7 @@ function overrideProtector(baseWindow: BaseWindow) {
     MessageBox.Show(
       baseWindow,
       `System.overrideProtection exception has occurred. You cannot override ${overriddenMethod}()!" Please consider using ${suggestedMethod}() function.`,
-      'Override violation',
+      "Override violation",
       MessageBoxButtons.OK,
       MessageBoxIcon.Error,
     );
@@ -176,16 +176,16 @@ function overrideProtector(baseWindow: BaseWindow) {
     MessageBox.Show(
       baseWindow,
       `System.overrideProtection exception has occurred. ${overriddenMethod}() is system method you are not allowed to override!"`,
-      'Override violation',
+      "Override violation",
       MessageBoxButtons.OK,
       MessageBoxIcon.Error,
     );
   };
 
   const reactMethods: { method: string; suggested: string }[] = [
-    { method: 'componentDidMount', suggested: 'load' },
-    { method: 'componentWillUnmount', suggested: 'closing' },
-    { method: 'render', suggested: 'renderInside' },
+    { method: "componentDidMount", suggested: "load" },
+    { method: "componentWillUnmount", suggested: "closing" },
+    { method: "render", suggested: "renderInside" },
   ];
   //This has to be in set timeout because baseWindow needs to be shown before showing message boxes
   for (const rectMethod of reactMethods) {
@@ -199,7 +199,7 @@ function overrideProtector(baseWindow: BaseWindow) {
   for (const [key] of Object.entries(entries)) {
     //bound methods cannot be protected
     if (!key) continue;
-    if (key === 'constructor') continue;
+    if (key === "constructor") continue;
     try {
       BaseWindow.prototype[key];
     } catch (error) {
@@ -214,13 +214,13 @@ function overrideProtector(baseWindow: BaseWindow) {
 
 let anonymous = false;
 function parseFlags(flags?: string): ILaunchFlags {
-  if (typeof flags !== 'string' || !flags) return {};
-  const flagsParsed = flags.split('-');
+  if (typeof flags !== "string" || !flags) return {};
+  const flagsParsed = flags.split("-");
   const launchFlags: ILaunchFlags = {};
   for (const flag of flagsParsed) {
     const trimmed = flag.trim();
     if (trimmed) {
-      const values = trimmed.split('=');
+      const values = trimmed.split("=");
       const key = values[0] && values[0].trim();
       const value = values[1] && values[1].trim();
       if (!key) continue;
@@ -252,7 +252,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _speedX = 0;
   private _speedY = 0;
   private _monitorInterval: number;
-  private _resizeType: ResizingType = 'none';
+  private _resizeType: ResizingType = "none";
   private wasActive = false;
   private _ignoreMouse = false;
   private _phone = null;
@@ -279,24 +279,24 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (!anonymous) {
       anonymous = false;
       if (!manifest) {
-        MessageBox._anonymousShow('Missing manifest of the app', 'Error');
+        MessageBox._anonymousShow("Missing manifest of the app", "Error");
         return;
       }
 
       if (!manifest.launchName) {
-        MessageBox._anonymousShow('Missing launch name', 'Error');
+        MessageBox._anonymousShow("Missing launch name", "Error");
         return;
       }
 
       if (!manifest.fullAppName) {
-        MessageBox._anonymousShow('Missing full app Name in manifest name', 'Error');
+        MessageBox._anonymousShow("Missing full app Name in manifest name", "Error");
         return;
       }
 
       if (props === undefined) {
         MessageBox._anonymousShow(
           `Cannot create app. Please use 'await ${this.constructor.name}.New()'`,
-          'Wrong implementation',
+          "Wrong implementation",
         );
         return;
       }
@@ -319,13 +319,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     let x = 0;
     let y = 0;
     const offset = 20;
-    if (verifiedOptions.startPos === 'random') {
+    if (verifiedOptions.startPos === "random") {
       x = random(offset, window.innerWidth - offset - width);
       y = random(offset, window.innerHeight - offset - height);
-    } else if (verifiedOptions.startPos === 'center') {
+    } else if (verifiedOptions.startPos === "center") {
       x = window.innerWidth * 0.5 - width * 0.5;
       y = window.innerHeight * 0.5 - height * 0.5;
-    } else if (verifiedOptions.startPos === 'card') {
+    } else if (verifiedOptions.startPos === "card") {
       x = lastX + offset;
       y = lastY + offset;
       if (y > window.innerHeight - height || x > window.innerWidth - width) {
@@ -341,7 +341,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     this.state = {
       options: verifiedOptions,
-      animate: 'in',
+      animate: "in",
       width,
       height,
       x,
@@ -380,7 +380,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   getBoundingRect() {
-    if (this.state.options.windowType === 'fullscreen') {
+    if (this.state.options.windowType === "fullscreen") {
       return {
         x: 0,
         y: 0,
@@ -415,7 +415,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const launchFile = this.props && this.props.launchFile && (this.props.launchFile as FileSystemFile<AppDescription>);
     if (!launchFile || launchFile.deleted) {
       this.exit();
-    } else if (launchFile.getType(internal.processor.symbol) !== 'lindowApp') {
+    } else if (launchFile.getType(internal.processor.symbol) !== "lindowApp") {
       this.exit();
     } else if (!launchFile.getContent(internal.processor.symbol).app) {
       this.exit();
@@ -428,8 +428,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       } catch (error) {
         this.exit();
         MessageBox._anonymousShow(
-          getMessageFromError(error, 'An unknown error occurred on load'),
-          'Error',
+          getMessageFromError(error, "An unknown error occurred on load"),
+          "Error",
           MessageBoxButtons.OK,
           MessageBoxIcon.Error,
         );
@@ -438,27 +438,27 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
     this._started = true;
     this._mounted = true;
-    window.addEventListener('resize', this._onResize, false);
+    window.addEventListener("resize", this._onResize, false);
 
-    window.addEventListener('mousedown', this._mouseDown, false);
-    window.addEventListener('touchstart', this.touchStart, false);
+    window.addEventListener("mousedown", this._mouseDown, false);
+    window.addEventListener("touchstart", this.touchStart, false);
 
-    window.addEventListener('mousemove', this._mouseMove, false);
-    window.addEventListener('touchmove', this._touchMove, false);
+    window.addEventListener("mousemove", this._mouseMove, false);
+    window.addEventListener("touchmove", this._touchMove, false);
 
-    window.addEventListener('mouseup', this._mouseUp, false);
-    window.addEventListener('touchend', this._touchEnd, false);
-    window.addEventListener('keydown', this._keyboard);
-    window.addEventListener('keypress', this._keyboard);
-    window.addEventListener('keyup', this._keyboard);
+    window.addEventListener("mouseup", this._mouseUp, false);
+    window.addEventListener("touchend", this._touchEnd, false);
+    window.addEventListener("keydown", this._keyboard);
+    window.addEventListener("keypress", this._keyboard);
+    window.addEventListener("keyup", this._keyboard);
 
     internal.processor.startProcess(this);
     this.changeActiveState(true);
     internal.processor.makeActive(this);
-    this.setState({ animate: 'in' });
+    this.setState({ animate: "in" });
     const t = setTimeout(() => {
       this._removeTimeout(t);
-      this.setState({ animate: 'none' });
+      this.setState({ animate: "none" });
     }, 1000);
     this.timeouts.push(t);
 
@@ -471,8 +471,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           if (promise instanceof Promise) await promise;
         } catch (error) {
           MessageBox._anonymousShow(
-            getMessageFromError(error, 'An unknown error occurred on shown'),
-            'Error',
+            getMessageFromError(error, "An unknown error occurred on shown"),
+            "Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error,
           );
@@ -490,16 +490,16 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   async componentWillUnmount() {
     this._mounted = false;
     clearInterval(this._monitorInterval);
-    window.removeEventListener('resize', this._onResize, false);
+    window.removeEventListener("resize", this._onResize, false);
 
-    window.removeEventListener('mousedown', this._mouseDown, false);
-    window.removeEventListener('touchstart', this.touchStart, false);
+    window.removeEventListener("mousedown", this._mouseDown, false);
+    window.removeEventListener("touchstart", this.touchStart, false);
 
-    window.removeEventListener('mousemove', this._mouseMove, false);
-    window.removeEventListener('touchmove', this._touchMove, false);
+    window.removeEventListener("mousemove", this._mouseMove, false);
+    window.removeEventListener("touchmove", this._touchMove, false);
 
-    window.removeEventListener('mouseup', this._mouseUp, false);
-    window.removeEventListener('touchend', this._touchEnd, false);
+    window.removeEventListener("mouseup", this._mouseUp, false);
+    window.removeEventListener("touchend", this._touchEnd, false);
     const timeouts = this.timeouts;
     for (const timeout of timeouts) {
       this._removeTimeout(timeout);
@@ -512,8 +512,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         if (promise instanceof Promise) await promise;
       } catch (error) {
         MessageBox._anonymousShow(
-          getMessageFromError(error, 'An error occurred while closed'),
-          'Error',
+          getMessageFromError(error, "An error occurred while closed"),
+          "Error",
           MessageBoxButtons.OK,
           MessageBoxIcon.Error,
         );
@@ -546,21 +546,21 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (!this._started || this._error) return null;
     let className = this._windowClass;
 
-    if (this.state.options.windowType === 'fullscreen') {
-      className += ' LWindowFullscreen';
+    if (this.state.options.windowType === "fullscreen") {
+      className += " LWindowFullscreen";
     } else if (this.state.options.maximized) {
       switch (navBarPos) {
-        case 'bottom':
-          className += ' LWindowBottom';
+        case "bottom":
+          className += " LWindowBottom";
           break;
-        case 'top':
-          className += ' LWindowTop';
+        case "top":
+          className += " LWindowTop";
           break;
-        case 'left':
-          className += ' LWindowLeft';
+        case "left":
+          className += " LWindowLeft";
           break;
-        case 'right':
-          className += ' LWindowRight';
+        case "right":
+          className += " LWindowRight";
           break;
         default:
           break;
@@ -570,7 +570,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const blocker = this._frozen ? <Blocker /> : null;
     try {
       return (
-        <LWindow className={className + ' lll'} ref={this._ref} style={this.getStyle()}>
+        <LWindow className={className + " lll"} ref={this._ref} style={this.getStyle()}>
           {blocker}
           {this._renderResizable()}
           {this._renderTitleBar()}
@@ -611,25 +611,25 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     if (active !== this.state.active) {
       if (active) {
-        const we = new WindowEvent('focus', this);
+        const we = new WindowEvent("focus", this);
         if (this.onFocus) {
           try {
             this.onFocus(we);
           } catch (error) {
             this.exit();
-            MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onFocus() method')}`);
+            MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onFocus() method")}`);
           }
         }
 
         if (we.isDefaultPrevented && doProcess) return;
       } else if (!active) {
         if (this.onBlur) {
-          const we = new WindowEvent('blure', this);
+          const we = new WindowEvent("blure", this);
           try {
             this.onBlur(we);
           } catch (error) {
             this.exit();
-            MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onBlur() method')}`);
+            MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onBlur() method")}`);
           }
           if (we.isDefaultPrevented && doProcess) return;
         }
@@ -651,7 +651,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     options.minimized = !options.minimized;
 
     this.setState({
-      animate: options.minimized ? 'unMinimize' : 'minimize',
+      animate: options.minimized ? "unMinimize" : "minimize",
       options,
     });
   };
@@ -663,7 +663,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       this._frozen = true;
       this.forceUpdate();
     } else {
-      MessageBox.Show(this, 'Invalid key');
+      MessageBox.Show(this, "Invalid key");
     }
   }
 
@@ -672,7 +672,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       this._frozen = false;
       this.forceUpdate();
     } else {
-      MessageBox.Show(this, 'Invalid key');
+      MessageBox.Show(this, "Invalid key");
     }
   }
 
@@ -753,10 +753,10 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   };
 
   private _renderTitleBar() {
-    if (this.state.options.windowType === 'windowed') {
+    if (this.state.options.windowType === "windowed") {
       return (
         <TitleBar
-          style={!this.active ? { backgroundColor: 'rgba(64, 64, 64, 1)' } : { backgroundColor: 'rgba(0, 0, 0, 1)' }}
+          style={!this.active ? { backgroundColor: "rgba(64, 64, 64, 1)" } : { backgroundColor: "rgba(0, 0, 0, 1)" }}
           onMouseDown={e => this._onTitleBarMouseDown(e.nativeEvent)}
           onTouchStart={e => this._onTitleBarTouchStart(e.nativeEvent)}
           onTouchEnd={() => {
@@ -784,7 +784,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   private _renderTitleBarTitle() {
-    const tClass = this.state.options.showIcon ? 'title-bar-title-with-icon' : 'title-bar-title';
+    const tClass = this.state.options.showIcon ? "title-bar-title-with-icon" : "title-bar-title";
 
     if (this.state.options.title) {
       if (this.state.options.showIcon) {
@@ -797,13 +797,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   private _renderExit() {
-    if (this.state.options.closeButton === 'shown') {
+    if (this.state.options.closeButton === "shown") {
       return (
         <TitleBarExit onClick={this.buttonExit}>
           <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
         </TitleBarExit>
       );
-    } else if (this.state.options.closeButton === 'disabled') {
+    } else if (this.state.options.closeButton === "disabled") {
       return (
         <TitleBarButtonDisabled>
           <FontAwesomeIcon icon={faTimes}></FontAwesomeIcon>
@@ -839,13 +839,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _renderMaximizeRestoreDown() {
     const icon = this.state.options.maximized ? faWindowRestore : faWindowMaximize;
     const buttonFunction = this.state.options.maximized ? this._buttonRestore : this._buttonMaximize;
-    if (this.state.options.maximizeRestoreDownButton === 'shown') {
+    if (this.state.options.maximizeRestoreDownButton === "shown") {
       return (
         <TitleBarButtonHover onClick={buttonFunction}>
           <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
         </TitleBarButtonHover>
       );
-    } else if (this.state.options.maximizeRestoreDownButton === 'disabled') {
+    } else if (this.state.options.maximizeRestoreDownButton === "disabled") {
       return (
         <TitleBarButtonDisabled>
           <FontAwesomeIcon icon={icon}></FontAwesomeIcon>
@@ -856,7 +856,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   private _renderMinimize() {
-    if (this.state.options.minimizeButton === 'shown') {
+    if (this.state.options.minimizeButton === "shown") {
       return (
         <TitleBarButtonHover
           onMouseDown={() => {
@@ -867,7 +867,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           <FontAwesomeIcon icon={faWindowMinimize}></FontAwesomeIcon>
         </TitleBarButtonHover>
       );
-    } else if (this.state.options.minimizeButton === 'disabled') {
+    } else if (this.state.options.minimizeButton === "disabled") {
       return (
         <TitleBarButtonDisabled>
           <FontAwesomeIcon icon={faWindowMinimize}></FontAwesomeIcon>
@@ -878,56 +878,56 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   private _renderResizable() {
-    if (this.state.options.resizable && this.state.options.windowType === 'windowed') {
+    if (this.state.options.resizable && this.state.options.windowType === "windowed") {
       return (
         <>
           <LWindowUpHover
-            onMouseEnter={() => this._mouseResize('verticalResize')}
+            onMouseEnter={() => this._mouseResize("verticalResize")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('up')}
-            onTouchStart={() => this.setResize('up')}
+            onMouseDown={() => this.setResize("up")}
+            onTouchStart={() => this.setResize("up")}
           ></LWindowUpHover>
           <LWindowBottomHover
-            onMouseEnter={() => this._mouseResize('verticalResize')}
+            onMouseEnter={() => this._mouseResize("verticalResize")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('bottom')}
-            onTouchStart={() => this.setResize('bottom')}
+            onMouseDown={() => this.setResize("bottom")}
+            onTouchStart={() => this.setResize("bottom")}
           ></LWindowBottomHover>
           <LWindowLeftHover
-            onMouseEnter={() => this._mouseResize('horizontalResize')}
+            onMouseEnter={() => this._mouseResize("horizontalResize")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('left')}
-            onTouchStart={() => this.setResize('left')}
+            onMouseDown={() => this.setResize("left")}
+            onTouchStart={() => this.setResize("left")}
           ></LWindowLeftHover>
           <LWindowRightHover
-            onMouseEnter={() => this._mouseResize('horizontalResize')}
+            onMouseEnter={() => this._mouseResize("horizontalResize")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('right')}
-            onTouchStart={() => this.setResize('right')}
+            onMouseDown={() => this.setResize("right")}
+            onTouchStart={() => this.setResize("right")}
           ></LWindowRightHover>
           <LWindowUpLeftHover
-            onMouseEnter={() => this._mouseResize('diagonalResize2')}
+            onMouseEnter={() => this._mouseResize("diagonalResize2")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('left-up')}
-            onTouchStart={() => this.setResize('left-up')}
+            onMouseDown={() => this.setResize("left-up")}
+            onTouchStart={() => this.setResize("left-up")}
           ></LWindowUpLeftHover>
           <LWindowUpRightHover
-            onMouseEnter={() => this._mouseResize('diagonalResize1')}
+            onMouseEnter={() => this._mouseResize("diagonalResize1")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('right-up')}
-            onTouchStart={() => this.setResize('right-up')}
+            onMouseDown={() => this.setResize("right-up")}
+            onTouchStart={() => this.setResize("right-up")}
           ></LWindowUpRightHover>
           <LWindowBottomLeftHover
-            onMouseEnter={() => this._mouseResize('diagonalResize1')}
+            onMouseEnter={() => this._mouseResize("diagonalResize1")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('left-bottom')}
-            onTouchStart={() => this.setResize('left-bottom')}
+            onMouseDown={() => this.setResize("left-bottom")}
+            onTouchStart={() => this.setResize("left-bottom")}
           ></LWindowBottomLeftHover>
           <LWindowBottomRightHover
-            onMouseEnter={() => this._mouseResize('diagonalResize2')}
+            onMouseEnter={() => this._mouseResize("diagonalResize2")}
             onMouseLeave={this._mouseResizeLeave}
-            onMouseDown={() => this.setResize('right-bottom')}
-            onTouchStart={() => this.setResize('right-bottom')}
+            onMouseDown={() => this.setResize("right-bottom")}
+            onTouchStart={() => this.setResize("right-bottom")}
           ></LWindowBottomRightHover>
         </>
       );
@@ -943,7 +943,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   };
 
   private _mouseResizeLeave = () => {
-    if (this._resizeType === 'none') mousePointer.changeMouse('normal');
+    if (this._resizeType === "none") mousePointer.changeMouse("normal");
   };
 
   private _onResize = () => {
@@ -981,23 +981,23 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private get _windowClass() {
     switch (this.state.animate) {
-      case 'in':
+      case "in":
         return `animated jackInTheBox faster`;
-      case 'out':
+      case "out":
         return `animated zoomOut faster`;
-      case 'minimize':
+      case "minimize":
         return `animated bounceInUp faster`;
-      case 'unMinimize':
+      case "unMinimize":
         return `animated bounceOutDown faster`;
     }
-    return '';
+    return "";
   }
 
   private _giveView = () => {
     if (!this.renderInside) return <div>Missing content</div>;
     const jsx = this.renderInside();
     //@ts-ignore Im so sorry
-    if (jsx && typeof jsx === 'object' && jsx.$$typeof && typeof jsx.$$typeof === 'symbol') {
+    if (jsx && typeof jsx === "object" && jsx.$$typeof && typeof jsx.$$typeof === "symbol") {
       return jsx;
     }
 
@@ -1015,7 +1015,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   };
 
   private _handleWindowMove(clientX: number, clientY: number) {
-    if (this._resizeType !== 'none' && !this._isWindowMoving) {
+    if (this._resizeType !== "none" && !this._isWindowMoving) {
       let width = this.state.width;
       let height = this.state.height;
       let x = this.state.x;
@@ -1026,11 +1026,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       const maxWidth = window.innerWidth;
 
       switch (this._resizeType) {
-        case 'right':
+        case "right":
           if (newX >= window.innerWidth) break;
           width = newX - this.state.x;
           break;
-        case 'left':
+        case "left":
           if (newX <= 0) break;
           const tlWidth = this.state.x - clientX + this.state.width;
           if (tlWidth >= this._minWidth && tlWidth < maxWidth) {
@@ -1039,7 +1039,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           }
           break;
 
-        case 'up':
+        case "up":
           if (newY <= 0) break;
           const upHeight = this.state.y - clientY + this.state.height;
           if (upHeight >= this._minHeight && upHeight < maxHeight) {
@@ -1047,17 +1047,17 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
             y = clientY;
           }
           break;
-        case 'bottom':
+        case "bottom":
           if (newY >= window.innerHeight) break;
           height = clientY - this.state.y;
           break;
-        case 'right-bottom':
+        case "right-bottom":
           if (newX >= window.innerWidth) break;
           if (newY >= window.innerHeight) break;
           height = clientY - this.state.y;
           width = clientX - this.state.x;
           break;
-        case 'left-bottom':
+        case "left-bottom":
           if (newX <= 0) break;
           if (newY >= window.innerHeight) break;
           const lbWidth = this.state.x - clientX + this.state.width;
@@ -1067,7 +1067,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
             width = lbWidth;
           }
           break;
-        case 'right-up':
+        case "right-up":
           if (newX >= window.innerWidth) break;
           if (newY <= 0) break;
           const ruHeight = this.state.y - clientY + this.state.height;
@@ -1078,7 +1078,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           }
 
           break;
-        case 'left-up':
+        case "left-up":
           if (newX <= 0) break;
           if (newY <= 0) break;
           const ltHeight = this.state.y - clientY + this.state.height;
@@ -1106,7 +1106,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           this.onResize(this.state.width, this.state.height);
         } catch (error) {
           this.exit();
-          MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onResize() method')}`);
+          MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onResize() method")}`);
         }
       }
     }
@@ -1142,13 +1142,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _mouseUp = (event: MouseEvent) => {
     if (this._frozen) return;
-    this._resizeType = 'none';
+    this._resizeType = "none";
     this._onTitleBarSetOffset(event.clientX, event.clientY, false);
   };
 
   private _touchEnd = (event: TouchEvent) => {
     if (this._frozen) return;
-    this._resizeType = 'none';
+    this._resizeType = "none";
 
     if (event.touches[0]) this._onTitleBarSetOffset(event.touches[0].clientX, event.touches[0].clientY, false);
     else this._onTitleBarSetOffset(0, 0, false);
@@ -1156,14 +1156,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _onTitleBarMouseDown(event: MouseEvent) {
     const div = event.target as HTMLDivElement;
-    if (div.tagName.toLowerCase() === 'span' || div.tagName.toLowerCase() === 'div')
+    if (div.tagName.toLowerCase() === "span" || div.tagName.toLowerCase() === "div")
       this._onTitleBarSetOffset(event.offsetX, event.offsetY);
   }
   private _onTitleBarTouchStart = (event: TouchEvent) => {
     if (!this._ignoreMouse) this._ignoreMouse = true;
     if (event.targetTouches[0]) {
       const div = event.target as HTMLDivElement;
-      if (div.tagName.toLowerCase() === 'span' || div.tagName.toLowerCase() === 'div') {
+      if (div.tagName.toLowerCase() === "span" || div.tagName.toLowerCase() === "div") {
         const x = event.targetTouches[0].clientX - this.state.x;
         const y = event.targetTouches[0].clientY - this.state.y;
         this._onTitleBarSetOffset(x, y);
@@ -1207,13 +1207,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _buttonMinimize = () => {
     if (this._frozen) return;
-    const we = new WindowEvent('minimize', this);
+    const we = new WindowEvent("minimize", this);
     if (this.onMinimize) {
       try {
         this.onFocus(we);
       } catch (error) {
         this.exit();
-        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onMinimize() method')}`);
+        MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onMinimize() method")}`);
       }
     }
 
@@ -1222,13 +1222,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private buttonExit = () => {
     if (this._frozen) return;
-    const we = new WindowEvent('exit', this);
+    const we = new WindowEvent("exit", this);
     if (this.onExit) {
       try {
         this.onExit(we);
       } catch (error) {
         this.exit();
-        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onExit() method')}`);
+        MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onExit() method")}`);
       }
     }
     if (!we.isDefaultPrevented) this.exit();
@@ -1242,8 +1242,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           if (promise instanceof Promise) await promise;
         } catch (error) {
           MessageBox._anonymousShow(
-            getMessageFromError(error, 'An error occurred while closing'),
-            'Error',
+            getMessageFromError(error, "An error occurred while closing"),
+            "Error",
             MessageBoxButtons.OK,
             MessageBoxIcon.Error,
           );
@@ -1251,7 +1251,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       }
       securityKeys.delete(this);
       this.setState({
-        animate: 'out',
+        animate: "out",
       });
       const t = setTimeout(() => {
         internal.processor.killProcess(this);
@@ -1265,13 +1265,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _buttonRestore = () => {
     if (this._frozen) return;
-    const we = new WindowEvent('restore', this);
+    const we = new WindowEvent("restore", this);
     if (this.onRestore) {
       try {
         this.onRestore(we);
       } catch (error) {
         this.exit();
-        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onRestore() method')}`);
+        MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onRestore() method")}`);
       }
     }
     if (!we.isDefaultPrevented) this.maximizeRestoreDown();
@@ -1279,13 +1279,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   private _buttonMaximize = () => {
     if (this._frozen) return;
-    const we = new WindowEvent('maximize', this);
+    const we = new WindowEvent("maximize", this);
     if (this.onMaximize) {
       try {
         this.onMaximize(we);
       } catch (error) {
         this.exit();
-        MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onMaximize() method')}`);
+        MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onMaximize() method")}`);
       }
     }
     if (!we.isDefaultPrevented) this.maximizeRestoreDown();
@@ -1295,7 +1295,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const options = { ...this.state.options };
     options.maximized = !options.maximized;
 
-    if (options.maximized || options.windowType === 'fullscreen') {
+    if (options.maximized || options.windowType === "fullscreen") {
       this._memorizedState = {
         x: this.state.x,
         y: this.state.y,
@@ -1308,12 +1308,12 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
 
     this.setState({
-      animate: 'in',
+      animate: "in",
       options,
     });
     const t = setTimeout(() => {
       this._removeTimeout(t);
-      this.setState({ animate: 'none' });
+      this.setState({ animate: "none" });
     }, 500);
     this.timeouts.push(t);
   };
@@ -1338,8 +1338,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         this.exit();
       });
       return;
-    } else if (launchFile.getType(internal.processor.symbol) !== 'lindowApp') {
-      console.log('not not lindows app');
+    } else if (launchFile.getType(internal.processor.symbol) !== "lindowApp") {
+      console.log("not not lindows app");
       setTimeout(() => {
         this.exit();
       });
@@ -1352,7 +1352,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     }
     if (!this._mounted) {
       if (!this._warnOnce) {
-        MessageBox._anonymousShow('Trying to update not mounted or destroyed window', 'Crash prevention');
+        MessageBox._anonymousShow("Trying to update not mounted or destroyed window", "Crash prevention");
         this._warnOnce = true;
         this.exit();
       }
@@ -1363,7 +1363,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           this.onUpdate(this.state.variables);
         } catch (error) {
           this.exit();
-          MessageBox._anonymousShow(`${getMessageFromError(error, 'An error occurred in onUpdate() method')}`);
+          MessageBox._anonymousShow(`${getMessageFromError(error, "An error occurred in onUpdate() method")}`);
         }
       }
     }
@@ -1372,11 +1372,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private verifyOptions(options?: IWindow): IWindow {
     if (!options) options = {};
     return {
-      windowType: options.windowType === undefined ? 'windowed' : options.windowType,
+      windowType: options.windowType === undefined ? "windowed" : options.windowType,
       resizable: options.resizable === undefined ? true : options.resizable,
-      startPos: options.startPos === undefined ? 'card' : options.startPos,
-      closeButton: options.closeButton === undefined ? 'shown' : options.closeButton,
-      minimizeButton: options.minimizeButton === undefined ? 'shown' : options.minimizeButton,
+      startPos: options.startPos === undefined ? "card" : options.startPos,
+      closeButton: options.closeButton === undefined ? "shown" : options.closeButton,
+      minimizeButton: options.minimizeButton === undefined ? "shown" : options.minimizeButton,
       maximized: options.maximized === undefined ? false : options.maximized,
       minimized: options.minimized === undefined ? false : options.minimized,
       width: options.width === undefined ? window.innerWidth : options.width,
@@ -1391,9 +1391,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       image: options.image === undefined ? this.getManifest().icon || DEFAULT_APP_IMAGE : options.image,
       redirectToWebpageButton: options.redirectToWebpageButton || options.redirectToWebpageButton,
       showIcon: options.showIcon === undefined ? true : options.showIcon,
-      title: options.title === undefined ? this.getManifest().fullAppName || 'An app' : options.title,
+      title: options.title === undefined ? this.getManifest().fullAppName || "An app" : options.title,
       maximizeRestoreDownButton:
-        options.maximizeRestoreDownButton === undefined ? 'shown' : options.maximizeRestoreDownButton,
+        options.maximizeRestoreDownButton === undefined ? "shown" : options.maximizeRestoreDownButton,
       alwaysOnTop: options.alwaysOnTop === undefined ? false : options.alwaysOnTop,
     };
   }
@@ -1418,33 +1418,33 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (this._frozen) return;
     if (!this.state.active) return;
     switch (ev.type) {
-      case 'keydown':
+      case "keydown":
         if (this.onKeyDown) {
           try {
             this.onKeyDown(ev);
           } catch (error) {
             this.exit();
-            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onkeyDown'), 'Error');
+            MessageBox.Show(this, getMessageFromError(error, "an error occurred in onkeyDown"), "Error");
           }
         }
         break;
-      case 'keypress':
+      case "keypress":
         if (this.onKeyPress) {
           try {
             this.onKeyPress(ev);
           } catch (error) {
             this.exit();
-            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onKeyPress'), 'Error');
+            MessageBox.Show(this, getMessageFromError(error, "an error occurred in onKeyPress"), "Error");
           }
         }
         break;
-      case 'keyup':
+      case "keyup":
         if (this.onKeyUp) {
           try {
             this.onKeyUp(ev);
           } catch (error) {
             this.exit();
-            MessageBox.Show(this, getMessageFromError(error, 'an error occurred in onKeyUp'), 'Error');
+            MessageBox.Show(this, getMessageFromError(error, "an error occurred in onKeyUp"), "Error");
           }
         }
         break;
@@ -1511,8 +1511,8 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       return manifest;
     } else {
       return {
-        fullAppName: 'Anonymous app',
-        launchName: '',
+        fullAppName: "Anonymous app",
+        launchName: "",
         icon: DEFAULT_APP_IMAGE,
       };
     }
@@ -1560,30 +1560,30 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
   private _dialogResult: DialogResult;
 
   public static manifest: IManifest = {
-    fullAppName: 'message box',
-    launchName: 'msgBox',
-    icon: '/assets/images/appsIcons/appIcon.svg',
+    fullAppName: "message box",
+    launchName: "msgBox",
+    icon: "/assets/images/appsIcons/appIcon.svg",
   };
 
   constructor(props) {
     super(
       props,
       {
-        title: 'Message box',
-        image: '/assets/images/appsIcons/appIcon.svg',
-        startPos: 'center',
+        title: "Message box",
+        image: "/assets/images/appsIcons/appIcon.svg",
+        startPos: "center",
         //alwaysOnTop: true,
         resizable: true,
         showIcon: false,
-        minimizeButton: 'hidden',
-        maximizeRestoreDownButton: 'hidden',
+        minimizeButton: "hidden",
+        maximizeRestoreDownButton: "hidden",
         minimized: false,
         minHeight: 175,
         minWidth: 400,
       },
       {
-        message: '',
-        content: '',
+        message: "",
+        content: "",
         buttons: MessageBoxButtons.OK,
         icon: MessageBoxIcon.None,
       },
@@ -1604,17 +1604,17 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
+      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
 
       const onClick = (dialogResult: DialogResult) => {
-        messageBox.object.msgBoxEmitter.removeListener('onClick', onClick);
+        messageBox.object.msgBoxEmitter.removeListener("onClick", onClick);
         baseWindow.changeActiveState = changeActiveState;
         baseWindow.unFreeze(key);
         resolve(dialogResult);
       };
 
-      messageBox.object.message = message || '';
-      messageBox.object.caption = caption || 'Message box';
+      messageBox.object.message = message || "";
+      messageBox.object.caption = caption || "Message box";
       messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
       messageBox.object.icon = messageBoxIcon || MessageBoxIcon.None;
       baseWindow.changeActiveState = bool => {
@@ -1624,7 +1624,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
           }
         });
       };
-      messageBox.object.msgBoxEmitter.on('onClick', onClick);
+      messageBox.object.msgBoxEmitter.on("onClick", onClick);
     });
   }
 
@@ -1640,7 +1640,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
     messageBoxIcon?: MessageBoxIcon,
   ) {
     const system = internal.processor.symbol;
-    const apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+    const apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
 
     const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
       <MessageBox
@@ -1651,9 +1651,9 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       ></MessageBox>
     );
     setTimeout(async () => {
-      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, 'msgBox');
-      messageBox.object.message = message || '';
-      messageBox.object.caption = caption || 'Message box';
+      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
+      messageBox.object.message = message || "";
+      messageBox.object.caption = caption || "Message box";
       messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
       messageBox.object.icon = messageBoxIcon || MessageBoxIcon.None;
     });
@@ -1683,7 +1683,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
   }
 
   private onButtonClick = (dialogResult: DialogResult, exit = true) => {
-    this.msgBoxEmitter.emit('onClick', dialogResult);
+    this.msgBoxEmitter.emit("onClick", dialogResult);
     if (exit) {
       this.exit();
     }
@@ -1765,9 +1765,9 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
 }
 
 export function getMessageFromError(error: Error, fallbackMessage: string) {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
-  } else if (typeof error === 'object' && typeof error.message === 'string') {
+  } else if (typeof error === "object" && typeof error.message === "string") {
     return error.message;
   }
   return fallbackMessage;
@@ -1775,9 +1775,9 @@ export function getMessageFromError(error: Error, fallbackMessage: string) {
 
 export class AdminPromp extends BaseWindow {
   public static manifest: IManifest = {
-    fullAppName: 'Admin Prop',
-    launchName: 'adminProp',
-    icon: '/assets/images/appsIcons/appIcon.svg',
+    fullAppName: "Admin Prop",
+    launchName: "adminProp",
+    icon: "/assets/images/appsIcons/appIcon.svg",
   };
 
   adminPrompEmitter = new EventEmitter();
@@ -1785,15 +1785,15 @@ export class AdminPromp extends BaseWindow {
 
   constructor(props) {
     super(props, {
-      title: 'User Account Control',
-      image: '/assets/images/appsIcons/appIcon.svg',
-      startPos: 'center',
+      title: "User Account Control",
+      image: "/assets/images/appsIcons/appIcon.svg",
+      startPos: "center",
       alwaysOnTop: true,
       resizable: false,
-      windowType: 'borderless',
+      windowType: "borderless",
 
-      minimizeButton: 'hidden',
-      maximizeRestoreDownButton: 'hidden',
+      minimizeButton: "hidden",
+      maximizeRestoreDownButton: "hidden",
       minimized: false,
       minHeight: 400,
       minWidth: 400,
@@ -1808,10 +1808,10 @@ export class AdminPromp extends BaseWindow {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const adminPromp = await internal.processor.addApp<AdminPromp>(reactGeneratorFunction, 'msgBox');
+      const adminPromp = await internal.processor.addApp<AdminPromp>(reactGeneratorFunction, "msgBox");
 
       const onClick = (bool: boolean) => {
-        adminPromp.object.adminPrompEmitter.removeListener('onClick', onClick);
+        adminPromp.object.adminPrompEmitter.removeListener("onClick", onClick);
         adminPromp.object.exit();
         baseWindow.changeActiveState = changeActiveState;
         baseWindow.unFreeze(key);
@@ -1827,7 +1827,7 @@ export class AdminPromp extends BaseWindow {
       };
       adminPromp.object._baseWindow = baseWindow;
       adminPromp.object.forceUpdate();
-      adminPromp.object.adminPrompEmitter.on('onClick', onClick);
+      adminPromp.object.adminPrompEmitter.on("onClick", onClick);
     });
   }
 
@@ -1838,29 +1838,29 @@ export class AdminPromp extends BaseWindow {
 
   private accept = (mouseEvent: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     if (!mouseEvent) {
-      return this.unknownSourceReject('function has been called without mouse event!');
+      return this.unknownSourceReject("function has been called without mouse event!");
     }
     if (!mouseEvent.isTrusted) {
-      return this.unknownSourceReject('Action cannot be trusted!');
+      return this.unknownSourceReject("Action cannot be trusted!");
     }
     if (!this.reference) return;
     const div = this.reference.current as HTMLDivElement;
     const target = event.target as HTMLDivElement;
     if (div.contains(target)) {
       adminAllowed.set(this._baseWindow, true);
-      this.adminPrompEmitter.emit('onClick', true);
+      this.adminPrompEmitter.emit("onClick", true);
       return securityKeys.get(this._baseWindow);
     }
-    return this.unknownSourceReject('Unknown source of mouse event!');
+    return this.unknownSourceReject("Unknown source of mouse event!");
   };
 
   private reject = () => {
-    this.adminPrompEmitter.emit('onClick', false);
+    this.adminPrompEmitter.emit("onClick", false);
   };
 
   private unknownSourceReject(reason: string) {
-    this.adminPrompEmitter.emit('onClick', false);
-    MessageBox._anonymousShow(reason, 'Security violation');
+    this.adminPrompEmitter.emit("onClick", false);
+    MessageBox._anonymousShow(reason, "Security violation");
     return new Error(reason);
   }
 
@@ -1904,4 +1904,4 @@ export class AdminPromp extends BaseWindow {
     );
   }
 }
-attachToWindowIfDev('BaseWindow', BaseWindow);
+attachToWindowIfDev("BaseWindow", BaseWindow);

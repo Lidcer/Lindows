@@ -1,5 +1,5 @@
-import React from 'react';
-import { BoxSelection } from './SelectBoxStyled';
+import React from "react";
+import { BoxSelection } from "./SelectBoxStyled";
 
 export interface IPos {
   pos: {
@@ -23,11 +23,11 @@ export class SelectBox extends React.Component<IPos, IState> {
   }
 
   componentDidMount() {
-    window.addEventListener('mousemove', this.mouseMove, false);
+    window.addEventListener("mousemove", this.mouseMove, false);
   }
 
   componentWillUnmount() {
-    window.removeEventListener('mousemove', this.mouseMove, false);
+    window.removeEventListener("mousemove", this.mouseMove, false);
   }
 
   mouseMove = (event: MouseEvent) => {

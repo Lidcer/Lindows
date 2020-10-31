@@ -1,11 +1,11 @@
-import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWindow/BaseWindow';
-import React from 'react';
-import { random } from 'lodash';
-import { randomString } from '../../../shared/utils';
-import { attachToWindowIfDev } from '../../essential/requests';
-import { GroupViewerCanvas, ICanvasInteraction } from './GroupViewerCanvas';
-import { toPixelData } from '../../utils/screenshoter/src/index';
-import { GroupViewerStyled } from './GroupViewerStyled';
+import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from "../BaseWindow/BaseWindow";
+import React from "react";
+import { random } from "lodash";
+import { randomString } from "../../../shared/utils";
+import { attachToWindowIfDev } from "../../essential/requests";
+import { GroupViewerCanvas, ICanvasInteraction } from "./GroupViewerCanvas";
+import { toPixelData } from "../../utils/screenshoter/src/index";
+import { GroupViewerStyled } from "./GroupViewerStyled";
 
 export interface IGroupViewerState {
   userId: string;
@@ -22,9 +22,9 @@ export interface IGroupViewerState {
 export class GroupViewer extends BaseWindow<IGroupViewerState> {
   public static readonly onlyOne = true;
   public static manifest: IManifest = {
-    fullAppName: 'Group Viewer',
-    launchName: 'groupviewer',
-    icon: '/assets/images/appsIcons/GroupViewer.svg',
+    fullAppName: "Group Viewer",
+    launchName: "groupviewer",
+    icon: "/assets/images/appsIcons/GroupViewer.svg",
   };
 
   private readonly EVENT_DELAY = 0;
@@ -32,7 +32,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
   private interval: number;
   private canvasInteraction?: ICanvasInteraction;
   private lastSentEvent = 0;
-  private cursor = document.createElement('img');
+  private cursor = document.createElement("img");
 
   constructor(props: IBaseWindowProps) {
     super(
@@ -42,54 +42,54 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         height: 500,
       },
       {
-        userId: '',
-        userPassword: '',
-        connectPassword: '',
-        connectUser: '',
+        userId: "",
+        userPassword: "",
+        connectPassword: "",
+        connectUser: "",
         connecting: false,
         connectionEstablished: false,
         height: 0,
         width: 0,
       },
     );
-    this.cursor.src = '/assets/images//cursors/normal.svg';
+    this.cursor.src = "/assets/images//cursors/normal.svg";
     this.cursor.style.zIndex = `${Number.MAX_SAFE_INTEGER}`;
-    this.cursor.style.position = 'fixed';
-    this.cursor.style.transform = 'rotate(-20deg)';
+    this.cursor.style.position = "fixed";
+    this.cursor.style.transform = "rotate(-20deg)";
     this.cursor.height = 50;
-    attachToWindowIfDev('groupViewer', this);
+    attachToWindowIfDev("groupViewer", this);
   }
 
   async obtainId() {
     try {
-      const id = await this.network.emitPromise<string, []>('group-viewer-ready');
+      const id = await this.network.emitPromise<string, []>("group-viewer-ready");
       this.setVariables({ userId: id, userPassword: randomString(6) });
     } catch (error) {
-      await MessageBox.Show(this, `Unable to get id ${error.message}`, 'Connection error');
+      await MessageBox.Show(this, `Unable to get id ${error.message}`, "Connection error");
       this.exit();
     }
   }
 
   shown() {
     this.obtainId();
-    this.network.socket.on('disconnect', this.unexpectedDisconnect);
-    this.network.socket.on('group-viewer-password-check', this.passwordCheck);
-    this.network.socket.on('group-viewer-establish', this.establish);
-    this.network.socket.on('group-viewer-display', this.onDisplay);
-    this.network.socket.on('group-viewer-event', this.onEvent);
+    this.network.socket.on("disconnect", this.unexpectedDisconnect);
+    this.network.socket.on("group-viewer-password-check", this.passwordCheck);
+    this.network.socket.on("group-viewer-establish", this.establish);
+    this.network.socket.on("group-viewer-display", this.onDisplay);
+    this.network.socket.on("group-viewer-event", this.onEvent);
   }
 
   closing() {
-    this.network.socket.removeEventListener('disconnect', this.unexpectedDisconnect);
-    this.network.socket.removeEventListener('group-viewer-password-check', this.passwordCheck);
-    this.network.socket.removeEventListener('group-viewer-establish', this.establish);
-    this.network.socket.removeEventListener('group-viewer-display', this.onDisplay);
-    this.network.socket.removeEventListener('group-viewer-event', this.onEvent);
+    this.network.socket.removeEventListener("disconnect", this.unexpectedDisconnect);
+    this.network.socket.removeEventListener("group-viewer-password-check", this.passwordCheck);
+    this.network.socket.removeEventListener("group-viewer-establish", this.establish);
+    this.network.socket.removeEventListener("group-viewer-display", this.onDisplay);
+    this.network.socket.removeEventListener("group-viewer-event", this.onEvent);
     document.body.style.width = ``;
     document.body.style.height = ``;
     this.removeCursor();
     if (this.network.socket.connected) {
-      this.network.socket.emit('group-viewer-clean');
+      this.network.socket.emit("group-viewer-clean");
     }
     // this.network.removeListener('group-viewer-connected', this.connectResponse);
   }
@@ -111,21 +111,21 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   onEvent = (type: string, properties: any) => {
     try {
-      if (type === 'mousemove') {
-        const mouseEvent = new MouseEvent('hover', {
+      if (type === "mousemove") {
+        const mouseEvent = new MouseEvent("hover", {
           ...properties,
           clientX: properties.x,
           clientY: properties.y,
         });
-        document.getElementById('app').dispatchEvent(mouseEvent);
+        document.getElementById("app").dispatchEvent(mouseEvent);
         return this.showCursor(properties.x, properties.y);
       }
       let event: MouseEvent | KeyboardEvent | TouchEvent | undefined;
-      if (type.includes('mouse') || type.includes('click')) {
+      if (type.includes("mouse") || type.includes("click")) {
         event = new MouseEvent(type, properties);
-      } else if (type.includes('key')) {
+      } else if (type.includes("key")) {
         event = new KeyboardEvent(type, properties);
-      } else if (type.includes('touch')) {
+      } else if (type.includes("touch")) {
         event = new TouchEvent(type, properties);
       }
 
@@ -141,12 +141,12 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   reGenerate() {
     this.setVariables({ userPassword: randomString(6) });
-    this.network.socket.on('disconnect', this.unexpectedDisconnect);
+    this.network.socket.on("disconnect", this.unexpectedDisconnect);
     //  this.network.emit('group-viewer-ready', this.variables.userId);
   }
 
   unexpectedDisconnect = async () => {
-    await MessageBox.Show(this, 'Unexpected disconnect occurred');
+    await MessageBox.Show(this, "Unexpected disconnect occurred");
     this.exit();
   };
 
@@ -157,7 +157,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
       const dataUrl = await toPixelData(document.body, { cacheBust: true, cache: true });
       return dataUrl;
     } catch (error) {
-      console.log('an error occurred', error);
+      console.log("an error occurred", error);
     }
     return new Uint8ClampedArray();
   }
@@ -183,12 +183,12 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
       this.setVariables({ connecting: true });
       try {
         const exist = await this.network.emitPromise<string, [string, string]>(
-          'group-viewer-connect',
+          "group-viewer-connect",
           this.variables.connectUser,
           this.variables.connectPassword,
         );
         if (!exist) {
-          MessageBox.Show(this, 'Id was not found');
+          MessageBox.Show(this, "Id was not found");
           this.setVariables({ connecting: false });
         }
       } catch (error) {
@@ -207,14 +207,14 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
       variables.connectionEstablished = true;
       this.setVariables(variables);
 
-      this.canvasInteraction.addEventListiner('mousemove', (ev: MouseEvent) => {
+      this.canvasInteraction.addEventListiner("mousemove", (ev: MouseEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit('group-viewer-event', 'mousemove', {
+            this.network.socket.emit("group-viewer-event", "mousemove", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -233,14 +233,14 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         }
       });
 
-      this.canvasInteraction.addEventListiner('mousedown', (ev: MouseEvent) => {
+      this.canvasInteraction.addEventListiner("mousedown", (ev: MouseEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit('group-viewer-event', 'mousedown', {
+            this.network.socket.emit("group-viewer-event", "mousedown", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -259,14 +259,14 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         }
       });
 
-      this.canvasInteraction.addEventListiner('mouseup', (ev: MouseEvent) => {
+      this.canvasInteraction.addEventListiner("mouseup", (ev: MouseEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit('group-viewer-event', 'mouseup', {
+            this.network.socket.emit("group-viewer-event", "mouseup", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -285,14 +285,14 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         }
       });
 
-      this.canvasInteraction.addEventListiner('click', (ev: MouseEvent) => {
+      this.canvasInteraction.addEventListiner("click", (ev: MouseEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit('group-viewer-event', 'click', {
+            this.network.socket.emit("group-viewer-event", "click", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -311,12 +311,12 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         }
       });
 
-      this.canvasInteraction.addEventListiner('keypress', (ev: KeyboardEvent) => {
+      this.canvasInteraction.addEventListiner("keypress", (ev: KeyboardEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
-            this.network.socket.emit('group-viewer-event', 'keypress', {
+            this.network.socket.emit("group-viewer-event", "keypress", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -328,12 +328,12 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         }
       });
 
-      this.canvasInteraction.addEventListiner('keyup', (ev: KeyboardEvent) => {
+      this.canvasInteraction.addEventListiner("keyup", (ev: KeyboardEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
-            this.network.socket.emit('group-viewer-event', 'keyup', {
+            this.network.socket.emit("group-viewer-event", "keyup", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -344,12 +344,12 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
           }
         }
       });
-      this.canvasInteraction.addEventListiner('keydown', (ev: KeyboardEvent) => {
+      this.canvasInteraction.addEventListiner("keydown", (ev: KeyboardEvent) => {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
           if (this.network.socket.connected) {
-            this.network.socket.emit('group-viewer-event', 'keydown', {
+            this.network.socket.emit("group-viewer-event", "keydown", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -374,7 +374,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
     };
 
     try {
-      await this.network.emitPromise('group-viewer-screen', base.buffer, bounds);
+      await this.network.emitPromise("group-viewer-screen", base.buffer, bounds);
     } catch (error) {
       MessageBox.Show(this, error.message);
       if (this.minimized) {
@@ -413,7 +413,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   passwordCheck = (password: string, socketId: string) => {
     const result = password === this.variables.userPassword;
-    this.network.socket.emit('group-viewer-password-response', result, socketId);
+    this.network.socket.emit("group-viewer-password-response", result, socketId);
   };
 
   renderInside() {
@@ -427,7 +427,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
     }
 
     const e = (
-      <div style={{ border: '1px solid blue' }}>
+      <div style={{ border: "1px solid blue" }}>
         <div>
           <span>User ID:</span>
           <input type='text' onChange={this.onUserId} value={this.variables.connectUser} />
@@ -442,7 +442,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
     return (
       <GroupViewerStyled>
-        <div style={{ border: '1px solid orange' }}>
+        <div style={{ border: "1px solid orange" }}>
           <div>
             <span>User ID:</span>
             <input type='text' value={this.variables.userId} readOnly />

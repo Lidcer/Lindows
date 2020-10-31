@@ -1,15 +1,15 @@
-import React from 'react';
+import React from "react";
 import {
   FileExplorer,
   FileExplorerButton,
   FileExplorerContent,
   FileExplorerLabel,
   FolderOrFile,
-} from './IDE-LideStyled';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFolder, faFile, faAngleDown, faAngleRight } from '@fortawesome/free-solid-svg-icons';
-import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';
-import { popup } from '../../components/Popup/popupRenderer';
+} from "./IDE-LideStyled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFolder, faFile, faAngleDown, faAngleRight } from "@fortawesome/free-solid-svg-icons";
+import { ContextMenu, IElement } from "../../components/ContextMenu/ContextMenu";
+import { popup } from "../../components/Popup/popupRenderer";
 
 export interface IExplorerFile {
   name: string;
@@ -57,8 +57,8 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
 
   componentDidMount() {
     this.refreshFolder();
-    window.addEventListener('click', this.dismissRenaming);
-    window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener("click", this.dismissRenaming);
+    window.addEventListener("keyup", this.onKeyUp);
   }
 
   componentDidUpdate() {
@@ -69,8 +69,8 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
   }
 
   componentWillUnmount() {
-    window.removeEventListener('click', this.dismissRenaming);
-    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener("click", this.dismissRenaming);
+    window.removeEventListener("keyup", this.onKeyUp);
   }
 
   dismissRenaming = () => {
@@ -88,7 +88,7 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
   };
 
   onKeyUp = (event: KeyboardEvent) => {
-    if (event.key === 'F2') {
+    if (event.key === "F2") {
       if (this.renaming) {
         this.dismissRenaming();
         return;
@@ -103,18 +103,18 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
       }
       this.refreshFolder();
     }
-    if (event.key === 'Backspace' && this.renaming) {
+    if (event.key === "Backspace" && this.renaming) {
       const name = this.renaming.name;
       this.renaming.name = name.slice(0, name.length - 1);
       this.refreshFolder();
     }
-    if (event.key === 'Escape' && this.renaming) {
+    if (event.key === "Escape" && this.renaming) {
       if (this.originalName) {
         this.renaming.name = this.originalName;
         this.dismissRenaming();
       }
     }
-    if (event.key === 'Enter' && this.renaming) {
+    if (event.key === "Enter" && this.renaming) {
       if (this.originalName) {
         this.dismissRenaming();
       }
@@ -202,8 +202,8 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
     };
 
     const elements: IElement[] = [
-      { content: 'Delete DEL', onClick: deleteFile },
-      { content: 'Rename F2', onClick: renameFile },
+      { content: "Delete DEL", onClick: deleteFile },
+      { content: "Rename F2", onClick: renameFile },
     ];
     const element = (
       <ContextMenu
@@ -280,8 +280,8 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
 
   createFile = () => {
     const folder = this.selectedFolder || getFolder(this.selected, this.props.fs);
-    const name = this.uniqNameGenerator(folder.contents, 'Untitled file');
-    const file: IExplorerFile = { content: '', name, path: '/' };
+    const name = this.uniqNameGenerator(folder.contents, "Untitled file");
+    const file: IExplorerFile = { content: "", name, path: "/" };
     folder.contents.push(file);
     setTimeout(() => {
       this.renaming = file;
@@ -293,7 +293,7 @@ export class IDEFileExplorer extends React.Component<IDEFileExplorerProps, IDEFi
 
   createFolder = () => {
     const folder = this.selectedFolder || getFolder(this.selected, this.props.fs);
-    const name = this.uniqNameGenerator(folder.contents, 'Untitled folder');
+    const name = this.uniqNameGenerator(folder.contents, "Untitled folder");
     const f: IExplorerFolder = { contents: [], name, collapsed: false };
     folder.contents.push(f);
     setTimeout(() => {

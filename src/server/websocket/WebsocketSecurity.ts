@@ -1,32 +1,32 @@
 //SocketIO.Socket
 
-import { logger } from '../database/EventLog';
-import { WebSocket } from './SocketHandler';
-import { IWebsocketPromise } from '../../shared/Websocket';
+import { logger } from "../database/EventLog";
+import { WebSocket } from "./SocketHandler";
+import { IWebsocketPromise } from "../../shared/Websocket";
 
 export class SocketValidator {
   constructor(private webSocket: WebSocket) {}
 
-  validateWebSocketPromise(client: SocketIO.Socket, promise:IWebsocketPromise){
+  validateWebSocketPromise(client: SocketIO.Socket, promise: IWebsocketPromise) {
     const error = () => {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate websocketPromise client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
-      return false
-    }
-    if (typeof promise !== 'object') return error();
-    if(!promise.id) return error();
-    if(!promise.status) return error();
+      return false;
+    };
+    if (typeof promise !== "object") return error();
+    if (!promise.id) return error();
+    if (!promise.status) return error();
     return true;
   }
 
   validateString(client: SocketIO.Socket, string: string) {
-    if (typeof string !== 'string') {
+    if (typeof string !== "string") {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate string client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -35,10 +35,10 @@ export class SocketValidator {
   }
 
   validateNumber(client: SocketIO.Socket, number: number) {
-    if (typeof number !== 'number') {
+    if (typeof number !== "number") {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate number client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -47,10 +47,10 @@ export class SocketValidator {
   }
 
   validateBoolean(client: SocketIO.Socket, boolean: boolean) {
-    if (typeof boolean !== 'boolean') {
+    if (typeof boolean !== "boolean") {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate boolean client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -59,10 +59,10 @@ export class SocketValidator {
   }
 
   validateBigInt(client: SocketIO.Socket, bigInt: bigint) {
-    if (typeof bigInt !== 'bigint') {
+    if (typeof bigInt !== "bigint") {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate bigInt client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -71,10 +71,10 @@ export class SocketValidator {
   }
 
   validateObject(client: SocketIO.Socket, object: object) {
-    if (typeof object !== 'object') {
+    if (typeof object !== "object") {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate object client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -86,7 +86,7 @@ export class SocketValidator {
     if (!Array.isArray(array)) {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate array client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -98,7 +98,7 @@ export class SocketValidator {
     if (und !== undefined) {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate undefined client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -110,7 +110,7 @@ export class SocketValidator {
     if (nu !== null) {
       client.disconnect();
       logger.error(
-        '[Websocket security]',
+        "[Websocket security]",
         `Unable to validate null client: ${client.id} ${this.getClientUserId(client)}`.trim(),
       );
       return false;
@@ -120,9 +120,8 @@ export class SocketValidator {
 
   private getClientUserId(client: SocketIO.Socket) {
     const userSchema = this.webSocket.getClientUserSchema(client);
-    let message = '';
+    let message = "";
     if (userSchema) message = `User ID: ${userSchema._id.toString()}`;
     return message;
   }
-
 }

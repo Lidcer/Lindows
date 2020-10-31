@@ -7,7 +7,7 @@ declare const twemoji: {
   size: string;
 };
 
-declare module 'compress-str' {
+declare module "compress-str" {
   export function gzip(string: string): Promise<string>;
   export function gzip(string: string, callback: (error: Error, compressed: string) => void);
 

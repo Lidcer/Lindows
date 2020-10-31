@@ -1,4 +1,4 @@
-import { HOUR } from '../../shared/constants';
+import { HOUR } from "../../shared/constants";
 
 export class SpamProtector {
   private resetTime = HOUR;

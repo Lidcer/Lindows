@@ -1,5 +1,5 @@
-import { Internal } from './Internal';
-import * as compress from 'compress-str';
+import { Internal } from "./Internal";
+import * as compress from "compress-str";
 import {
   everyone,
   FileSystemContent,
@@ -11,11 +11,11 @@ import {
   parseDirectoryOrFile,
   sanitizeName,
   StringSymbol,
-} from '../../utils/FileSystemDirectory';
-import { BaseService, SystemServiceStatus } from './BaseSystemService';
-import prettysize from 'prettysize';
+} from "../../utils/FileSystemDirectory";
+import { BaseService, SystemServiceStatus } from "./BaseSystemService";
+import prettysize from "prettysize";
 
-const fileSystemKey = '__fileSystem__';
+const fileSystemKey = "__fileSystem__";
 
 const internal = new WeakMap<FileSystem, Internal>();
 
@@ -30,7 +30,7 @@ export class FileSystem extends BaseService {
     internal.set(this, _internal);
     const system = _internal.systemSymbol;
 
-    this._root = new FileSystemDirectory('root', system, async () => {
+    this._root = new FileSystemDirectory("root", system, async () => {
       if (this.saving) {
         const objected = objectifyDirectory(this._root, system);
         const string = JSON.stringify(objected);
@@ -42,7 +42,7 @@ export class FileSystem extends BaseService {
   }
 
   init() {
-    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
     const int = internal.get(this);
     const system = int.systemSymbol;
@@ -52,38 +52,38 @@ export class FileSystem extends BaseService {
 
       const systemSymbol = system;
       const directories = [
-        'bin',
-        'boot',
-        'dev',
-        'etc',
-        'home',
-        'media',
-        'mnt',
-        'opt',
-        'proc',
-        'run',
-        'sbin',
-        'snap',
-        'srv',
-        'sys',
-        'tmp',
-        'usr',
+        "bin",
+        "boot",
+        "dev",
+        "etc",
+        "home",
+        "media",
+        "mnt",
+        "opt",
+        "proc",
+        "run",
+        "sbin",
+        "snap",
+        "srv",
+        "sys",
+        "tmp",
+        "usr",
       ];
 
       for (const directory of directories) {
         const createdDirectory = await this._root.createDirectory(directory, systemSymbol);
-        if (directory === 'home') {
+        if (directory === "home") {
           homeDirectory = createdDirectory;
           this._home = homeDirectory;
         }
-        if (directory === 'usr') {
-          const bin = await createdDirectory.createDirectory('bin', systemSymbol);
-          bin.createDirectory('cmd', systemSymbol);
-          bin.createDirectory('apps', systemSymbol);
+        if (directory === "usr") {
+          const bin = await createdDirectory.createDirectory("bin", systemSymbol);
+          bin.createDirectory("cmd", systemSymbol);
+          bin.createDirectory("apps", systemSymbol);
         }
-        if (directory === 'bin') {
-          createdDirectory.createDirectory('cmd', systemSymbol);
-          createdDirectory.createDirectory('apps', systemSymbol);
+        if (directory === "bin") {
+          createdDirectory.createDirectory("cmd", systemSymbol);
+          createdDirectory.createDirectory("apps", systemSymbol);
         }
       }
       //homeDirector.createDirectory(this.username());
@@ -118,9 +118,9 @@ export class FileSystem extends BaseService {
           for (const content of objectFolder.contents) {
             parseDirectory(this._root, content, system);
           }
-          this._home = this._root.getDirectory('home', system);
+          this._home = this._root.getDirectory("home", system);
           if (!this._home) {
-            this._root.createDirectory('home', system);
+            this._root.createDirectory("home", system);
           }
         } catch (error) {
           DEV && console.error(error);
@@ -131,13 +131,13 @@ export class FileSystem extends BaseService {
       const objected = objectifyDirectory(this._root, system);
       const string = JSON.stringify(objected);
       const compressed = await compress.gzip(string);
-      localStorage.setItem('fs', compressed);
+      localStorage.setItem("fs", compressed);
       this._status = SystemServiceStatus.Ready;
     };
 
     const destroy = () => {
       this.saving = false;
-      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
       internal.delete(this);
     };
@@ -150,8 +150,8 @@ export class FileSystem extends BaseService {
   }
 
   parseDirectory(path: string, owner = everyone): FileSystemDirectory | null {
-    path = path.replace(/\\/g, '/');
-    const folders = path.split('/');
+    path = path.replace(/\\/g, "/");
+    const folders = path.split("/");
     let currentScanner = this.root;
     for (const folderName of folders) {
       if (currentScanner.name === folderName) {
@@ -174,11 +174,11 @@ export class FileSystem extends BaseService {
     }
   }
   parseDirectorRelative(current: FileSystemDirectory, path: string, owner = everyone) {
-    path = path.replace(/\\/g, '/');
-    const split = path.split('/');
-    if (path.startsWith('/')) {
+    path = path.replace(/\\/g, "/");
+    const split = path.split("/");
+    if (path.startsWith("/")) {
       current = this.root;
-    } else if (path.startsWith('.')) {
+    } else if (path.startsWith(".")) {
       /* do nothing */
     } else if (/^[a-z]/gi.test(path)) {
       path = `./${path}`;
@@ -190,15 +190,15 @@ export class FileSystem extends BaseService {
     const int = internal.get(this);
     const system = int.systemSymbol;
     while (looking) {
-      if (looking === '..') {
-        const newDirectoryPath = current.path.split('/');
+      if (looking === "..") {
+        const newDirectoryPath = current.path.split("/");
         newDirectoryPath.pop();
-        const dir = this.parseDirectory(newDirectoryPath.join('/'), system);
+        const dir = this.parseDirectory(newDirectoryPath.join("/"), system);
         if (!dir) {
           return null;
         }
         current = dir;
-      } else if (looking !== '.') {
+      } else if (looking !== ".") {
         const dir = current.getDirectory(looking, system);
         if (!dir) {
           return null;
@@ -253,7 +253,7 @@ export class FileSystem extends BaseService {
     const user = await this.home.createDirectory(sanitizeName(username), system);
     const userSymbol = new StringSymbol(username);
     user.setPermissionFor(system, userSymbol, FileSystemPermissions.ReadAndWrite);
-    const userDirectories = ['Desktop', 'Documents', 'Downloads', 'Music', 'Pictures', 'Videos'];
+    const userDirectories = ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Videos"];
     for (const userDir of userDirectories) {
       user.createDirectory(userDir, userSymbol);
     }
@@ -270,7 +270,7 @@ export class FileSystem extends BaseService {
   }
 
   size(arg: FileSystemContent | number): string {
-    if (typeof arg === 'number') {
+    if (typeof arg === "number") {
       return prettysize(arg, true);
     }
     try {
@@ -278,7 +278,7 @@ export class FileSystem extends BaseService {
       return result;
     } catch (error) {
       DEV && console.error(error);
-      return '?';
+      return "?";
     }
   }
 }

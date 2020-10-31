@@ -1,4 +1,4 @@
-import { Keypress } from './constants/Keypress';
+import { Keypress } from "./constants/Keypress";
 
 declare type KeyCombination = Keypress | Keypress[];
 export interface HotKeyHandler {
@@ -15,8 +15,8 @@ export class HotKeyHandler {
     this.resetOnKeyUp = resetOnKeyUp;
     this.keySequence = keySequence;
 
-    document.addEventListener('keydown', this.onKeyDown, false);
-    if (resetOnKeyUp) document.addEventListener('keyup', this.onKeyUp, false);
+    document.addEventListener("keydown", this.onKeyDown, false);
+    if (resetOnKeyUp) document.addEventListener("keyup", this.onKeyUp, false);
   }
   onKeyUp = (event: KeyboardEvent) => {
     if (!this.enable) return;
@@ -71,7 +71,7 @@ export class HotKeyHandler {
   }
 
   destroy() {
-    document.removeEventListener('keydown', this.onKeyDown, false);
-    if (this.resetOnKeyUp) document.removeEventListener('keyup', this.onKeyUp, false);
+    document.removeEventListener("keydown", this.onKeyDown, false);
+    if (this.resetOnKeyUp) document.removeEventListener("keyup", this.onKeyUp, false);
   }
 }

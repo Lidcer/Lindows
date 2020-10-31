@@ -1,16 +1,16 @@
-import { IManifest, BaseWindow } from '../BaseWindow/BaseWindow';
-import React from 'react';
-import { SnakeGameWarper } from './SnakeGameStyle';
-import { SnakeGameLogic } from './SnakeGameLogic';
-import { SnakeInput } from './SnakeInput';
+import { IManifest, BaseWindow } from "../BaseWindow/BaseWindow";
+import React from "react";
+import { SnakeGameWarper } from "./SnakeGameStyle";
+import { SnakeGameLogic } from "./SnakeGameLogic";
+import { SnakeInput } from "./SnakeInput";
 
 export class SnakeGame extends BaseWindow {
   public static readonly onlyOne = true;
 
   public static manifest: IManifest = {
-    fullAppName: 'Snake game',
-    launchName: 'webGlSnake',
-    icon: '/assets/images/appsIcons/SnakeGameIcon.svg',
+    fullAppName: "Snake game",
+    launchName: "webGlSnake",
+    icon: "/assets/images/appsIcons/SnakeGameIcon.svg",
   };
 
   private ref = React.createRef<HTMLCanvasElement>();
@@ -24,12 +24,12 @@ export class SnakeGame extends BaseWindow {
         minHeight: 500,
         minWidth: 500,
         resizable: false,
-        startPos: 'center',
+        startPos: "center",
         showIcon: false,
-        maximizeRestoreDownButton: 'disabled',
+        maximizeRestoreDownButton: "disabled",
       },
       {
-        message: '',
+        message: "",
       },
     );
   }

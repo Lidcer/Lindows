@@ -1,11 +1,11 @@
-import { BaseCommand } from './BaseCommand';
-import { launchApp } from '../apps';
+import { BaseCommand } from "./BaseCommand";
+import { launchApp } from "../apps";
 
 export class Start extends BaseCommand {
-  public static help = 'appname [flags...]';
+  public static help = "appname [flags...]";
   execute() {
     const appName = this.args[1];
-    const flags = this.args.slice(2).join(' ');
+    const flags = this.args.slice(2).join(" ");
     if (launchApp(appName, flags)) {
       this.finish(`App ${appName} launched`);
       return 0;

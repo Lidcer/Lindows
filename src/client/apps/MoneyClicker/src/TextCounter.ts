@@ -1,13 +1,13 @@
 export class TextCounter {
   canvas: HTMLCanvasElement;
 
-  spliter = '';
+  spliter = "";
 
   isLandscape = true;
 
-  color = 'rgba(0,0,0,0.50)';
-  valueColor = 'rgba(255,255,255,1)';
-  cpsColor = 'rgba(255,255,255,0.90)';
+  color = "rgba(0,0,0,0.50)";
+  valueColor = "rgba(255,255,255,1)";
+  cpsColor = "rgba(255,255,255,0.90)";
   blackSquare = [0, 0, 0, 0];
   valuePos = [0, 0];
   cpsPos = [0, 0];
@@ -77,16 +77,16 @@ export class TextCounter {
     this.ctx.fillRect(0, 0, this.blackSquare[0], this.blackSquare[1]);
 
     this.ctx.fillStyle = this.valueColor;
-    this.ctx.textAlign = 'center';
-    this.ctx.font = this.valueSize + 'px ds-digi';
+    this.ctx.textAlign = "center";
+    this.ctx.font = this.valueSize + "px ds-digi";
 
     const displayValue = this.value.toString().match(/.{1,3}/g);
 
     this.ctx.fillText(displayValue.join(this.spliter), this.valuePos[0], this.valuePos[1]);
     this.ctx.fillStyle = this.cpsColor;
-    this.ctx.font = this.cpsSize + 'px ds-digi';
+    this.ctx.font = this.cpsSize + "px ds-digi";
 
     const displyCPS = this.cps.toString().match(/.{1,3}/g);
-    this.ctx.fillText('CPS:' + displyCPS.join(this.spliter), this.cpsPos[0], this.cpsPos[1]);
+    this.ctx.fillText("CPS:" + displyCPS.join(this.spliter), this.cpsPos[0], this.cpsPos[1]);
   }
 }

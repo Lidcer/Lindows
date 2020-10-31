@@ -1,6 +1,6 @@
-import { Schema, Document } from 'mongoose';
-import { mongoose } from './database';
-import { logger } from './EventLog';
+import { Schema, Document } from "mongoose";
+import { mongoose } from "./database";
+import { logger } from "./EventLog";
 
 export interface IMongooseTokenBlackList extends Document {
   token: string;
@@ -14,14 +14,14 @@ const VerificationSchema = new Schema<IMongooseTokenBlackList>(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-const MongoTokenBlackList = mongoose.model<IMongooseTokenBlackList>('blackListTokens', VerificationSchema);
+const MongoTokenBlackList = mongoose.model<IMongooseTokenBlackList>("blackListTokens", VerificationSchema);
 
 export function isTokenBlackListed(token: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
@@ -74,7 +74,7 @@ export function rubbishCollectTokens(): Promise<void> {
         }
       })
       .catch(err => {
-        logger.error(err, 'Problem fetching data from database');
+        logger.error(err, "Problem fetching data from database");
         reject(err);
       });
   });

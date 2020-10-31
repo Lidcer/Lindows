@@ -1,12 +1,12 @@
-import { LypeService } from './LypeServices';
-import { BaseService } from './BaseService';
-import { EventEmitter } from 'events';
-import { attachToWindowIfDev } from '../../essential/requests';
+import { LypeService } from "./LypeServices";
+import { BaseService } from "./BaseService";
+import { EventEmitter } from "events";
+import { attachToWindowIfDev } from "../../essential/requests";
 
 interface IBackgroundServices {
   name: string;
   Service: constructorGenerator;
-  origin: BaseService['constructor'];
+  origin: BaseService["constructor"];
 }
 
 export type constructorGenerator = () => BaseService;
@@ -14,14 +14,14 @@ export type constructorGenerator = () => BaseService;
 const INSTALLED_SERVICES: IBackgroundServices[] = [];
 
 if (!STATIC) {
-  INSTALLED_SERVICES.push({ name: 'lype', Service: () => new LypeService(), origin: LypeService });
+  INSTALLED_SERVICES.push({ name: "lype", Service: () => new LypeService(), origin: LypeService });
 }
 
-const startUp: string[] = ['lype'];
+const startUp: string[] = ["lype"];
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 declare interface BackgroundServices {
-  on(event: 'ready', listener: () => void): this;
+  on(event: "ready", listener: () => void): this;
 }
 
 class BackgroundServices extends EventEmitter {
@@ -33,7 +33,7 @@ class BackgroundServices extends EventEmitter {
       this.loadAll();
     } else {
       this.isReady = true;
-      this.emit('ready');
+      this.emit("ready");
     }
   }
 
@@ -43,7 +43,7 @@ class BackgroundServices extends EventEmitter {
       if (running) return resolve(running);
 
       const service = INSTALLED_SERVICES.find(s => s.name === name);
-      if (!service) return reject(new Error('Unknown service'));
+      if (!service) return reject(new Error("Unknown service"));
       try {
         const actualService = service.Service();
         const startResult = actualService.start();
@@ -109,7 +109,7 @@ class BackgroundServices extends EventEmitter {
       }
       resolve();
       this.isReady = true;
-      this.emit('ready');
+      this.emit("ready");
     });
   }
 
@@ -128,7 +128,7 @@ export function backgroundServices() {
 export async function bgService<T>(name: string): Promise<T> {
   return new Promise(resolve => {
     const justResolve = async () => {
-      service.removeListener('ready', justResolve);
+      service.removeListener("ready", justResolve);
       return resolve(await service.startOrGetService<T>(name));
     };
     if (service && service.ready) {
@@ -138,7 +138,7 @@ export async function bgService<T>(name: string): Promise<T> {
       if (service.ready) {
         justResolve();
       } else {
-        service.on('ready', justResolve);
+        service.on("ready", justResolve);
       }
     }
   });
@@ -155,6 +155,6 @@ export function killBGService<T>(name: string): Promise<void> {
 export function startBackgroundServices(loadAllStartUpServices = false) {
   if (service) return service;
   service = new BackgroundServices(loadAllStartUpServices);
-  attachToWindowIfDev('service', service);
+  attachToWindowIfDev("service", service);
   return service;
 }

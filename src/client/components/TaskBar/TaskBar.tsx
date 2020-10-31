@@ -1,14 +1,31 @@
-import React from 'react';
-import moment from 'moment';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
-import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
-import { StartMenu } from '../StartMenu/StartMenu';
-import { internal } from '../../services/internals/Internal';
-import { TaskBarNotificationHor, TaskBarNotificationVer, TaskBarExtended, TaskBarIcon, TaskBarOpenIcons,
-   TaskBarClockHor, TaskBarClockVer, TaskBarShowDesktopHor, TaskBarShowDesktopVer, TaskBarStartBtnHor,
-    TaskBarStartBtnVer, TaskBarGridHor, TaskBarGridVer, TaskBarBackground, Aero, TaskBarBottom, TaskBarTop,
-     TaskBarLeft, TaskBarRight } from './TaskBarStyled';
+import React from "react";
+import moment from "moment";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCommentAlt } from "@fortawesome/free-solid-svg-icons";
+import { BaseWindow } from "../../apps/BaseWindow/BaseWindow";
+import { StartMenu } from "../StartMenu/StartMenu";
+import { internal } from "../../services/internals/Internal";
+import {
+  TaskBarNotificationHor,
+  TaskBarNotificationVer,
+  TaskBarExtended,
+  TaskBarIcon,
+  TaskBarOpenIcons,
+  TaskBarClockHor,
+  TaskBarClockVer,
+  TaskBarShowDesktopHor,
+  TaskBarShowDesktopVer,
+  TaskBarStartBtnHor,
+  TaskBarStartBtnVer,
+  TaskBarGridHor,
+  TaskBarGridVer,
+  TaskBarBackground,
+  Aero,
+  TaskBarBottom,
+  TaskBarTop,
+  TaskBarLeft,
+  TaskBarRight,
+} from "./TaskBarStyled";
 
 interface IState {
   time: string;
@@ -17,14 +34,14 @@ interface IState {
   runningApps: BaseWindow[];
 }
 
-declare type BavBarPos = 'bottom' | 'top' | 'left' | 'right';
+declare type BavBarPos = "bottom" | "top" | "left" | "right";
 interface ITaskBarApp {
   app: BaseWindow;
   multiple: boolean;
 }
 declare type ITaskBarAppIcon = ITaskBarApp[] | ITaskBarApp;
 
-export let navBarPos: BavBarPos = 'bottom';
+export let navBarPos: BavBarPos = "bottom";
 export function changeNavBarPos(pos: BavBarPos) {
   navBarPos = pos;
 }
@@ -36,31 +53,31 @@ export class TaskBar extends React.Component<{}, IState> {
   constructor(props) {
     super(props);
     this.state = {
-      date: '',
-      time: '',
+      date: "",
+      time: "",
       startMenu: false,
       runningApps: [],
     };
   }
 
   componentDidMount() {
-    internal.processor.on('appAdd', this.updateTaskBar);
-    internal.processor.on('appRemove', this.updateTaskBar);
-    internal.processor.on('appAdd', this.onAppAdd);
-    internal.processor.on('appRemove', this.onAppRemove);
+    internal.processor.on("appAdd", this.updateTaskBar);
+    internal.processor.on("appRemove", this.updateTaskBar);
+    internal.processor.on("appAdd", this.onAppAdd);
+    internal.processor.on("appRemove", this.onAppRemove);
     this.timeOutFunction = setInterval(this.updateTaskBar, 1000);
   }
 
   componentWillUnmount() {
-    internal.processor.removeListener('appAdd', this.updateTaskBar);
-    internal.processor.removeListener('appRemove', this.updateTaskBar);
+    internal.processor.removeListener("appAdd", this.updateTaskBar);
+    internal.processor.removeListener("appRemove", this.updateTaskBar);
     clearTimeout(this.timeOutFunction);
   }
 
   updateTaskBar = () => {
     this.setState({
-      time: moment().format('HH:mm:ss'),
-      date: moment().format('DD/MM/YYYY'),
+      time: moment().format("HH:mm:ss"),
+      date: moment().format("DD/MM/YYYY"),
     });
   };
 
@@ -112,9 +129,10 @@ export class TaskBar extends React.Component<{}, IState> {
     // const active = window.active ? window.active : !!sameInstance.find(a => a.active);
     const multipleInstance = sameInstance.length > 1;
     return (
-      <TaskBarOpenIcons style={ { backgroundColor: window.active ? 'rgba(255,255,255,0.25)' : 'transparent'}}
+      <TaskBarOpenIcons
+        style={{ backgroundColor: window.active ? "rgba(255,255,255,0.25)" : "transparent" }}
         key={index}
-          onClick={() => this.openAppClick(window)}
+        onClick={() => this.openAppClick(window)}
       >
         <TaskBarIcon src={window.state.options.image} alt={window.state.options.title} />
         {multipleInstance ? this.multipleInstances() : null}
@@ -140,7 +158,7 @@ export class TaskBar extends React.Component<{}, IState> {
   // };
 
   openAppClick(app: BaseWindow) {
-    if(app.minimized || !app.active){
+    if (app.minimized || !app.active) {
       app.focus();
     } else {
       app.minimize();
@@ -149,7 +167,7 @@ export class TaskBar extends React.Component<{}, IState> {
   }
 
   getIcon() {
-     const TaskBarAlert = this.isHorizontal ? TaskBarNotificationHor : TaskBarNotificationVer; 
+    const TaskBarAlert = this.isHorizontal ? TaskBarNotificationHor : TaskBarNotificationVer;
     if (notifications)
       return (
         <TaskBarAlert>
@@ -166,8 +184,8 @@ export class TaskBar extends React.Component<{}, IState> {
 
   get isHorizontal() {
     switch (navBarPos) {
-      case 'bottom':
-      case 'top':
+      case "bottom":
+      case "top":
         return true;
       default:
         return false;
@@ -180,18 +198,17 @@ export class TaskBar extends React.Component<{}, IState> {
 
   get navBar() {
     switch (navBarPos) {
-      case 'bottom':
+      case "bottom":
         return TaskBarBottom;
-      case 'top':
+      case "top":
         return TaskBarTop;
-      case 'left':
-          return TaskBarLeft;
-      case 'right':
-          return TaskBarRight;
+      case "left":
+        return TaskBarLeft;
+      case "right":
+        return TaskBarRight;
       default:
         break;
     }
-
   }
 
   render() {
@@ -203,29 +220,37 @@ export class TaskBar extends React.Component<{}, IState> {
     return (
       <>
         {this.state.startMenu ? <StartMenu appClick={this.appClickStartMenu} /> : null}
-        <NavBar> <Aero /></NavBar>
-        <NavBar> <TaskBarBackground  style={{color:'blue'}}/> </NavBar>
-        <NavBar> <TaskBarGrid>
-          <TaskBarStartBtn>
-            <img
-              src='./assets/images/lidcer-logo.svg'
-              alt='StartMenu'
-              onClick={() => this.setState({ startMenu: !this.state.startMenu })}
-            />
-          </TaskBarStartBtn>
+        <NavBar>
+          {" "}
+          <Aero />
+        </NavBar>
+        <NavBar>
+          {" "}
+          <TaskBarBackground style={{ color: "blue" }} />{" "}
+        </NavBar>
+        <NavBar>
+          {" "}
+          <TaskBarGrid>
+            <TaskBarStartBtn>
+              <img
+                src='./assets/images/lidcer-logo.svg'
+                alt='StartMenu'
+                onClick={() => this.setState({ startMenu: !this.state.startMenu })}
+              />
+            </TaskBarStartBtn>
 
-          <p></p>
-          {this.openApps}
-          <p></p>
+            <p></p>
+            {this.openApps}
+            <p></p>
 
-
-          <TaskBarClock>
-            <div>{this.state.time}</div>
-            <div>{this.state.date}</div>
-          </TaskBarClock>
-          {this.getIcon()}
-          <TaskBarShowDesktop onClick={this.showDesktop}/>
-        </TaskBarGrid></NavBar>
+            <TaskBarClock>
+              <div>{this.state.time}</div>
+              <div>{this.state.date}</div>
+            </TaskBarClock>
+            {this.getIcon()}
+            <TaskBarShowDesktop onClick={this.showDesktop} />
+          </TaskBarGrid>
+        </NavBar>
       </>
     );
   }

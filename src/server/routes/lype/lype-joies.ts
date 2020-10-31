@@ -1,5 +1,5 @@
-import { ILypeSearchQuery, ILypeUserID } from '../../../shared/ApiLypeRequestsResponds';
-import Joi from '@hapi/joi';
+import { ILypeSearchQuery, ILypeUserID } from "../../../shared/ApiLypeRequestsResponds";
+import Joi from "@hapi/joi";
 
 export const joi$LypeSearchQuery = Joi.object<ILypeSearchQuery>({
   query: Joi.string(),

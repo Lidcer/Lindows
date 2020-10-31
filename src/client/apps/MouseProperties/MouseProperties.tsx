@@ -1,9 +1,9 @@
-import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWindow/BaseWindow';
+import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from "../BaseWindow/BaseWindow";
 //import './Lype.scss';
-import React from 'react';
-import { mousePointer } from '../../components/Cursor/Cursor';
-import { throws } from 'assert';
-import { MousePropertiesWarper } from './MousePropertiesStyled';
+import React from "react";
+import { mousePointer } from "../../components/Cursor/Cursor";
+import { throws } from "assert";
+import { MousePropertiesWarper } from "./MousePropertiesStyled";
 
 export interface IMousePropertiesProperties {
   enabled: boolean;
@@ -12,17 +12,17 @@ export interface IMousePropertiesProperties {
 export class MouseProperties extends BaseWindow<IMousePropertiesProperties> {
   public static readonly onlyOne = true;
   public static manifest: IManifest = {
-    fullAppName: 'Mouse Properties',
-    launchName: 'mouseProperties',
-    icon: '/assets/images/appsIcons/MouseProperties.svg',
+    fullAppName: "Mouse Properties",
+    launchName: "mouseProperties",
+    icon: "/assets/images/appsIcons/MouseProperties.svg",
   };
 
   constructor(props: IBaseWindowProps) {
     super(
       props,
       {
-        title: 'Mouse Properties',
-        image: '/assets/images/appsIcons/MouseProperties.svg',
+        title: "Mouse Properties",
+        image: "/assets/images/appsIcons/MouseProperties.svg",
         showIcon: false,
         minHeight: 450,
         minWidth: 400,

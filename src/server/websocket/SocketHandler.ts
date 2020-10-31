@@ -1,19 +1,18 @@
-import { attachDebugMethod } from '../devDebugger';
-import { logger } from '../database/EventLog';
-import { IMongooseUserSchema, getUserById } from '../routes/users/users-database';
-import { getTokenData } from '../routes/common';
-import { SocketValidator } from './WebsocketSecurity';
-import { IWebsocketPromise } from '../../shared/Websocket';
-import { response } from 'express';
-
+import { attachDebugMethod } from "../devDebugger";
+import { logger } from "../database/EventLog";
+import { IMongooseUserSchema, getUserById } from "../routes/users/users-database";
+import { getTokenData } from "../routes/common";
+import { SocketValidator } from "./WebsocketSecurity";
+import { IWebsocketPromise } from "../../shared/Websocket";
+import { response } from "express";
 
 type WebsocketCallback = (client: SocketIO.Socket, ...args: any[] | any) => void;
 type WebsocketCallbackPromise = (client: SocketIO.Socket, ...args: any[] | any) => Promise<any>;
 
 interface SocketPromise<A = undefined> {
-  resolve: (a:A) => void;
-  reject: (error:Error) => void;
-  status: IWebsocketPromise['status']
+  resolve: (a: A) => void;
+  reject: (error: Error) => void;
+  status: IWebsocketPromise["status"];
 }
 
 export class WebSocket {
@@ -24,13 +23,13 @@ export class WebSocket {
   readonly socketValidator = new SocketValidator(this);
 
   constructor(socketServer: SocketIO.Server) {
-    attachDebugMethod('webSocket', this);
+    attachDebugMethod("webSocket", this);
     logger._setWebSocket(this);
-    socketServer.on('connection', client => {
-      logger.debug('[WebSocket]', 'connected', client.id);
+    socketServer.on("connection", client => {
+      logger.debug("[WebSocket]", "connected", client.id);
       this.clients.push(client);
 
-      let values: string[] = []
+      let values: string[] = [];
 
       for (const [value] of this.callbacks) {
         values.push(value);
@@ -42,27 +41,26 @@ export class WebSocket {
         this.updateEventListenersOnAllClients(value);
       }
 
-
-      client.on('disconnect', () => {
+      client.on("disconnect", () => {
         const indexOf = this.clients.indexOf(client);
         client.removeAllListeners();
         if (indexOf === -1) {
-          throw new Error('Unable to disconnect client from websocket');
+          throw new Error("Unable to disconnect client from websocket");
         }
-        logger.debug('[WebSocket]', 'disconnected', client.id);
+        logger.debug("[WebSocket]", "disconnected", client.id);
         this.clients.splice(indexOf, 1);
       });
 
-      client.on('ping-request', arg => {
+      client.on("ping-request", arg => {
         if (!this.socketValidator.validateUndefined(client, arg)) return;
-        client.emit('ping-response');
+        client.emit("ping-response");
       });
 
-      client.on('authenticate', async (token: string) => {
+      client.on("authenticate", async (token: string) => {
         if (!this.socketValidator.validateString(client, token)) return;
         const decode = await getTokenData(undefined, token);
         if (!decode) {
-          return client.emit('authenticate-failed', 'Invalid token');
+          return client.emit("authenticate-failed", "Invalid token");
         }
         try {
           let user: IMongooseUserSchema;
@@ -76,23 +74,23 @@ export class WebSocket {
             user = await getUserById(decode.id);
           }
 
-          if (!user) throw new Error('User does not exist');
+          if (!user) throw new Error("User does not exist");
           this.userSchema.set(client, user);
-          return client.emit('authenticate-success', `Authentication succeeded Welcome ${user.displayedName}`);
+          return client.emit("authenticate-success", `Authentication succeeded Welcome ${user.displayedName}`);
         } catch (error) {
-          return client.emit('authenticate-failed', 'Invalid token');
+          return client.emit("authenticate-failed", "Invalid token");
         }
       });
 
-      client.on('unauthenticate', async (und: undefined) => {
+      client.on("unauthenticate", async (und: undefined) => {
         if (!this.socketValidator.validateUndefined(client, und)) return;
         this.userSchema.delete(client);
       });
     });
   }
 
-  isPromise(promise:IWebsocketPromise){
-    if (typeof promise !== 'object') return false;
+  isPromise(promise: IWebsocketPromise) {
+    if (typeof promise !== "object") return false;
     if (!promise.id) return false;
     if (!promise.status) return false;
     return true;
@@ -100,17 +98,14 @@ export class WebSocket {
 
   broadcast(message: string, arg1?: any, arg2?: any, arg3?: any) {
     if (!message.length) {
-      throw new Error('Cannot broadcast empty message');
+      throw new Error("Cannot broadcast empty message");
     }
     for (const client of this.clients) {
       client.emit(message, arg1, arg2, arg3);
     }
   }
 
-  on<T extends any[]>(
-    value: string,
-    callback: (client: SocketIO.Socket, ...args: T) => void,
-  ) {
+  on<T extends any[]>(value: string, callback: (client: SocketIO.Socket, ...args: T) => void) {
     const callbacks = this.callbacks.get(value) || [];
     const indexOf = callbacks.indexOf(callback);
     if (indexOf === -1) callbacks.push(callback);
@@ -118,12 +113,10 @@ export class WebSocket {
     this.callbacks.set(value, callbacks);
   }
 
-  onPromise<A, T extends any[]>(
-    value: string,
-    callback: (client: SocketIO.Socket, ...args: T) => Promise<A>) {
-      if(!(callback instanceof (async () => {}).constructor)) {
-        throw new Error('Promise callback expected');
-      }
+  onPromise<A, T extends any[]>(value: string, callback: (client: SocketIO.Socket, ...args: T) => Promise<A>) {
+    if (!(callback instanceof (async () => {}).constructor)) {
+      throw new Error("Promise callback expected");
+    }
 
     const callbacks = this.promiseCallback.get(value) || [];
     const indexOf = callbacks.indexOf(callback);
@@ -140,40 +133,37 @@ export class WebSocket {
     this.callbacks.delete(value);
   }
 
-  private updateEventListenersOnAllClients<T extends any[]>(
-    value: string,
-  ) {
-
+  private updateEventListenersOnAllClients<T extends any[]>(value: string) {
     const callbacks = this.callbacks.get(value) || [];
     const promiseCallbacks = this.promiseCallback.get(value) || [];
 
     for (const client of this.clients) {
       client.removeAllListeners(value);
       client.on(value, async (...args: T) => {
-        let promise:IWebsocketPromise | undefined = undefined 
+        let promise: IWebsocketPromise | undefined = undefined;
         if (args.length && this.isPromise(args[0])) {
-          promise = args.shift(); 
+          promise = args.shift();
         }
-        if(!!promise) {
-          for (const cb of promiseCallbacks) {         
+        if (!!promise) {
+          for (const cb of promiseCallbacks) {
             try {
               const result = await cb.apply(null, [client, ...args]);
-              const responsePromise:IWebsocketPromise ={
-                id:promise.id,
+              const responsePromise: IWebsocketPromise = {
+                id: promise.id,
                 resolve: result,
-                status: 'fulfilled' 
-              }
+                status: "fulfilled",
+              };
               if (!client.disconnected) {
                 client.emit(`${value}-${promise.id}`, responsePromise);
               }
             } catch (error) {
-              const responsePromise:IWebsocketPromise ={
-                id:promise.id,
+              const responsePromise: IWebsocketPromise = {
+                id: promise.id,
                 reject: {
-                  message:'Unknown error'
+                  message: "Unknown error",
                 },
-                status: 'rejected' 
-              }
+                status: "rejected",
+              };
 
               if (error && error.message) {
                 responsePromise.reject.message = error.message;

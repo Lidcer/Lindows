@@ -1,6 +1,6 @@
-import { MINUTE } from '../../../shared/constants';
-import { Processor } from '../../services/system/ProcessorSystem';
-import { FileSystemDirectory } from '../../utils/FileSystemDirectory';
+import { MINUTE } from "../../../shared/constants";
+import { Processor } from "../../services/system/ProcessorSystem";
+import { FileSystemDirectory } from "../../utils/FileSystemDirectory";
 
 interface CommandParameters {
   [key: number]: string;
@@ -52,16 +52,16 @@ export class BaseCommand {
   private _text: string;
   private _args: string[];
   constructor(private _originalText: string, private _data?: string) {
-    this._text = _originalText.replace(/  +/g, ' ');
-    this._args = this._text.split(' ');
+    this._text = _originalText.replace(/  +/g, " ");
+    this._args = this._text.split(" ");
   }
 
   _destructor() {
-    const keys = Object.keys(this).filter(d => d !== 'destructor');
+    const keys = Object.keys(this).filter(d => d !== "destructor");
     for (const dest of keys) {
       delete this[dest];
     }
-    delete this['destructor'];
+    delete this["destructor"];
   }
 
   /**
@@ -122,7 +122,7 @@ export class BaseCommand {
       handleEnd();
       return;
     }
-    const handled = this.sigTerm(new InterruptMessage(text, 'SIGTERM'));
+    const handled = this.sigTerm(new InterruptMessage(text, "SIGTERM"));
 
     if (handled instanceof Promise) {
       const timeout = setTimeout(() => {
@@ -161,7 +161,7 @@ export class BaseCommand {
   get commandEntry() {
     const args = [...this.args];
     args.shift();
-    return args.join(' ');
+    return args.join(" ");
   }
 
   hasArg(value: string, caseIntensive = false) {
@@ -172,11 +172,11 @@ export class BaseCommand {
   }
 
   toString() {
-    return '[Lindows Command]';
+    return "[Lindows Command]";
   }
 }
 
-export type SIG = 'SIGTERM' | 'SIGKILL';
+export type SIG = "SIGTERM" | "SIGKILL";
 
 export class InterruptMessage {
   private _stack: string;

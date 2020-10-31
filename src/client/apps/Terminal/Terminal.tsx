@@ -1,7 +1,7 @@
-import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWindow/BaseWindow';
-import { uniq } from 'lodash';
-import React from 'react';
-import { internal } from '../../services/internals/Internal';
+import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from "../BaseWindow/BaseWindow";
+import { uniq } from "lodash";
+import React from "react";
+import { internal } from "../../services/internals/Internal";
 import {
   TerminalBlinkingCursor,
   TerminalCommandContent,
@@ -10,16 +10,16 @@ import {
   TerminalLine,
   TerminalName,
   TerminalStyled,
-} from './TerminalStyled';
-import { CommandForExecute, getCommand } from '../../essential/Commands/CommandHandler';
-import { BaseCommand, ExecutionParameters } from '../../essential/Commands/BaseCommand';
+} from "./TerminalStyled";
+import { CommandForExecute, getCommand } from "../../essential/Commands/CommandHandler";
+import { BaseCommand, ExecutionParameters } from "../../essential/Commands/BaseCommand";
 import {
   FileSystemDirectory,
   FileSystemFile,
   isDirectory,
   sanitizeName,
   StringSymbol,
-} from '../../utils/FileSystemDirectory';
+} from "../../utils/FileSystemDirectory";
 //TODO: add html parser
 
 interface ITerminal {
@@ -46,25 +46,25 @@ function terminalName() {
 
 function deviceInfo() {
   const browser = internal.hardwareInfo.userAgent.getBrowser();
-  if (browser && (browser.name || browser.version)) return `${browser.name || ''}${browser.version || ''}`;
-  return 'unknown';
+  if (browser && (browser.name || browser.version)) return `${browser.name || ""}${browser.version || ""}`;
+  return "unknown";
 }
 
 export class Terminal extends BaseWindow<ITerminal> {
   public static manifest: IManifest = {
-    fullAppName: 'Terminal',
-    launchName: 'lterminal',
-    icon: '/assets/images/appsIcons/Terminal.svg',
+    fullAppName: "Terminal",
+    launchName: "lterminal",
+    icon: "/assets/images/appsIcons/Terminal.svg",
   };
-  private lastUsedSuggestion = '';
-  folderPermission: import('c:/Users/Alpha/Desktop/dev/Lindows/src/client/utils/FileSystemDirectory').StringSymbol;
+  private lastUsedSuggestion = "";
+  folderPermission: import("c:/Users/Alpha/Desktop/dev/Lindows/src/client/utils/FileSystemDirectory").StringSymbol;
   constructor(props: IBaseWindowProps) {
     super(
       props,
       { width: 500, showIcon: true },
       {
-        afterCursor: '',
-        beforeCursor: '',
+        afterCursor: "",
+        beforeCursor: "",
         deviceInfo: terminalName(),
         userName: deviceInfo(),
         active: undefined,
@@ -75,12 +75,12 @@ export class Terminal extends BaseWindow<ITerminal> {
     );
   }
   async shown() {
-    if (this.hasLaunchFlag('admin')) {
+    if (this.hasLaunchFlag("admin")) {
       const processor = this.getProcessor();
       if (!processor) {
         const result = await this.requestAdmin();
         if (!result) {
-          await MessageBox.Show(this, 'Unable to obtain admin permission', 'Failed');
+          await MessageBox.Show(this, "Unable to obtain admin permission", "Failed");
           this.exit();
           return;
         }
@@ -127,15 +127,15 @@ export class Terminal extends BaseWindow<ITerminal> {
     const path = this.variables.directory.path;
     if (path.startsWith(internal.fileSystem.userDirectory.path)) {
       const h = path.slice(internal.fileSystem.userDirectory.path.length);
-      return `~${h ? h : ''}`;
+      return `~${h ? h : ""}`;
     }
-    if (path.startsWith('root/')) {
+    if (path.startsWith("root/")) {
       return path.slice(5);
     }
     return this.variables.directory.path;
   }
   get dollarOrHash() {
-    return this.getProcessor() ? '#' : '$';
+    return this.getProcessor() ? "#" : "$";
   }
 
   renderContentInputLine(noCursor = false) {
@@ -156,15 +156,15 @@ export class Terminal extends BaseWindow<ITerminal> {
 
   onExit() {
     if (this.variables.active) {
-      this.variables.active.signalKill('Terminal closed');
+      this.variables.active.signalKill("Terminal closed");
     }
   }
 
   fullscreenMode = () => {
-    if (this.options.windowType === 'fullscreen') {
-      this.changeOptions({ windowType: 'windowed' });
+    if (this.options.windowType === "fullscreen") {
+      this.changeOptions({ windowType: "windowed" });
     } else {
-      this.changeOptions({ windowType: 'fullscreen' });
+      this.changeOptions({ windowType: "fullscreen" });
     }
   };
 
@@ -173,34 +173,34 @@ export class Terminal extends BaseWindow<ITerminal> {
     if (this.variables.active) {
       this.variables.active.signalInput(event);
     }
-    if (event.ctrlKey && event.key.toLowerCase() === 'c' && variables.active) {
-      return variables.active.signalTerminate('^C');
+    if (event.ctrlKey && event.key.toLowerCase() === "c" && variables.active) {
+      return variables.active.signalTerminate("^C");
     }
     if (event.key.length <= 1) {
-      if (event.key === ' ') this.lastUsedSuggestion = '';
+      if (event.key === " ") this.lastUsedSuggestion = "";
       variables.beforeCursor = `${variables.beforeCursor}${event.key}`;
     } else
       switch (event.key) {
-        case 'Enter':
+        case "Enter":
           const entry = `${variables.beforeCursor}${variables.afterCursor}`;
           if (!entry) return;
-          if (entry === 'clear' || entry === 'cls') {
-            variables.beforeCursor = '';
-            variables.afterCursor = '';
+          if (entry === "clear" || entry === "cls") {
+            variables.beforeCursor = "";
+            variables.afterCursor = "";
             variables.history = [];
             this.setVariables(variables);
             return;
           }
-          const commands = entry.split('&&');
+          const commands = entry.split("&&");
           const validCommands = commands.map(c => {
             c = c.trim();
-            const pipes = c.split('||').map(c => c.trim());
+            const pipes = c.split("||").map(c => c.trim());
             pipes.shift();
 
             const executablePipes: CommandForExecute[] = [];
 
             for (const pipe of pipes) {
-              const cmd = pipe.split(' ')[0];
+              const cmd = pipe.split(" ")[0];
               executablePipes.push({
                 entry: pipe,
                 command: cmd,
@@ -208,7 +208,7 @@ export class Terminal extends BaseWindow<ITerminal> {
               });
             }
 
-            const cmd = c.split(' ')[0];
+            const cmd = c.split(" ")[0];
             const executable: CommandForExecute = {
               entry: c,
               command: cmd,
@@ -230,32 +230,32 @@ export class Terminal extends BaseWindow<ITerminal> {
             this.executeCommands(validCommands as Required<CommandForExecute>[]);
           }
 
-          variables.beforeCursor = '';
-          variables.afterCursor = '';
+          variables.beforeCursor = "";
+          variables.afterCursor = "";
           break;
-        case 'Backspace':
+        case "Backspace":
           if (variables.beforeCursor.length > 0) variables.beforeCursor = variables.beforeCursor.slice(0, -1);
           break;
-        case 'Delete':
+        case "Delete":
           if (variables.afterCursor.length > 0) variables.afterCursor = variables.afterCursor.slice(1);
           break;
-        case 'ArrowLeft':
+        case "ArrowLeft":
           if (variables.beforeCursor.length !== 0) {
-            const newBeforeCursor = variables.beforeCursor.split('');
+            const newBeforeCursor = variables.beforeCursor.split("");
             const addCharacter = newBeforeCursor.pop();
             variables.afterCursor = `${addCharacter}${variables.afterCursor}`;
-            variables.beforeCursor = newBeforeCursor.join('');
+            variables.beforeCursor = newBeforeCursor.join("");
           }
           break;
-        case 'Tab':
+        case "Tab":
           event.preventDefault();
           const entry2 = variables.beforeCursor;
-          const typedCommand = entry2.split('&&').map(m => m.trim());
-          const command = typedCommand[typedCommand.length - 1].split('||').map(m => m.trim());
-          const cmd = command[0].split(' ')[0].trim();
+          const typedCommand = entry2.split("&&").map(m => m.trim());
+          const command = typedCommand[typedCommand.length - 1].split("||").map(m => m.trim());
+          const cmd = command[0].split(" ")[0].trim();
           const commandObject = getCommand(cmd);
           const argIndex = command.length - 1;
-          const typing = command[argIndex].split(' ');
+          const typing = command[argIndex].split(" ");
           if (commandObject) {
             const c = new commandObject(cmd);
             if (c.suggest) {
@@ -280,12 +280,12 @@ export class Terminal extends BaseWindow<ITerminal> {
           }
 
           break;
-        case 'ArrowRight':
+        case "ArrowRight":
           if (variables.afterCursor.length !== 0) {
-            const newAfterCursor = variables.afterCursor.split('');
+            const newAfterCursor = variables.afterCursor.split("");
             const addCharacter = newAfterCursor.shift();
             variables.beforeCursor = `${variables.beforeCursor}${addCharacter}`;
-            variables.afterCursor = newAfterCursor.join('');
+            variables.afterCursor = newAfterCursor.join("");
           }
           break;
         default:
@@ -297,8 +297,8 @@ export class Terminal extends BaseWindow<ITerminal> {
   };
 
   private outputInFile(commandEntry: string): OutputInFile {
-    const appendFileArrow = '>>';
-    const overwriteArrow = '>';
+    const appendFileArrow = ">>";
+    const overwriteArrow = ">";
     const appendFile = commandEntry.split(appendFileArrow)[1];
     const newFile = commandEntry.split(overwriteArrow)[1];
     if (appendFile) {
@@ -324,8 +324,8 @@ export class Terminal extends BaseWindow<ITerminal> {
     const command = commands.shift();
     let result = -1;
     const variables = { ...this.variables };
-    variables.beforeCursor = '';
-    variables.afterCursor = '';
+    variables.beforeCursor = "";
+    variables.afterCursor = "";
     const cmd = this.outputInFile(command.entry);
 
     try {
@@ -354,7 +354,7 @@ export class Terminal extends BaseWindow<ITerminal> {
       } else if (text) {
         variables.history.push(this.parseString(text));
       } else {
-        variables.history.push(this.parseString(''));
+        variables.history.push(this.parseString(""));
       }
       variables.current = undefined;
       this.setVariables(variables);
@@ -368,7 +368,7 @@ export class Terminal extends BaseWindow<ITerminal> {
         if (object && object.directory && isDirectory(object.directory)) {
           variables.directory = object.directory;
         }
-        let textToPush = '';
+        let textToPush = "";
         if (!text && this.variables.current) {
           textToPush = this.variables.current;
         } else if (text) {
@@ -393,7 +393,7 @@ export class Terminal extends BaseWindow<ITerminal> {
                 const content = file.getContent(this.folderPermission);
                 file.setContent(`${content}\n${textToPush}`);
               } else {
-                variables.directory.createFile(cmd.fileName, 'text', textToPush, this.folderPermission);
+                variables.directory.createFile(cmd.fileName, "text", textToPush, this.folderPermission);
               }
               wroteFile = true;
             } catch (error) {
@@ -414,7 +414,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           if (!writeFile(pcmd)) return;
         }
         if (!wroteFile) {
-          variables.history.push(this.parseString(textToPush || ''));
+          variables.history.push(this.parseString(textToPush || ""));
         }
         this.setVariables(variables);
         if (commands.length && result === 0) {

@@ -1,11 +1,11 @@
-import React from 'react';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-import { Main } from './components/Main';
-import { BlueScreen } from './components/BlueScreen/BlueScreen';
-import './App.scss';
-import { AccountManagerWebpage } from './apps/AccountManager/AccountManagerWebpage';
-import { LypeWebpage } from './apps/Lype/LypeWebpage';
-import { PopupRenderer } from './components/Popup/popupRenderer';
+import React from "react";
+import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { Main } from "./components/Main";
+import { BlueScreen } from "./components/BlueScreen/BlueScreen";
+import "./App.scss";
+import { AccountManagerWebpage } from "./apps/AccountManager/AccountManagerWebpage";
+import { LypeWebpage } from "./apps/Lype/LypeWebpage";
+import { PopupRenderer } from "./components/Popup/popupRenderer";
 
 export class App extends React.Component {
   render() {

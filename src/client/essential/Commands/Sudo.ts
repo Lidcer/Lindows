@@ -1,11 +1,11 @@
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { internal } from '../../services/internals/Internal';
-import { getCommand } from './CommandHandler';
-import { AdminPromp } from '../../apps/BaseWindow/BaseWindow';
+import { BaseCommand, ExecutionParameters } from "./BaseCommand";
+import { internal } from "../../services/internals/Internal";
+import { getCommand } from "./CommandHandler";
+import { AdminPromp } from "../../apps/BaseWindow/BaseWindow";
 // import { Sudo } from './SudoHelperApp';
 
 export class Sudo extends BaseCommand {
-  public static help = 'shows help message';
+  public static help = "shows help message";
   async execute(obj: ExecutionParameters) {
     if (this.args.length < 1) {
       this.finish(`${this.args[0]} command`);
@@ -17,7 +17,7 @@ export class Sudo extends BaseCommand {
       obj.directory = internal.fileSystem.root;
     }
 
-    const next = this.originalText.split(' ')[1];
+    const next = this.originalText.split(" ")[1];
     const Command = getCommand(next);
     if (!Command) {
       this.finish(`No such command ${next}`);
@@ -38,9 +38,9 @@ export class Sudo extends BaseCommand {
       }
     }
 
-    const arrayCommands = this.originalText.split(' ');
+    const arrayCommands = this.originalText.split(" ");
     arrayCommands.shift();
-    const commandToExecute = arrayCommands.join(' ');
+    const commandToExecute = arrayCommands.join(" ");
     const newCommands = new Command(commandToExecute);
     newCommands.finish = this.finish;
     newCommands.addHistory = this.addHistory;

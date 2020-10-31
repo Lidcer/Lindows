@@ -1,15 +1,21 @@
-import React from 'react';
-import { internal } from '../../services/internals/Internal';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCog, faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { popup } from '../Popup/popupRenderer';
-import { ContextMenu, IElement } from '../ContextMenu/ContextMenu';
-import { SECOND } from '../../../shared/constants';
-import { NotificationContent, NotificationImage, NotificationButtons, NotificationOverlay, NotificationToast } from './NotificationsDisplayStyled';
-import { getNotification, INotification } from '../Desktop/Notifications';
+import React from "react";
+import { internal } from "../../services/internals/Internal";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCog, faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { popup } from "../Popup/popupRenderer";
+import { ContextMenu, IElement } from "../ContextMenu/ContextMenu";
+import { SECOND } from "../../../shared/constants";
+import {
+  NotificationContent,
+  NotificationImage,
+  NotificationButtons,
+  NotificationOverlay,
+  NotificationToast,
+} from "./NotificationsDisplayStyled";
+import { getNotification, INotification } from "../Desktop/Notifications";
 
 interface INotificationDisplay extends INotification {
-  className: 'animated' | 'none';
+  className: "animated" | "none";
 }
 
 interface INotificationsDisplayState {
@@ -26,11 +32,11 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     };
   }
   componentDidMount() {
-    this.notification.on('notification', this.newNotification);
+    this.notification.on("notification", this.newNotification);
   }
 
   componentWillUnmount() {
-    this.notification.removeListener('notification', this.newNotification);
+    this.notification.removeListener("notification", this.newNotification);
     for (const timeout of this.timeouts) {
       this.removeTimeout(timeout);
     }
@@ -43,7 +49,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
       title: notification.title,
       icon: notification.icon,
       content: notification.content,
-      className: 'animated',
+      className: "animated",
     };
 
     const state = { ...this.state };
@@ -55,7 +61,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
       const state = { ...this.state };
       const thatAlert = state.notifications.find(n => n === alert);
       if (thatAlert) {
-        thatAlert.className = 'none';
+        thatAlert.className = "none";
         this.setState(state);
       }
     }, 1000);
@@ -142,7 +148,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     const state = { ...this.state };
     const alert = state.notifications.find(a => a === notification);
     if (!alert) return;
-    alert.className = 'animated';
+    alert.className = "animated";
     this.setState(state);
     const t = setTimeout(() => {
       this.removeTimeout(t);

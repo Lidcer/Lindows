@@ -15,8 +15,8 @@ export class ImageLoader {
       const image = new Image();
       image.src = src;
       const removeEventListeiner = () => {
-        image.removeEventListener('load', onLoad);
-        image.removeEventListener('error', onError);
+        image.removeEventListener("load", onLoad);
+        image.removeEventListener("error", onError);
       };
       const onLoad = () => {
         removeEventListeiner();
@@ -27,8 +27,8 @@ export class ImageLoader {
         return reject(error);
       };
 
-      image.addEventListener('load', onLoad);
-      image.addEventListener('error', onError);
+      image.addEventListener("load", onLoad);
+      image.addEventListener("error", onError);
       image.src = src;
     });
   }

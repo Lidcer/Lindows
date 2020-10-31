@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 interface shop {
   shopName: string;
@@ -11,7 +11,7 @@ interface shop {
 }
 
 export class ShopInterface extends EventEmitter {
-  spliter = '';
+  spliter = "";
   canvas: HTMLCanvasElement;
 
   topShopPicture: HTMLImageElement;
@@ -39,12 +39,12 @@ export class ShopInterface extends EventEmitter {
 
   rightLine: number;
 
-  boxColor = 'rgba(0,0,0,0.75)';
-  boxColorNot = 'rgba(0,0,0,0)';
-  backgroundColor = '#17181c';
-  valueColor = '#ffffff';
-  scrollColor = '#575757';
-  boxBoughtColor = 'rgba(0,255,156,0.50)';
+  boxColor = "rgba(0,0,0,0.75)";
+  boxColorNot = "rgba(0,0,0,0)";
+  backgroundColor = "#17181c";
+  valueColor = "#ffffff";
+  scrollColor = "#575757";
+  boxBoughtColor = "rgba(0,255,156,0.50)";
 
   isMoving: any = null;
   isMovingDelay: any;
@@ -168,7 +168,7 @@ export class ShopInterface extends EventEmitter {
       const d = this.boxYheight + this.boxYpos[i] * 0.95 > y;
 
       if (a && b && c && d) {
-        this.emit('bought', {
+        this.emit("bought", {
           shopName: this.shopName,
           lvl: this.lvl,
           cps: this.cps,
@@ -412,7 +412,7 @@ export class ShopInterface extends EventEmitter {
 
     const now = performance.now();
     if (this.isOpen) {
-      const c = this.canvas.getContext('2d');
+      const c = this.canvas.getContext("2d");
       this.landscapeCheck();
       this.alignElements();
 
@@ -434,24 +434,24 @@ export class ShopInterface extends EventEmitter {
         this.list(i);
 
         c.fillStyle = this.valueColor;
-        c.textAlign = 'left';
-        c.font = this.lvlSize + 'px ds-digi';
+        c.textAlign = "left";
+        c.font = this.lvlSize + "px ds-digi";
         if (this.cps[i] >= 0) {
           const displyCPS = this.cps[i].toString().match(/.{1,3}/g);
-          c.fillText('CPS+ ' + displyCPS.join(this.spliter), this.cpsXPos, this.cpsYPos[i]);
+          c.fillText("CPS+ " + displyCPS.join(this.spliter), this.cpsXPos, this.cpsYPos[i]);
         }
-        c.textAlign = 'left';
-        c.font = this.priceSize + 'px ds-digi';
+        c.textAlign = "left";
+        c.font = this.priceSize + "px ds-digi";
         if (this.price[i] >= 0) {
           const displyPrice = this.price[i].toString().match(/.{1,3}/g);
           c.fillText(displyPrice.join(this.spliter), this.priceXPos, this.priceYPos[i]);
         } else {
-          c.fillText('Already bought', this.priceXPos, this.priceYPos[i]);
+          c.fillText("Already bought", this.priceXPos, this.priceYPos[i]);
         }
-        c.textAlign = 'right';
-        c.font = this.lvlSize + 'px ds-digi';
+        c.textAlign = "right";
+        c.font = this.lvlSize + "px ds-digi";
 
-        c.fillText('LVL: ' + this.lvl[i].toString(), this.lvlXPos, this.lvlYPos[i]);
+        c.fillText("LVL: " + this.lvl[i].toString(), this.lvlXPos, this.lvlYPos[i]);
 
         if (this.boxEnabled[i] && !this.boxBought[i]) c.fillStyle = this.boxColor;
         else if (this.boxBought[i]) c.fillStyle = this.boxBoughtColor;
@@ -463,8 +463,8 @@ export class ShopInterface extends EventEmitter {
       c.drawImage(this.topShopPicture, this.topShopPos[0], this.topShopPos[1], this.topShopPos[2], this.topShopPos[3]);
       c.drawImage(this.botShopPicture, this.botShopPos[0], this.botShopPos[1], this.botShopPos[2], this.botShopPos[3]);
       c.fillStyle = this.valueColor;
-      c.textAlign = 'center';
-      c.font = this.valueSize + 'px ds-digi';
+      c.textAlign = "center";
+      c.font = this.valueSize + "px ds-digi";
 
       const displyValue = this.value.toString().match(/.{1,3}/g);
 

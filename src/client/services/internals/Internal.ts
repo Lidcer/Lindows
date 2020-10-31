@@ -1,11 +1,11 @@
-import { EventEmitter } from 'events';
-import { HardwareInfo } from '../system/HardwareInfo';
-import { Broadcaster } from './BroadcasterSystem';
-import { Service, SystemServiceStatus } from './BaseSystemService';
-import { attachToWindowIfDev } from '../../essential/requests';
-import { FileSystem } from './FileSystem';
-import { requestSystemSymbol } from '../../utils/FileSystemDirectory';
-import { System } from '../system/System';
+import { EventEmitter } from "events";
+import { HardwareInfo } from "../system/HardwareInfo";
+import { Broadcaster } from "./BroadcasterSystem";
+import { Service, SystemServiceStatus } from "./BaseSystemService";
+import { attachToWindowIfDev } from "../../essential/requests";
+import { FileSystem } from "./FileSystem";
+import { requestSystemSymbol } from "../../utils/FileSystemDirectory";
+import { System } from "../system/System";
 
 const systemSymbol = requestSystemSymbol();
 export class Internal {
@@ -18,11 +18,11 @@ export class Internal {
   private _readyToBoot = false;
 
   constructor() {
-    attachToWindowIfDev('internal', this);
+    attachToWindowIfDev("internal", this);
   }
   private failedServiceInternals() {
     let _status = SystemServiceStatus.Failed;
-    const mockInternal: Service<any>['internalMethods'] = {
+    const mockInternal: Service<any>["internalMethods"] = {
       start: () => {},
       destroy: () => {
         _status = SystemServiceStatus.Destroyed;
@@ -35,21 +35,21 @@ export class Internal {
   }
 
   async init() {
-    this._fileSystem = await this.initService(new FileSystem(this), 'FileSystem');
-    this._hardwareInfo = await this.initService(new HardwareInfo(), 'HardwareInfo');
-    this._broadcaster = await this.initService(new Broadcaster(), 'Broadcaster');
+    this._fileSystem = await this.initService(new FileSystem(this), "FileSystem");
+    this._hardwareInfo = await this.initService(new HardwareInfo(), "HardwareInfo");
+    this._broadcaster = await this.initService(new Broadcaster(), "Broadcaster");
 
-    this._eventEmitter.emit('readyToBoot', this);
+    this._eventEmitter.emit("readyToBoot", this);
     this._readyToBoot = true;
 
     this._system = new System(this);
   }
   private emitServiceStatus(service: Service<any>, serviceName: string) {
     if (!service.internalMethods || service.internalMethods.status() === SystemServiceStatus.Failed) {
-      this._eventEmitter.emit('onServiceFailed', serviceName);
+      this._eventEmitter.emit("onServiceFailed", serviceName);
       return;
     }
-    this._eventEmitter.emit('onServiceReady', serviceName);
+    this._eventEmitter.emit("onServiceReady", serviceName);
   }
 
   // @ts-ignore
@@ -70,18 +70,18 @@ export class Internal {
     return systemInternal;
   }
 
-  on(event: 'onServiceReady', listener: (name: string) => void): void;
-  on(event: 'onServiceFailed', listener: (name: string) => void): void;
-  on(event: 'allReady', listener: () => void): void;
-  on(event: 'readyToBoot', listener: () => void): void;
+  on(event: "onServiceReady", listener: (name: string) => void): void;
+  on(event: "onServiceFailed", listener: (name: string) => void): void;
+  on(event: "allReady", listener: () => void): void;
+  on(event: "readyToBoot", listener: () => void): void;
   on(event: string, listener: (...args: any[]) => void): void {
     this._eventEmitter.on(event, listener);
   }
 
-  removeListener(event: 'onServiceReady', listener: (name: string) => void): void;
-  removeListener(event: 'onServiceFailed', listener: (name: string) => void): void;
-  removeListener(event: 'allReady', listener: () => void): void;
-  removeListener(event: 'readyToBoot', listener: () => void): void;
+  removeListener(event: "onServiceReady", listener: (name: string) => void): void;
+  removeListener(event: "onServiceFailed", listener: (name: string) => void): void;
+  removeListener(event: "allReady", listener: () => void): void;
+  removeListener(event: "readyToBoot", listener: () => void): void;
   removeListener(event: string, listener: (...args: any[]) => void) {
     this._eventEmitter.removeListener(event, listener);
   }

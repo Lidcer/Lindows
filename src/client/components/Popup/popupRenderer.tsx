@@ -1,6 +1,6 @@
-import React from 'react';
-import './popup.scss';
-import { IPopup, PopupElement } from './popup';
+import React from "react";
+import "./popup.scss";
+import { IPopup, PopupElement } from "./popup";
 
 export const popup = new IPopup();
 
@@ -18,10 +18,10 @@ export class PopupRenderer extends React.Component<{}, IStatePopup> {
     };
   }
   componentDidMount() {
-    popup.on('update', this.updateElements);
+    popup.on("update", this.updateElements);
   }
   componentWillUnmount() {
-    popup.removeListener('update', this.updateElements);
+    popup.removeListener("update", this.updateElements);
   }
   updateElements = (elements: PopupElement[]) => {
     this.setState({ elements });
@@ -37,7 +37,7 @@ export class PopupRenderer extends React.Component<{}, IStatePopup> {
 
     return (
       <div
-        className={`overlay-blocker${shouldBlockEvents ? ' block-events' : ''}${this.state.darken ? ' darken' : ''}`}
+        className={`overlay-blocker${shouldBlockEvents ? " block-events" : ""}${this.state.darken ? " darken" : ""}`}
         onClick={exit}
       ></div>
     );

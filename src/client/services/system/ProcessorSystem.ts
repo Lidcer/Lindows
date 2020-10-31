@@ -1,13 +1,13 @@
-import { BaseWindow, IManifest } from '../../apps/BaseWindow/BaseWindow';
-import { EventEmitter } from 'events';
-import { random } from 'lodash';
-import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
-import { Broadcaster } from '../internals/BroadcasterSystem';
-import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
-import { BrowserStorage } from '../internals/__BrowserStorageSystem';
-import { BaseService, Service, SystemServiceStatus } from '../internals/BaseSystemService';
-import { HardwareInfo } from './HardwareInfo';
-import { Internal } from '../internals/Internal';
+import { BaseWindow, IManifest } from "../../apps/BaseWindow/BaseWindow";
+import { EventEmitter } from "events";
+import { random } from "lodash";
+import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from "../../essential/apps";
+import { Broadcaster } from "../internals/BroadcasterSystem";
+import { IJSONWindowEvent } from "../../apps/BaseWindow/WindowEvent";
+import { BrowserStorage } from "../internals/__BrowserStorageSystem";
+import { BaseService, Service, SystemServiceStatus } from "../internals/BaseSystemService";
+import { HardwareInfo } from "./HardwareInfo";
+import { Internal } from "../internals/Internal";
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -23,18 +23,18 @@ export interface IDisplayingApp<T = unknown> {
   state?: any;
 }
 
-const browserStorageKey = '__processor';
+const browserStorageKey = "__processor";
 const internal = new WeakMap<Processor, Internal>();
 export class Processor extends BaseService {
-  private readonly serviceName = 'processor';
+  private readonly serviceName = "processor";
   private readonly processorId = random(1000, 9999);
   private readonly _uptime = Date.now();
   private lindowsProcesses: BaseWindow[] = [];
   private displaying: IDisplayingApp<any>[] = [];
-  private user = '';
-  private _deviceName = 'Unknown';
+  private user = "";
+  private _deviceName = "Unknown";
   private _mobileDetect: MobileDetect;
-  private _frontend = 'Lindows 1.0 Alpha';
+  private _frontend = "Lindows 1.0 Alpha";
   private processID = 0;
   private processors: number[] = [];
   private main = true;
@@ -59,7 +59,7 @@ export class Processor extends BaseService {
   }
 
   init() {
-    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
     return {
       start: this.start,
@@ -69,7 +69,7 @@ export class Processor extends BaseService {
   }
 
   private start = () => {
-    if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+    if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error("Service is not in state for start");
     this._status = SystemServiceStatus.Starting;
     this.broadcastNewProcess();
 
@@ -77,7 +77,7 @@ export class Processor extends BaseService {
     // this.broadcaster.on(`${this.serviceName}-detach`, this.removeProcess);
     // this.broadcaster.on(`${this.serviceName}-update`, this.updateProcesses);
     // this.broadcaster.on(`${this.serviceName}-addApp`, this.remoteAppAdd);
-    window.addEventListener('beforeunload', this.destroy);
+    window.addEventListener("beforeunload", this.destroy);
     this.monitorFunction = setInterval(() => {
       this.monitor();
       this.lastPerformance = performance.now();
@@ -86,7 +86,7 @@ export class Processor extends BaseService {
   };
 
   private destroy = () => {
-    if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+    if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
     this._status = SystemServiceStatus.Destroyed;
     internal.delete(this);
     // this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
@@ -115,7 +115,7 @@ export class Processor extends BaseService {
     const perf = performance.now();
     const result = perf - this.lastPerformance;
     if (result > 1000 && !document.hidden) {
-      this.emit('slowSystem', result);
+      this.emit("slowSystem", result);
     }
 
     // const dataToUpdate = []
@@ -126,18 +126,18 @@ export class Processor extends BaseService {
     this.lastPerformance = perf;
   };
 
-  on(value: 'appAdd', listener: (object: BaseWindow) => void): void;
-  on(value: 'appRemove', listener: (object: BaseWindow) => void): void;
-  on(value: 'appDisplayingAdd', listener: (object: IDisplayingApp) => void): void;
-  on(value: 'slowSystem', listener: (performance: number) => void): void;
+  on(value: "appAdd", listener: (object: BaseWindow) => void): void;
+  on(value: "appRemove", listener: (object: BaseWindow) => void): void;
+  on(value: "appDisplayingAdd", listener: (object: IDisplayingApp) => void): void;
+  on(value: "slowSystem", listener: (performance: number) => void): void;
   on(value: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.on(value, listener);
   }
 
-  private emit(value: 'appAdd', object: BaseWindow): void;
-  private emit(value: 'appRemove', object: BaseWindow): void;
-  private emit(value: 'appDisplayingAdd', object: IDisplayingApp<any>): void;
-  private emit(value: 'slowSystem', performance: number): void;
+  private emit(value: "appAdd", object: BaseWindow): void;
+  private emit(value: "appRemove", object: BaseWindow): void;
+  private emit(value: "appDisplayingAdd", object: IDisplayingApp<any>): void;
+  private emit(value: "slowSystem", performance: number): void;
   private emit(value: string | symbol, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [value, ...args]);
   }
@@ -171,7 +171,7 @@ export class Processor extends BaseService {
     processorIds.sort((a, b) => a - b);
     if (processorIds[0] === this._uptime) {
       this.main = true;
-      console.warn('this is main');
+      console.warn("this is main");
     }
   }
 
@@ -240,7 +240,7 @@ export class Processor extends BaseService {
           const displaying = this.displaying.find(o => o.processID === object.id);
           const indexOfDisplaying = this.displaying.indexOf(displaying);
           if (indexOfDisplaying !== -1) this.displaying.splice(indexOfDisplaying, 1);
-          this.emit('appRemove', lindowsProcess);
+          this.emit("appRemove", lindowsProcess);
           lindowsProcess.changeActiveState(true);
           return;
         }
@@ -262,7 +262,7 @@ export class Processor extends BaseService {
     //   this.broadcaster.emit(`${this.serviceName}-update`, ev.json);
     // });
 
-    this.emit('appAdd', object);
+    this.emit("appAdd", object);
   }
 
   killProcess(object: BaseWindow) {
@@ -276,7 +276,7 @@ export class Processor extends BaseService {
     if (indexOfProcess !== -1) this.lindowsProcesses.splice(indexOfProcess, 1);
     if (indexOfDisplaying !== -1) this.displaying.splice(indexOfDisplaying, 1);
 
-    this.emit('appRemove', process);
+    this.emit("appRemove", process);
   }
 
   makeActive(object: BaseWindow) {
@@ -304,7 +304,7 @@ export class Processor extends BaseService {
         app: jsxElement,
       };
       this.displaying.push(displayingApp);
-      this.emit('appDisplayingAdd', displayingApp);
+      this.emit("appDisplayingAdd", displayingApp);
 
       //react doesn't update element instantly
       setTimeout(() => {

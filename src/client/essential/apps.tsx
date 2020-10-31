@@ -1,20 +1,20 @@
-import { Terminal } from '../apps/Terminal/Terminal';
-import { TaskManager } from '../apps/TaskManager/TaskManager';
-import { AccountManager } from '../apps/AccountManager/AccountManager';
-import { Lype } from '../apps/Lype/Lype';
-import { MouseProperties } from '../apps/MouseProperties/MouseProperties';
-import { GroupViewer } from '../apps/GroupViewer/GroupViewer';
-import React from 'react';
-import { IManifest, BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
-import { internal } from '../services/internals/Internal';
-import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
-import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
-import { attachToWindowIfDev, isDev } from './requests';
-import { AnApp } from '../apps/AnApp/AnApp';
-import { IDELide } from '../apps/IDE-Lide.ts/IDE-Lide';
-import { SnakeGame } from '../apps/SnakeGame/SnakeGame';
-import { FileExplorer } from '../apps/FileExplorer/FileExplorer';
-import { MoneyClicker } from '../apps/MoneyClicker/MoneyClicker';
+import { Terminal } from "../apps/Terminal/Terminal";
+import { TaskManager } from "../apps/TaskManager/TaskManager";
+import { AccountManager } from "../apps/AccountManager/AccountManager";
+import { Lype } from "../apps/Lype/Lype";
+import { MouseProperties } from "../apps/MouseProperties/MouseProperties";
+import { GroupViewer } from "../apps/GroupViewer/GroupViewer";
+import React from "react";
+import { IManifest, BaseWindow, MessageBox, AdminPromp } from "../apps/BaseWindow/BaseWindow";
+import { internal } from "../services/internals/Internal";
+import { WebExplorer } from "../apps/WebExplorer/WebExplorer";
+import { VirtualCreate } from "../apps/VirtualCreate/VirtualCrate";
+import { attachToWindowIfDev, isDev } from "./requests";
+import { AnApp } from "../apps/AnApp/AnApp";
+import { IDELide } from "../apps/IDE-Lide.ts/IDE-Lide";
+import { SnakeGame } from "../apps/SnakeGame/SnakeGame";
+import { FileExplorer } from "../apps/FileExplorer/FileExplorer";
+import { MoneyClicker } from "../apps/MoneyClicker/MoneyClicker";
 import {
   everyone,
   FileSystemDirectory,
@@ -22,7 +22,7 @@ import {
   isDirectory,
   isNameValid,
   StringSymbol,
-} from '../utils/FileSystemDirectory';
+} from "../utils/FileSystemDirectory";
 
 export declare type ReactGeneratorFunction = (id: number, props?: any) => JSX.Element;
 
@@ -34,16 +34,16 @@ export interface AppDescription {
 
 export async function installApp(appWindow: BaseWindow | any, name: string, showInTaskBar = false, owner = everyone) {
   if (!appWindow) {
-    throw new Error('Failed to install, passed empty app!');
+    throw new Error("Failed to install, passed empty app!");
   }
 
   if (!appWindow.manifest) {
-    throw new Error('Cannot install without manifest');
+    throw new Error("Cannot install without manifest");
   }
   name = appWindow.manifest.launchName || name;
 
   if (!name) {
-    throw new Error('Missing launch name');
+    throw new Error("Missing launch name");
   }
   const validName = isNameValid(name);
   if (!validName.valid) {
@@ -56,20 +56,20 @@ export async function installApp(appWindow: BaseWindow | any, name: string, show
   const system = internal.processor.symbol;
   let apps: FileSystemDirectory;
   try {
-    apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+    apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
   } catch (error) {
-    throw new Error('Corrupted file system');
+    throw new Error("Corrupted file system");
   }
 
   const contents = apps.contents(system);
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (existing && !isDirectory(existing)) {
-    throw new Error('Command already installed!');
+    throw new Error("Command already installed!");
   } else if (existing) {
-    throw new Error('Failed to install command under this name!');
+    throw new Error("Failed to install command under this name!");
   }
 
-  const file = await apps.createFile(name, 'lindowApp', undefined, owner);
+  const file = await apps.createFile(name, "lindowApp", undefined, owner);
   const Element = appWindow as any;
   const app = (id: number, props?: any) => (
     <Element key={id} id={id} onlyOne={!!appWindow.onlyOne} launchFile={file} {...props}></Element>
@@ -89,7 +89,7 @@ export function installSystemCommand(
   system: StringSymbol,
 ) {
   if (!system.requals(internal.processor.symbol)) {
-    throw new Error('You do not have admin permission to install this command');
+    throw new Error("You do not have admin permission to install this command");
   }
   return installApp(appWindow, name, showInTaskBar, system);
 }
@@ -98,20 +98,20 @@ export function uninstallCommand(name: string, owner = everyone) {
   const system = internal.processor.symbol;
   let apps: FileSystemDirectory;
   try {
-    apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+    apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
   } catch (error) {
-    throw new Error('Corrupted file system');
+    throw new Error("Corrupted file system");
   }
   const contents = apps.contents(system);
 
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (!existing) {
-    throw new Error('App is not installed!');
+    throw new Error("App is not installed!");
   }
   if (!isDirectory(existing)) {
     existing.deleteFile(owner);
   } else {
-    throw new Error('File is a directory');
+    throw new Error("File is a directory");
   }
 }
 
@@ -128,9 +128,9 @@ export function appConstructorGenerator(appName: string) {
   const system = internal.processor.symbol;
   let apps: FileSystemDirectory;
   try {
-    apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+    apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
   } catch (error) {
-    throw new Error('Corrupted file system');
+    throw new Error("Corrupted file system");
   }
   const object = apps.getFile<AppDescription>(appName, system);
   if (object) {
@@ -172,15 +172,15 @@ export function allInstalledApps(): AppDescription[] {
   let apps: FileSystemDirectory;
   const system = internal.processor.symbol;
   try {
-    apps = internal.fileSystem.root.getDirectory('bin', system).getDirectory('apps', system);
+    apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
   } catch (error) {
     DEV && console.error(error);
     return [];
   }
   const contents = apps.contents(system).filter(f => !isDirectory(f)) as FileSystemFile[];
-  const lindowAppsFiles = contents.filter(f => f.getType(system) === 'lindowApp') as FileSystemFile<AppDescription>[];
+  const lindowAppsFiles = contents.filter(f => f.getType(system) === "lindowApp") as FileSystemFile<AppDescription>[];
   const lindowsApps = lindowAppsFiles.map(f => f.getContent(system));
   return lindowsApps;
 }
 
-attachToWindowIfDev('launchApp', launchApp);
+attachToWindowIfDev("launchApp", launchApp);

@@ -1,9 +1,9 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronRight, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import React from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 
-import { ContextMenuStyled, ContextIcon, ContextSeparator, ContextMenuItem, ContextColumn } from './ContextMenuStyled';
-import { popup } from '../Popup/popupRenderer';
+import { ContextMenuStyled, ContextIcon, ContextSeparator, ContextMenuItem, ContextColumn } from "./ContextMenuStyled";
+import { popup } from "../Popup/popupRenderer";
 
 export interface IElements {
   elements: IElement[];
@@ -72,7 +72,7 @@ export class ContextMenu extends React.Component<IElements, IState> {
     }
     return (
       <ContextMenuItem
-        className={`${!element.onClick && !element.elements ? ' context-disabled' : ''}`}
+        className={`${!element.onClick && !element.elements ? " context-disabled" : ""}`}
         onMouseEnter={() => this.showInnerContext(element)}
         onClick={ev => this.handleClick(ev, element)}
       >
@@ -125,7 +125,7 @@ export class ContextMenu extends React.Component<IElements, IState> {
 
   icon = (icon?: string | IconDefinition) => {
     if (!icon) return null;
-    if (typeof icon === 'string') {
+    if (typeof icon === "string") {
       return (
         <ContextIcon>
           <img src={icon} />

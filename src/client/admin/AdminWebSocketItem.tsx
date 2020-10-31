@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
-import { IAdminWebSocket } from './Websocket';
-import { withRouter, Link } from 'react-router-dom';
-import { INotificationHandler } from './NotificationHandler';
-import { IAdminAccount } from './AdminAccountsList';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { TOKEN_HEADER } from '../../shared/constants';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import ReactLoading from 'react-loading';
-import AdminFingerprint from './AdminFingerprint';
+import React, { Component } from "react";
+import { IAdminWebSocket } from "./Websocket";
+import { withRouter, Link } from "react-router-dom";
+import { INotificationHandler } from "./NotificationHandler";
+import { IAdminAccount } from "./AdminAccountsList";
+import Axios, { AxiosRequestConfig } from "axios";
+import { TOKEN_HEADER } from "../../shared/constants";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import ReactLoading from "react-loading";
+import AdminFingerprint from "./AdminFingerprint";
 
 interface IWebSocketInfo {
   id: string;
@@ -62,7 +62,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
   async getInfo() {
     this.setState({ fetching: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -70,7 +70,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
     try {
       const response = await Axios.post<IResponse<IWebSocketInfo>>(
-        '/api/v1/admin/web-socket-info',
+        "/api/v1/admin/web-socket-info",
         { socketID: this.webSocketID },
         axiosRequestConfig,
       );
@@ -87,7 +87,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
   fingerPrintSocket = async () => {
     this.setState({ fingerprinting: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -95,7 +95,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
     try {
       const response = await Axios.post<IResponse<IWebSocketInfo>>(
-        '/api/v1/admin/fingerprint-socket',
+        "/api/v1/admin/fingerprint-socket",
         { socketID: this.webSocketID },
         axiosRequestConfig,
       );
@@ -116,7 +116,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
           <div>
             <b>ID: </b> {socket.account.id}
           </div>
-  
+
           <div>
             <b>Username: </b> {socket.account.username}
           </div>
@@ -135,7 +135,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
     const fingerprint = () => {
       if (this.state.fingerprinting) {
-        return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+        return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
       }
       return (
         <>
@@ -160,7 +160,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
 
   render() {
     if (this.state.fetching)
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
 
     return (
       <>

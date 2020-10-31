@@ -1,8 +1,8 @@
-import { Schema, Document } from 'mongoose';
-import { mongoose } from './database';
-import { getUserById, IMongooseUserSchema } from '../routes/users/users-database';
+import { Schema, Document } from "mongoose";
+import { mongoose } from "./database";
+import { getUserById, IMongooseUserSchema } from "../routes/users/users-database";
 
-declare type RequestType = 'email-change' | 'verify-account' | 'password-change';
+declare type RequestType = "email-change" | "verify-account" | "password-change";
 export interface IMongooseVerificationSchema extends Document {
   id: string;
   verificationCode: string;
@@ -19,14 +19,14 @@ const VerificationSchema = new Schema<IMongooseVerificationSchema>(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-const MongoVerification = mongoose.model<IMongooseVerificationSchema>('verifications', VerificationSchema);
+const MongoVerification = mongoose.model<IMongooseVerificationSchema>("verifications", VerificationSchema);
 
 export function getVerificationById(id: string): Promise<IMongooseVerificationSchema> {
   return new Promise((resolve, reject) => {
@@ -87,19 +87,19 @@ export function verifyCode(verificationCode: string): Promise<IMongooseUserSchem
     try {
       const schema = await findVerificationByVerificationKey(verificationCode);
       if (!schema) {
-        rejects(new Error('Code not found'));
+        rejects(new Error("Code not found"));
         return;
       }
       const user = await getUserById(schema.id);
       if (!user) {
-        rejects(new Error('User not found'));
+        rejects(new Error("User not found"));
         return;
       }
       switch (schema.requestType) {
-        case 'password-change':
+        case "password-change":
           user.password = schema.storage;
           break;
-        case 'email-change':
+        case "email-change":
           user.email = schema.storage;
           break;
         default:
@@ -117,8 +117,8 @@ export function verifyCode(verificationCode: string): Promise<IMongooseUserSchem
 
 export function generateVerificationCode() {
   const LENGTH = 49;
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = "";
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   const charactersLength = characters.length;
   for (let i = 0; i < LENGTH; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));

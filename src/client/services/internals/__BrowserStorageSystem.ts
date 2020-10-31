@@ -1,27 +1,27 @@
-import * as compress from 'compress-str';
-import { Service, SystemServiceStatus } from './BaseSystemService';
-import { inIframe } from '../../utils/util';
+import * as compress from "compress-str";
+import { Service, SystemServiceStatus } from "./BaseSystemService";
+import { inIframe } from "../../utils/util";
 
 export class BrowserStorage extends Service {
-  private readonly storageName = '__lindows__';
+  private readonly storageName = "__lindows__";
   private data: any = {};
   private useSession = false;
   private _status = SystemServiceStatus.Uninitialized;
 
   init() {
-    if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
 
     const obsoleteBrowser = () => {
-      location.href = 'unsupported-browser';
+      location.href = "unsupported-browser";
     };
 
     const start = async () => {
-      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error("Service is not in state for start");
       if (!localStorage) {
         obsoleteBrowser();
         this._status = SystemServiceStatus.Failed;
-        throw new Error('Browser storage does not exist');
+        throw new Error("Browser storage does not exist");
       }
 
       if (inIframe()) {
@@ -29,7 +29,7 @@ export class BrowserStorage extends Service {
         return;
       }
 
-      let data = '';
+      let data = "";
       if (sessionStorage) {
         data = sessionStorage.getItem(this.storageName);
       }
@@ -58,7 +58,7 @@ export class BrowserStorage extends Service {
     };
 
     const destroy = () => {
-      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
     };
 
@@ -75,7 +75,7 @@ export class BrowserStorage extends Service {
 
   //This doesn't save
   setItemQuick<V = any>(key: string, value: V) {
-    if (key.length < 3) throw new Error('key must have more than 3 characters');
+    if (key.length < 3) throw new Error("key must have more than 3 characters");
     this.data[key] = value;
   }
   async setItem<V = any>(key: string, value: V): Promise<void> {
@@ -88,7 +88,7 @@ export class BrowserStorage extends Service {
   }
 
   getItemRaw(key: string) {
-    if (this.status() !== SystemServiceStatus.Ready) return '';
+    if (this.status() !== SystemServiceStatus.Ready) return "";
     if (inIframe()) return undefined;
     if (this.useSession && sessionStorage) {
       return sessionStorage.getItem(key);

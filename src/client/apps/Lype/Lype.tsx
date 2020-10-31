@@ -1,19 +1,19 @@
-import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
-import React from 'react';
-import { LypeWebpage } from './LypeWebpage';
+import { BaseWindow, IBaseWindowProps, IManifest } from "../BaseWindow/BaseWindow";
+import React from "react";
+import { LypeWebpage } from "./LypeWebpage";
 
 export class Lype extends BaseWindow {
   public static readonly onlyOne = true;
   public static manifest: IManifest = {
-    fullAppName: 'Lype',
-    launchName: 'lype',
-    icon: '/assets/images/appsIcons/Lype.svg',
+    fullAppName: "Lype",
+    launchName: "lype",
+    icon: "/assets/images/appsIcons/Lype.svg",
   };
 
   constructor(props: IBaseWindowProps) {
     super(props, {
-      title: 'Lype',
-      redirectToWebpageButton: 'lype',
+      title: "Lype",
+      redirectToWebpageButton: "lype",
       minHeight: 400,
       minWidth: 500,
     });

@@ -1,14 +1,14 @@
-import { Request, Response } from 'express';
-import { IResponse } from '../../../shared/ApiUsersRequestsResponds';
-import { IMongooseUserSchema, MongoUser, UserAccountFlags, changeAvatar, getUserImage } from '../users/users-database';
-import { logger, getAllEvents, prettifyEvent, IEventLog, getEventById } from '../../database/EventLog';
-import * as os from 'os';
-import * as disk from 'node-disk-info';
-import { respondWithError } from '../common';
-import { WebSocket } from '../../websocket/SocketHandler';
-import Joi from '@hapi/joi';
-import { SECOND } from '../../../shared/constants';
-import fingerprintjs from 'fingerprintjs2';
+import { Request, Response } from "express";
+import { IResponse } from "../../../shared/ApiUsersRequestsResponds";
+import { IMongooseUserSchema, MongoUser, UserAccountFlags, changeAvatar, getUserImage } from "../users/users-database";
+import { logger, getAllEvents, prettifyEvent, IEventLog, getEventById } from "../../database/EventLog";
+import * as os from "os";
+import * as disk from "node-disk-info";
+import { respondWithError } from "../common";
+import { WebSocket } from "../../websocket/SocketHandler";
+import Joi from "@hapi/joi";
+import { SECOND } from "../../../shared/constants";
+import fingerprintjs from "fingerprintjs2";
 
 let websocket: WebSocket;
 const fingerprintedSockets = new Map<string, fingerprintjs.Component[]>();
@@ -69,7 +69,7 @@ export async function serverInfo(req: Request, res: Response, account: IMongoose
     },
   };
 
-  logger.log('[ADMIN]', `User ${account.username} : ${account._id.toString()}  obtained data from server info`);
+  logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()}  obtained data from server info`);
   res.status(200).json(response);
 }
 
@@ -90,12 +90,12 @@ export async function eventLog(req: Request, res: Response, account: IMongooseUs
     };
 
     logger.log(
-      '[ADMIN]',
+      "[ADMIN]",
       `User ${account.username} : ${account._id.toString()} obtained event log ${response.success.id}`,
     );
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -114,13 +114,13 @@ export async function eventLogDelete(req: Request, res: Response, account: IMong
     await schema.remove();
 
     const response: IResponse<string> = {
-      success: 'Deleted successfully',
+      success: "Deleted successfully",
     };
 
-    logger.log('[ADMIN]', `User ${account.username} : ${account._id.toString()} removed event ${id}`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} removed event ${id}`);
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -135,10 +135,10 @@ export async function eventLogs(req: Request, res: Response, account: IMongooseU
     }
 
     response.success = eventLog;
-    logger.log('[ADMIN]', `User ${account.username} : ${account._id.toString()} obtained data from event log`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained data from event log`);
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -189,10 +189,10 @@ export async function accounts(req: Request, res: Response, account: IMongooseUs
     }
 
     response.success = accounts;
-    logger.log('[ADMIN]', `User ${account.username} : ${account._id.toString()} obtained accounts data`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained accounts data`);
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 interface IAccountID {
@@ -214,14 +214,14 @@ export async function account(req: Request, res: Response, account: IMongooseUse
       success: stripAccountData(schema),
     };
     logger.log(
-      '[ADMIN]',
+      "[ADMIN]",
       `User ${account.username} : ${account._id.toString()} obtained account data ${response.success.username} ${
         response.success.id
       }`,
     );
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -239,17 +239,17 @@ export async function accountDelete(req: Request, res: Response, account: IMongo
     await schema.remove();
 
     const response: IResponse<string> = {
-      success: 'Account has been deleted',
+      success: "Account has been deleted",
     };
     logger.log(
-      '[ADMIN]',
+      "[ADMIN]",
       `User ${account.username} : ${account._id.toString()} obtained account data ${
         schema.username
       } ${schema._id.toString()}`,
     );
     res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -268,7 +268,7 @@ export async function accountUpdate(req: Request, res: Response, account: IMongo
 
     // res.status(200).json(response);
   } catch (error) {
-    return respondWithError(res, 500, 'Internal server error');
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -297,11 +297,11 @@ export async function webSocketsInfo(req: Request, res: Response, account: IMong
     }
 
     response.success = websocketInfo;
-    logger.log('[ADMIN]', `User ${account.username} : ${account._id.toString()} obtained websocket data`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained websocket data`);
     res.status(200).json(response);
   } catch (error) {
-    logger.error('API Websockets info', error);
-    return respondWithError(res, 500, 'Internal server error');
+    logger.error("API Websockets info", error);
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -324,7 +324,7 @@ export async function webSocketInfo(req: Request, res: Response, account: IMongo
     const clientRaw = websocket.getClients().find(f => f.id === req.body.socketID);
 
     if (!clientRaw) {
-      return respondWithError(res, 400, 'Socket does not exist');
+      return respondWithError(res, 400, "Socket does not exist");
     }
 
     const schema = websocket.getClientUserSchema(clientRaw);
@@ -337,13 +337,13 @@ export async function webSocketInfo(req: Request, res: Response, account: IMongo
     const ip = clientRaw.conn.remoteAddress;
     response.success = { id: clientRaw.id, ip, account: socketAccount, fingerprint };
     logger.log(
-      '[ADMIN]',
+      "[ADMIN]",
       `User ${account.username} : ${account._id.toString()} obtained websocket info ${clientRaw.id}`,
     );
     res.status(200).json(response);
   } catch (error) {
-    logger.error('API Websocket info', error);
-    return respondWithError(res, 500, 'Internal server error');
+    logger.error("API Websocket info", error);
+    return respondWithError(res, 500, "Internal server error");
   }
 }
 
@@ -369,8 +369,8 @@ export function broadcastWebSocket(req: Request, res: Response, account: IMongoo
   const args = [req.body.arg0, req.body.arg1, req.body.arg2, req.body.arg3].filter(f => f);
 
   logger.info(
-    '[Admin broadcast]',
-    `User ${account.username}:${account._id.toString()} broadcasted ${req.body.value} ${args.join(', ')}`,
+    "[Admin broadcast]",
+    `User ${account.username}:${account._id.toString()} broadcasted ${req.body.value} ${args.join(", ")}`,
   );
   websocket.broadcast(req.body.value, req.body.arg0, req.body.arg1, req.body.arg2);
 
@@ -395,16 +395,16 @@ export function disconnectClient(req: Request, res: Response, account: IMongoose
   }
   const client = websocket.getClients().find(w => w.id === req.body.socketID);
   if (!client) {
-    return respondWithError(res, 400, 'Client is not connected to websocket');
+    return respondWithError(res, 400, "Client is not connected to websocket");
   }
   const schema = websocket.getClientUserSchema(client);
 
   client.disconnect();
 
   logger.info(
-    '[Admin client disconnect]',
+    "[Admin client disconnect]",
     `Client ${account.username}:${account._id.toString()} disconnected client ${client.id} ${
-      schema ? `${schema.username} ${schema._id.toString()}` : ''
+      schema ? `${schema.username} ${schema._id.toString()}` : ""
     }}`,
   );
 
@@ -425,7 +425,7 @@ export function fingerprintClient(req: Request, res: Response, account: IMongoos
   }
   const client = websocket.getClients().find(w => w.id === req.body.socketID);
   if (!client) {
-    return respondWithError(res, 400, 'Client is not connected to websocket');
+    return respondWithError(res, 400, "Client is not connected to websocket");
   }
 
   let to: NodeJS.Timeout = undefined;
@@ -452,11 +452,11 @@ export function fingerprintClient(req: Request, res: Response, account: IMongoos
     res.status(200).json(response);
   };
 
-  client.on('fingerprint-result', success);
-  client.emit('take-fingerprint', success);
+  client.on("fingerprint-result", success);
+  client.emit("take-fingerprint", success);
   to = setTimeout(() => {
-    client.removeListener('fingerprint-result', success);
-    return respondWithError(res, 400, 'Unable to fingerprint client');
+    client.removeListener("fingerprint-result", success);
+    return respondWithError(res, 400, "Unable to fingerprint client");
   }, SECOND * 10);
 }
 

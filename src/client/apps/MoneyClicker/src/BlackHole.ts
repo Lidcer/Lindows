@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 export class BlackHole extends EventEmitter {
   private id: HTMLImageElement;
@@ -60,7 +60,7 @@ export class BlackHole extends EventEmitter {
   //draw on canvas
   public draw(): void {
     if (!this.end && this.scale > 1) {
-      this.emit('blackHoleFull');
+      this.emit("blackHoleFull");
       this.end = true;
     }
 
@@ -71,7 +71,7 @@ export class BlackHole extends EventEmitter {
     this.animate(now - this.performanceNow);
     this.performanceNow = now;
 
-    const c = this.canvas.getContext('2d');
+    const c = this.canvas.getContext("2d");
     this.landscapeCheck();
     this.ctx.save();
 
@@ -82,7 +82,7 @@ export class BlackHole extends EventEmitter {
     this.ctx.drawImage(this.id, this.imagePos[0], this.imagePos[1], this.imagePos[2], this.imagePos[2]);
     this.ctx.restore();
 
-    this.ctx.fillStyle = '#000000';
+    this.ctx.fillStyle = "#000000";
     this.ctx.beginPath();
     this.ctx.arc(this.canvas.width * 0.5, this.canvas.height * 0.5, this.size, 0, 2 * Math.PI);
     this.ctx.fill();

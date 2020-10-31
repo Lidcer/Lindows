@@ -1,12 +1,12 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
-const $resizeBorderThickens = '5pt';
-const $debugColorSide = 'none'; // yellow;
-const $debugColorCorner = 'none'; // orange;
-const $titleBarHeight = '20pt';
-const $zIndex = '50';
-const $scrollbarBG = 'rgb(0, 0, 0)';
-const $thumbBG = 'rgb(48, 50, 51)';
+const $resizeBorderThickens = "5pt";
+const $debugColorSide = "none"; // yellow;
+const $debugColorCorner = "none"; // orange;
+const $titleBarHeight = "20pt";
+const $zIndex = "50";
+const $scrollbarBG = "rgb(0, 0, 0)";
+const $thumbBG = "rgb(48, 50, 51)";
 
 export const LWindow = styled.div`
   position: absolute;

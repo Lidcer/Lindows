@@ -1,9 +1,9 @@
-import { EventEmitter } from 'events';
-import { BrowserStorage } from '../../services/internals/__BrowserStorageSystem';
-import { internal } from '../../services/internals/Internal';
-import { BaseWindow, MessageBox } from '../../apps/BaseWindow/BaseWindow';
-import { attachToWindowIfDev } from '../../essential/requests';
-import { Processor } from '../../services/system/ProcessorSystem';
+import { EventEmitter } from "events";
+import { BrowserStorage } from "../../services/internals/__BrowserStorageSystem";
+import { internal } from "../../services/internals/Internal";
+import { BaseWindow, MessageBox } from "../../apps/BaseWindow/BaseWindow";
+import { attachToWindowIfDev } from "../../essential/requests";
+import { Processor } from "../../services/system/ProcessorSystem";
 
 export interface INotification {
   icon?: string;
@@ -14,25 +14,25 @@ export interface INotification {
 }
 
 export class NotificationSystem {
-  private SERVICE_NAME = '__notification__';
+  private SERVICE_NAME = "__notification__";
   private eventEmitter = new EventEmitter();
   private blocks: string[] = [];
   private browserStorage: BrowserStorage;
   private processor: Processor;
   constructor() {
-    attachToWindowIfDev('notif', this);
+    attachToWindowIfDev("notif", this);
     this.browserStorage = internal.browserStorage;
     this.processor = internal.processor;
     if (!this.browserStorage.ready) {
-      throw new Error('BrowserStorage is not ready');
+      throw new Error("BrowserStorage is not ready");
     }
     if (!this.processor.ready) {
-      throw new Error('processor is not ready');
+      throw new Error("processor is not ready");
     }
   }
 
-  on(event: 'destroy', listener: () => void): void;
-  on(event: 'notification', listener: (notification: INotification) => void): void;
+  on(event: "destroy", listener: () => void): void;
+  on(event: "notification", listener: (notification: INotification) => void): void;
   on(event: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.on(event, listener);
   }
@@ -41,8 +41,8 @@ export class NotificationSystem {
     this.eventEmitter.removeListener(event, listener);
   }
 
-  private emit(event: 'destroy'): void;
-  private emit(event: 'notification', notification: INotification): void;
+  private emit(event: "destroy"): void;
+  private emit(event: "notification", notification: INotification): void;
   private emit(event: string | symbol, ...args: any[]) {
     this.eventEmitter.emit.apply(this.eventEmitter, [event, ...args]);
   }
@@ -51,8 +51,8 @@ export class NotificationSystem {
     const senderString = sender.getManifest().fullAppName;
     const found = this.processor.runningApps.find(d => d.object === sender);
     if (!found) {
-      MessageBox._anonymousShow('Notification cannot be displayed. Unknown origin of the app', 'Security Violation');
-      throw new Error('Unknown origin of the app');
+      MessageBox._anonymousShow("Notification cannot be displayed. Unknown origin of the app", "Security Violation");
+      throw new Error("Unknown origin of the app");
     }
 
     if (this.blocks.includes(senderString)) return;
@@ -64,7 +64,7 @@ export class NotificationSystem {
       icon,
       block: () => this.block(senderString),
     };
-    this.emit('notification', notification);
+    this.emit("notification", notification);
   }
 
   block(sender: string) {

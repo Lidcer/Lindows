@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
-import { TOKEN_HEADER } from '../../shared/constants';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import { withRouter, Link } from 'react-router-dom';
-import { INotificationHandler } from './NotificationHandler';
-import { IAdminAccount } from './AdminAccountsList';
-import ReactLoading from 'react-loading';
-import moment from 'moment';
+import React, { Component } from "react";
+import { TOKEN_HEADER } from "../../shared/constants";
+import Axios, { AxiosRequestConfig } from "axios";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import { withRouter, Link } from "react-router-dom";
+import { INotificationHandler } from "./NotificationHandler";
+import { IAdminAccount } from "./AdminAccountsList";
+import ReactLoading from "react-loading";
+import moment from "moment";
 
 interface IAdminAccountsState {
   fetching: boolean;
@@ -39,7 +39,7 @@ class AdminAccountsItem extends Component<IAdminAccountsProps, IAdminAccountsSta
 
   async getInfo() {
     this.setState({ fetching: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -47,7 +47,7 @@ class AdminAccountsItem extends Component<IAdminAccountsProps, IAdminAccountsSta
 
     try {
       const response = await Axios.post<IResponse<IAdminAccount>>(
-        '/api/v1/admin/account',
+        "/api/v1/admin/account",
         { accountID: this.accountID },
         axiosRequestConfig,
       );
@@ -71,7 +71,7 @@ class AdminAccountsItem extends Component<IAdminAccountsProps, IAdminAccountsSta
               <img className='account-avatar' src={account.avatar} /> {account.avatar}
             </>
           ) : (
-            'Avatar: none'
+            "Avatar: none"
           )}
         </div>
         <div>Username: {account.username}</div>
@@ -81,14 +81,14 @@ class AdminAccountsItem extends Component<IAdminAccountsProps, IAdminAccountsSta
         <div>
           createdAt:
           <div>
-            createdAt: {moment(account.createdAt).format('MMMM Do YYYY, HH:mm:ss')}{' '}
+            createdAt: {moment(account.createdAt).format("MMMM Do YYYY, HH:mm:ss")}{" "}
             {moment(account.createdAt).fromNow()}
           </div>
         </div>
         <div>
           lastOnlineAt:
           <div>
-            createdAt: {moment(account.lastOnlineAt).format('MMMM Do YYYY, HH:mm:ss')}{' '}
+            createdAt: {moment(account.lastOnlineAt).format("MMMM Do YYYY, HH:mm:ss")}{" "}
             {moment(account.lastOnlineAt).fromNow()}
           </div>
         </div>
@@ -109,7 +109,7 @@ class AdminAccountsItem extends Component<IAdminAccountsProps, IAdminAccountsSta
 
   render() {
     if (this.state.fetching)
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
 
     return (
       <div className='m-2'>

@@ -24,7 +24,7 @@ export interface InitReturn {
 
 export abstract class BaseService {
   init(): InitReturn {
-    throw new Error('Not implemented!');
+    throw new Error("Not implemented!");
   }
   status() {
     return SystemServiceStatus.Uninitialized;

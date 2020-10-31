@@ -1,5 +1,5 @@
-import React from 'react';
-import * as BaseWindow from '../BaseWindow/BaseWindow';
+import React from "react";
+import * as BaseWindow from "../BaseWindow/BaseWindow";
 import {
   WarperIDE,
   TextareaIDE,
@@ -10,18 +10,18 @@ import {
   ToolBar,
   IDEContent,
   ToolBarButton,
-} from './IDE-LideStyled';
-import { random } from 'lodash';
-import { transpile, CompilerOptions, ScriptTarget, ModuleResolutionKind, JsxEmit, ModuleKind } from 'typescript';
-import AceEditor from 'react-ace';
-import safeEval from 'safer-eval';
-import 'ace-builds/src-noconflict/mode-typescript';
-import 'ace-builds/src-noconflict/theme-dracula';
-import './IDE-Lide.scss';
-import { internal } from '../../services/internals/Internal';
-import { templateProject } from './template';
-import { IExplorerFile, IExplorerFolder, getFolder, IDEFileExplorer, isFolder } from './FileExplorer';
-import styled from 'styled-components';
+} from "./IDE-LideStyled";
+import { random } from "lodash";
+import { transpile, CompilerOptions, ScriptTarget, ModuleResolutionKind, JsxEmit, ModuleKind } from "typescript";
+import AceEditor from "react-ace";
+import safeEval from "safer-eval";
+import "ace-builds/src-noconflict/mode-typescript";
+import "ace-builds/src-noconflict/theme-dracula";
+import "./IDE-Lide.scss";
+import { internal } from "../../services/internals/Internal";
+import { templateProject } from "./template";
+import { IExplorerFile, IExplorerFolder, getFolder, IDEFileExplorer, isFolder } from "./FileExplorer";
+import styled from "styled-components";
 
 interface ITab {
   content: string;
@@ -31,16 +31,16 @@ interface ITab {
 interface IDELideState {
   tabs: IExplorerFile[];
   activeTab?: IExplorerFile;
-  app: BaseWindow.BaseWindow | 'building' | undefined;
+  app: BaseWindow.BaseWindow | "building" | undefined;
   root: IExplorerFolder;
 }
 
 export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
   public static readonly onlyOne = true;
   public static manifest: BaseWindow.IManifest = {
-    fullAppName: 'IDE Lide',
-    launchName: 'idelide',
-    icon: '/assets/images/appsIcons/ideLide.svg',
+    fullAppName: "IDE Lide",
+    launchName: "idelide",
+    icon: "/assets/images/appsIcons/ideLide.svg",
   };
 
   constructor(props) {
@@ -71,11 +71,11 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
     if (this.variables.app) return;
     // await this.setItem(this.variables.code);
 
-    this.setVariables({ app: 'building' });
+    this.setVariables({ app: "building" });
 
     const compilerOptions: CompilerOptions = {
       target: ScriptTarget.ES2017,
-      lib: ['dom', 'es6'],
+      lib: ["dom", "es6"],
       module: ModuleKind.CommonJS,
       moduleResolution: ModuleResolutionKind.NodeJs,
 
@@ -90,30 +90,30 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
     let loc: IExplorerFile | IExplorerFolder = this.variables.root;
     const req = (srt: string) => {
       switch (srt) {
-        case 'BaseWindow':
+        case "BaseWindow":
           return BaseWindow;
-        case 'MessageBox':
+        case "MessageBox":
           return BaseWindow.MessageBox;
-        case 'react':
+        case "react":
           return { ...React, default: React };
-        case 'styled-components':
+        case "styled-components":
           return { ...styled, default: styled };
       }
-      if (srt.startsWith('.')) {
-        const path = srt.split('/');
+      if (srt.startsWith(".")) {
+        const path = srt.split("/");
         let m = loc;
 
         while (path.length) {
           const key = path.shift();
-          if (key === '.') continue;
-          if (key === '..') {
+          if (key === ".") continue;
+          if (key === "..") {
             if (!isFolder(m)) {
               const folder = getFolder(m, this.variables.root);
-              if (!folder) throw new Error('Compiler error: Unable to locate folder from file');
+              if (!folder) throw new Error("Compiler error: Unable to locate folder from file");
               m = folder;
             }
             const folder = getFolder(m, this.variables.root);
-            if (!folder) throw new Error('Compiler error: Unable to locate folder');
+            if (!folder) throw new Error("Compiler error: Unable to locate folder");
             m = folder;
             continue;
           }
@@ -165,7 +165,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
       const entires = [...Object.entries(compiled)];
       const entry = entires.find(f => (f[1] as any).manifest);
       if (!entry) {
-        throw new Error('Unknown app!');
+        throw new Error("Unknown app!");
       }
       if (
         !entry[1] ||
@@ -174,7 +174,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
         !entry[1].manifest.icon ||
         !entry[1].manifest.fullAppName
       ) {
-        throw new Error('invalid app checking that your app had manifest variable!');
+        throw new Error("invalid app checking that your app had manifest variable!");
       }
       const compiledApp = entry[1] as any;
 
@@ -185,13 +185,13 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
         };
       }
       //@ts-ignore
-      const desktop = internal.fileSystem.userDirectory.getDirectory('Desktop', internal.processor.symbol);
+      const desktop = internal.fileSystem.userDirectory.getDirectory("Desktop", internal.processor.symbol);
       const fileName = compiledApp.manifest.launchName;
       let file = desktop.getFile(compiledApp.manifest.launchName, internal.fileSystem.userSymbol);
       if (!file) {
         file = desktop.createFile(
           fileName,
-          'lindowApp',
+          "lindowApp",
           {
             manifest: compiledApp.manifest,
             app: compiledApp,
@@ -219,7 +219,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
 
   terminateApp = () => {
     const app = this.variables.app;
-    if (app && typeof app !== 'string') {
+    if (app && typeof app !== "string") {
       const id = app.id;
       app.exit();
 
@@ -232,7 +232,7 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
 
   appMonitor = () => {
     const anApp = this.variables.app;
-    if (!anApp || typeof anApp === 'string') return;
+    if (!anApp || typeof anApp === "string") return;
     if (anApp.destroyed) {
       const id = anApp.id;
       this.removeFromProcessor(id);
@@ -252,8 +252,8 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
 
   get editorStyle(): React.CSSProperties {
     return {
-      width: '100%',
-      height: '100%',
+      width: "100%",
+      height: "100%",
     };
   }
 

@@ -1,7 +1,7 @@
-import { clamp } from 'lodash';
-import { IWindowInfo } from './SnakeGameLogic';
-import { Renderer } from './SnakeRender';
-import { Square } from './Square';
+import { clamp } from "lodash";
+import { IWindowInfo } from "./SnakeGameLogic";
+import { Renderer } from "./SnakeRender";
+import { Square } from "./Square";
 
 export class Snake extends Square {
   public static readonly snakeColour = [32, 247, 90];

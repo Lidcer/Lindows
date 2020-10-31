@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const AdminNavbar = styled.div`
   background-color: transparent !important;

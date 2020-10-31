@@ -1,3 +1,3 @@
-import { getUserById } from './db';
+import { getUserById } from "./db";
 
-test('testing user id', () => {});
+test("testing user id", () => {});

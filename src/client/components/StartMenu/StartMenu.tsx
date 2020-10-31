@@ -1,7 +1,7 @@
-import React from 'react';
-import { navBarPos } from '../TaskBar/TaskBar';
-import { allInstalledApps, AppDescription, launchApp } from '../../essential/apps';
-import { StartMenuStyled, TaskBarItem } from './StartMenuStyled';
+import React from "react";
+import { navBarPos } from "../TaskBar/TaskBar";
+import { allInstalledApps, AppDescription, launchApp } from "../../essential/apps";
+import { StartMenuStyled, TaskBarItem } from "./StartMenuStyled";
 
 export interface IStartMenuProps {
   appClick: (name: string) => void;
@@ -57,10 +57,10 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
 
   get style() {
     switch (navBarPos) {
-      case 'bottom':
+      case "bottom":
         return {
-          bottom: '30pt',
-          transition: 'width 0.2s, height 0.2s',
+          bottom: "30pt",
+          transition: "width 0.2s, height 0.2s",
           height: `${this.state.height}px`,
         };
       default:

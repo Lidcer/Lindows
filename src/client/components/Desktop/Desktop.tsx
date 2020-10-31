@@ -1,22 +1,22 @@
-import React from 'react';
-import { TaskBar } from '../TaskBar/TaskBar';
-import { Cursor } from '../Cursor/Cursor';
-import { IElement, showContext } from '../ContextMenu/ContextMenu';
-import { SelectBox } from '../SelectBox/SelectBox';
-import Axios from 'axios';
-import { launchApp } from '../../essential/apps';
-import { HotKeyHandler } from '../../essential/apphotkeys';
-import { BlueScreen } from '../BlueScreen/BlueScreen';
-import { internal } from '../../services/internals/Internal';
-import { Keypress } from '../../essential/constants/Keypress';
-import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
-import { ActivationWatermark } from '../activationWatermark/activationWatermark';
-import { popup } from '../Popup/popupRenderer';
-import { NotificationsDisplay } from '../Notifications.tsx/NotificationsDisplay';
-import { ScreenStyled, Wallpaper } from './DesktopStyled';
-import { FileSystemDirectory, FileSystemFile, StringSymbol } from '../../utils/FileSystemDirectory';
-import { DesktopIcons } from './DesktopIcon';
-import { MessageBox } from '../../apps/BaseWindow/BaseWindow';
+import React from "react";
+import { TaskBar } from "../TaskBar/TaskBar";
+import { Cursor } from "../Cursor/Cursor";
+import { IElement, showContext } from "../ContextMenu/ContextMenu";
+import { SelectBox } from "../SelectBox/SelectBox";
+import Axios from "axios";
+import { launchApp } from "../../essential/apps";
+import { HotKeyHandler } from "../../essential/apphotkeys";
+import { BlueScreen } from "../BlueScreen/BlueScreen";
+import { internal } from "../../services/internals/Internal";
+import { Keypress } from "../../essential/constants/Keypress";
+import { startBackgroundServices, backgroundServices } from "../../services/backgroundService/ServicesHandler";
+import { ActivationWatermark } from "../activationWatermark/activationWatermark";
+import { popup } from "../Popup/popupRenderer";
+import { NotificationsDisplay } from "../Notifications.tsx/NotificationsDisplay";
+import { ScreenStyled, Wallpaper } from "./DesktopStyled";
+import { FileSystemDirectory, FileSystemFile, StringSymbol } from "../../utils/FileSystemDirectory";
+import { DesktopIcons } from "./DesktopIcon";
+import { MessageBox } from "../../apps/BaseWindow/BaseWindow";
 
 interface IState {
   ready: boolean;
@@ -35,31 +35,31 @@ interface IState {
   icons: JSX.Element;
 }
 
-const customWallpaper: string = '';
+const customWallpaper: string = "";
 
 export class Desktop extends React.Component<{}, IState> {
   private wallpaperContextMenu: IElement[] = [
     {
-      content: 'View',
-      elements: [{ content: 'Large Icons' }, { content: 'Medium Icons' }, { content: 'Small Icons' }],
+      content: "View",
+      elements: [{ content: "Large Icons" }, { content: "Medium Icons" }, { content: "Small Icons" }],
     },
     {
-      content: 'Sort by',
-      elements: [{ content: 'Name' }, { content: 'Size' }, { content: 'Item type' }, { content: 'Date modified' }],
+      content: "Sort by",
+      elements: [{ content: "Name" }, { content: "Size" }, { content: "Item type" }, { content: "Date modified" }],
     },
-    { content: 'Refresh', onClick: () => this.refresh() },
+    { content: "Refresh", onClick: () => this.refresh() },
     {},
-    { content: 'Paste' },
-    { content: 'LVidia Control Panel', iconOrPicture: './assets/images/livida.svg' },
+    { content: "Paste" },
+    { content: "LVidia Control Panel", iconOrPicture: "./assets/images/livida.svg" },
     {
-      content: 'New',
+      content: "New",
       elements: [
-        { content: 'Folder', onClick: e => this.createNewFolder(e) },
-        { content: 'File', onClick: e => this.createNewFile(e) },
+        { content: "Folder", onClick: e => this.createNewFolder(e) },
+        { content: "File", onClick: e => this.createNewFile(e) },
       ],
     },
-    { content: 'Browser Settings', iconOrPicture: './assets/images/browserSettings.svg' },
-    { content: 'Personalize', iconOrPicture: './assets/images/browserSettings.svg' },
+    { content: "Browser Settings", iconOrPicture: "./assets/images/browserSettings.svg" },
+    { content: "Personalize", iconOrPicture: "./assets/images/browserSettings.svg" },
   ];
 
   private terminal: HotKeyHandler;
@@ -75,7 +75,7 @@ export class Desktop extends React.Component<{}, IState> {
   constructor(props) {
     super(props);
     this.state = {
-      blueScreen: '',
+      blueScreen: "",
       ready: internal.ready,
       landscape: true,
       selectionBox: {
@@ -84,7 +84,7 @@ export class Desktop extends React.Component<{}, IState> {
         y: 0,
       },
       wallpaper: {
-        base64: '',
+        base64: "",
         height: 1080,
         width: 1920,
       },
@@ -102,32 +102,32 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   showBlueScreen = () => {
-    this.setState({ blueScreen: 'CRASHED_BY_USER' });
+    this.setState({ blueScreen: "CRASHED_BY_USER" });
   };
 
   componentDidMount() {
     startBackgroundServices(true);
     const serviceReady = () => {
       (alert as any) = (message: any) => {
-        MessageBox._anonymousShow(message.toString(), 'Alert');
+        MessageBox._anonymousShow(message.toString(), "Alert");
       };
       this.setState({
         ready: true,
       });
-      internal.processor.on('appDisplayingAdd', this.updateView);
-      internal.processor.on('appRemove', this.updateView);
+      internal.processor.on("appDisplayingAdd", this.updateView);
+      internal.processor.on("appRemove", this.updateView);
 
-      backgroundServices().removeListener('ready', serviceReady);
+      backgroundServices().removeListener("ready", serviceReady);
 
-      window.addEventListener('error', this.showError);
+      window.addEventListener("error", this.showError);
       this.refresh();
     };
     if (!backgroundServices().ready) {
-      backgroundServices().addListener('ready', serviceReady);
+      backgroundServices().addListener("ready", serviceReady);
     } else serviceReady();
 
     this.terminal = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.T], true);
-    this.terminal.onCombination = () => launchApp('lterminal');
+    this.terminal.onCombination = () => launchApp("lterminal");
     this.killActiveWindow = new HotKeyHandler([Keypress.Alt, Keypress.Four], true);
     this.killActiveWindow.onCombination = () => {
       const active = internal.processor.processes.find(p => p.active);
@@ -135,7 +135,7 @@ export class Desktop extends React.Component<{}, IState> {
     };
 
     this.taskManager = new HotKeyHandler([Keypress.Control, Keypress.Alt, Keypress.D]);
-    this.taskManager.onCombination = () => launchApp('taskmgr');
+    this.taskManager.onCombination = () => launchApp("taskmgr");
     if (DEV) {
       this.blueScreen = new HotKeyHandler([
         Keypress.ArrowUp,
@@ -152,11 +152,11 @@ export class Desktop extends React.Component<{}, IState> {
       this.blueScreen.onCombination = this.showBlueScreen;
     }
     this.updateDimensions();
-    window.addEventListener('resize', this.updateDimensions, false);
+    window.addEventListener("resize", this.updateDimensions, false);
 
     if (!customWallpaper) return;
     Axios.get(customWallpaper, {
-      responseType: 'arraybuffer',
+      responseType: "arraybuffer",
     })
       .then(response => {
         // const base64 = `data:image/png;base64, ${Buffer.from(response.data, 'binary').toString('base64')}`;
@@ -174,13 +174,13 @@ export class Desktop extends React.Component<{}, IState> {
   }
 
   componentWillUnmount() {
-    window.removeEventListener('resize', this.updateDimensions, false);
-    window.removeEventListener('showError', this.showError);
+    window.removeEventListener("resize", this.updateDimensions, false);
+    window.removeEventListener("showError", this.showError);
     this.terminal.destroy();
     this.killActiveWindow.destroy();
     this.blueScreen.destroy();
-    internal.processor.removeListener('appDisplayingAdd', this.updateView);
-    internal.processor.removeListener('appRemove', this.updateView);
+    internal.processor.removeListener("appDisplayingAdd", this.updateView);
+    internal.processor.removeListener("appRemove", this.updateView);
   }
 
   showError = (error: ErrorEvent) => {
@@ -203,12 +203,12 @@ export class Desktop extends React.Component<{}, IState> {
   createNewFolder = async (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const usr = internal.fileSystem.userSymbol;
     const userDirectory = internal.fileSystem.userDirectory;
-    let desktop = userDirectory.getDirectory('Desktop', usr);
+    let desktop = userDirectory.getDirectory("Desktop", usr);
     if (!desktop) {
-      desktop = await userDirectory.createDirectory('Desktop', usr);
+      desktop = await userDirectory.createDirectory("Desktop", usr);
     }
 
-    const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New folder', internal.processor.symbol);
+    const uniqueName = internal.fileSystem.getUniqueName(desktop, "New folder", internal.processor.symbol);
     internal.fileSystem.saveHome();
     const file = await desktop.createDirectory(uniqueName, new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
@@ -221,9 +221,9 @@ export class Desktop extends React.Component<{}, IState> {
   createNewFile = async (ev: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const usr = internal.fileSystem.userSymbol;
     const userDirectory = internal.fileSystem.userDirectory;
-    const desktop = userDirectory.getDirectory('Desktop', usr);
-    const uniqueName = internal.fileSystem.getUniqueName(desktop, 'New File', internal.processor.symbol);
-    const file = await desktop.createFile(uniqueName, 'text', '', new StringSymbol(internal.fileSystem.cleanName));
+    const desktop = userDirectory.getDirectory("Desktop", usr);
+    const uniqueName = internal.fileSystem.getUniqueName(desktop, "New File", internal.processor.symbol);
+    const file = await desktop.createFile(uniqueName, "text", "", new StringSymbol(internal.fileSystem.cleanName));
     this.newFile = {
       x: ev.clientX,
       y: ev.clientY,
@@ -237,9 +237,9 @@ export class Desktop extends React.Component<{}, IState> {
     const sys = internal.processor.symbol;
 
     const userDirectory = internal.fileSystem.userDirectory;
-    let desktop = userDirectory.getDirectory('Desktop', sys);
+    let desktop = userDirectory.getDirectory("Desktop", sys);
     if (!desktop) {
-      desktop = await userDirectory.createDirectory('Desktop', internal.fileSystem.userSymbol);
+      desktop = await userDirectory.createDirectory("Desktop", internal.fileSystem.userSymbol);
     }
     const contents = desktop.contents(sys);
     const userSymbol = internal.fileSystem.userSymbol;
@@ -324,7 +324,7 @@ export class Desktop extends React.Component<{}, IState> {
   };
 
   get wallpaperStyle() {
-    return this.state.landscape ? { width: '100%', height: 'auto' } : { width: 'auto', height: '100%' };
+    return this.state.landscape ? { width: "100%", height: "auto" } : { width: "auto", height: "100%" };
   }
 
   render() {

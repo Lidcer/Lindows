@@ -1,6 +1,6 @@
-import React from 'react';
-import { allInstalledApps, AppDescription } from '../essential/apps';
-import { internal } from '../services/internals/Internal';
+import React from "react";
+import { allInstalledApps, AppDescription } from "../essential/apps";
+import { internal } from "../services/internals/Internal";
 
 interface State {
   apps: AppDescription[];
@@ -15,17 +15,17 @@ export class TestWebPage extends React.Component<{}, State> {
   }
 
   componentDidMount = () => {
-    internal.removeListener('allReady', this.componentDidMount);
+    internal.removeListener("allReady", this.componentDidMount);
     if (internal.ready) {
       const apps = allInstalledApps();
       this.setState({ apps });
     } else {
-      internal.addListener('allReady', this.componentDidMount);
+      internal.addListener("allReady", this.componentDidMount);
     }
   };
 
   componentWillUnmount() {
-    internal.removeListener('allReady', this.componentDidMount);
+    internal.removeListener("allReady", this.componentDidMount);
   }
 
   get links() {
@@ -37,7 +37,7 @@ export class TestWebPage extends React.Component<{}, State> {
             onClick={() => {
               location.href = `app-tester/${a.manifest.launchName}`;
             }}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
           >
             <a className='text-info pl-2' href={`app-tester/${a.manifest.launchName}`}>
               <img className='text-info mr-2' src={a.manifest.icon} height='25' />

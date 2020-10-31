@@ -14,20 +14,20 @@ export class Renderer {
   private shaders: IShaders = {};
   private compiledShaders: WebGLShader[] = [];
   private _webGLProgram: WebGLProgram;
-  private _usedTechnology = 'webgl2';
+  private _usedTechnology = "webgl2";
 
   constructor(canvas: HTMLCanvasElement, height?: number, width?: number) {
     let webGL: webGL = canvas.getContext(this._usedTechnology) as WebGL2RenderingContext;
     if (!webGL) {
-      this._usedTechnology = 'webgl';
+      this._usedTechnology = "webgl";
       this.webGL = canvas.getContext(this._usedTechnology) as WebGLRenderingContext;
     }
     if (!webGL) {
-      this._usedTechnology = 'experimental-webgl';
-      webGL = canvas.getContext('experimental-webgl') as WebGLRenderingContext;
+      this._usedTechnology = "experimental-webgl";
+      webGL = canvas.getContext("experimental-webgl") as WebGLRenderingContext;
     }
     if (!webGL) {
-      throw new Error('Unable to create create webgl context');
+      throw new Error("Unable to create create webgl context");
     }
     if (height !== undefined) {
       canvas.height = height;

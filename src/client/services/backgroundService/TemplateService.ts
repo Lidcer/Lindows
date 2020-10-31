@@ -1,9 +1,9 @@
-import { internal } from '../internals/Internal';
-import { BaseService } from './BaseService';
-import { EventEmitter } from 'events';
+import { internal } from "../internals/Internal";
+import { BaseService } from "./BaseService";
+import { EventEmitter } from "events";
 
 export class TemplateService extends BaseService {
-  private SERVICE_NAME = 'template';
+  private SERVICE_NAME = "template";
   private eventEmitter = new EventEmitter();
 
   start = () => {
@@ -15,9 +15,9 @@ export class TemplateService extends BaseService {
   }
   actualStart = async () => {
     if (!internal.ready) {
-      internal.on('allReady', this.actualStart);
+      internal.on("allReady", this.actualStart);
       return;
     }
-    internal.removeListener('allReady', this.actualStart);
+    internal.removeListener("allReady", this.actualStart);
   };
 }

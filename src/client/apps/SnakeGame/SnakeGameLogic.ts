@@ -1,10 +1,10 @@
-import { clamp, random } from 'lodash';
-import { Food } from './Food';
-import { Snake } from './Snake';
-import { Controls, SnakeInput } from './SnakeInput';
-import { Renderer } from './SnakeRender';
-import { fragmentShader, vertexShader, vertexShaderTest } from './SnakeShader';
-import { SnakeGame } from './SnakeGame';
+import { clamp, random } from "lodash";
+import { Food } from "./Food";
+import { Snake } from "./Snake";
+import { Controls, SnakeInput } from "./SnakeInput";
+import { Renderer } from "./SnakeRender";
+import { fragmentShader, vertexShader, vertexShaderTest } from "./SnakeShader";
+import { SnakeGame } from "./SnakeGame";
 
 enum GameControls {
   Up,
@@ -57,9 +57,9 @@ export class SnakeGameLogic {
   ) {
     this.renderer = new Renderer(canvas, this.height, this.width);
     //this.renderer.loadShader('vertex', vertexShader, this.gl.VERTEX_SHADER, false);
-    this.renderer.loadShader('vertex', vertexShaderTest, this.gl.VERTEX_SHADER, false);
+    this.renderer.loadShader("vertex", vertexShaderTest, this.gl.VERTEX_SHADER, false);
 
-    this.renderer.loadShader('fragment', fragmentShader, this.gl.FRAGMENT_SHADER);
+    this.renderer.loadShader("fragment", fragmentShader, this.gl.FRAGMENT_SHADER);
     if (this.speed !== SnakeGameLogic.DEFAULT_SPEED) {
       //this.speed = this.speed;
     }
@@ -71,8 +71,8 @@ export class SnakeGameLogic {
     const triangleVertexBufferObject = this.gl.createBuffer();
     this.gl.bindBuffer(this.gl.ARRAY_BUFFER, triangleVertexBufferObject);
 
-    const positionAttributeLocation = this.gl.getAttribLocation(this.renderer.program, 'vertPosition');
-    const colorAttributeLocation = this.gl.getAttribLocation(this.renderer.program, 'vertColor');
+    const positionAttributeLocation = this.gl.getAttribLocation(this.renderer.program, "vertPosition");
+    const colorAttributeLocation = this.gl.getAttribLocation(this.renderer.program, "vertColor");
     this.gl.vertexAttribPointer(
       positionAttributeLocation,
       2,
@@ -150,25 +150,25 @@ export class SnakeGameLogic {
 
     if (control === Controls.Up && this.direction !== GameControls.Up && behind(-1, 0)) {
       this.direction = GameControls.Up;
-      this.bounce('top', true);
+      this.bounce("top", true);
     } else if (control === Controls.Down && this.direction !== GameControls.Down && behind(1, 0)) {
       this.direction = GameControls.Down;
-      this.bounce('top', false);
+      this.bounce("top", false);
     } else if (control === Controls.Left && this.direction !== GameControls.Left && behind(0, -1)) {
       this.direction = GameControls.Left;
-      this.bounce('left', true);
+      this.bounce("left", true);
     } else if (control === Controls.Right && this.direction !== GameControls.Right && behind(0, 1)) {
       this.direction = GameControls.Right;
-      this.bounce('left', false);
+      this.bounce("left", false);
     }
   };
-  bounce(direction: 'top' | 'left', minus = false) {
+  bounce(direction: "top" | "left", minus = false) {
     const boundingClientRect = this.gameWindow.getBoundingRect();
     const distance = 5;
     const time = 50;
     const m = minus ? -1 : 1;
     //this.div.style[direction] = `${boundingClientRect[xy] + (distance  * m)}px`;
-    if (direction === 'top') {
+    if (direction === "top") {
       this.setY(boundingClientRect.y + distance * m);
       //this.gameWindow.changeOptions({x}) //{boundingClientRect[xy] + (distance  * m)
       //this.div.style.top = `${boundingClientRect[xy] + (distance  * m)}px`;
@@ -179,7 +179,7 @@ export class SnakeGameLogic {
       //this.renderer.canvas.style.marginLeft = `${distance * 2 * -m}px`;
     }
     setTimeout(() => {
-      if (direction === 'top') {
+      if (direction === "top") {
         this.setY(boundingClientRect.y);
       } else {
         this.setX(boundingClientRect.x);

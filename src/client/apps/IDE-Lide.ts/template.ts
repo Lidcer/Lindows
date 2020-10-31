@@ -1,4 +1,4 @@
-import { IExplorerFile, IExplorerFolder } from './FileExplorer';
+import { IExplorerFile, IExplorerFolder } from "./FileExplorer";
 
 export const sampleCode = [
   `import React from 'react';`,
@@ -31,7 +31,7 @@ export const sampleCode = [
   `  }`,
   `}`,
   ``,
-].join('\n');
+].join("\n");
 
 export const styledCode = [
   `import styled from 'styled-components';`,
@@ -43,15 +43,15 @@ export const styledCode = [
   `    outline:none;`,
   `\``,
   ``,
-].join('\n');
+].join("\n");
 
 const files: IExplorerFile[] = [
-  { name: 'main.tsx', content: sampleCode, path: '/' },
-  { name: 'styled.ts', content: styledCode, path: '/' },
+  { name: "main.tsx", content: sampleCode, path: "/" },
+  { name: "styled.ts", content: styledCode, path: "/" },
 ];
 
 export const templateProject: IExplorerFolder = {
-  name: 'Basic app',
+  name: "Basic app",
   contents: [...files],
   collapsed: false,
 };

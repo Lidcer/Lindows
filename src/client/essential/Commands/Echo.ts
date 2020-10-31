@@ -1,4 +1,4 @@
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
+import { BaseCommand, ExecutionParameters } from "./BaseCommand";
 
 export class EchoCommand extends BaseCommand {
   execute() {

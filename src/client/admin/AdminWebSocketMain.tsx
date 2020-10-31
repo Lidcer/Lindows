@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { TOKEN_HEADER } from '../../shared/constants';
-import Navigation from './AdminNavigation';
-import { IAdminAccount } from './AdminAccountsList';
-import { INotificationHandler } from './NotificationHandler';
-import { withRouter, Link } from 'react-router-dom';
-import ReactLoading from 'react-loading';
-import { IAdminWebSocket } from './Websocket';
+import React, { Component } from "react";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import Axios, { AxiosRequestConfig } from "axios";
+import { TOKEN_HEADER } from "../../shared/constants";
+import Navigation from "./AdminNavigation";
+import { IAdminAccount } from "./AdminAccountsList";
+import { INotificationHandler } from "./NotificationHandler";
+import { withRouter, Link } from "react-router-dom";
+import ReactLoading from "react-loading";
+import { IAdminWebSocket } from "./Websocket";
 
 interface IAdminWebSocketItemState {
   broadcast: string;
@@ -20,7 +20,7 @@ interface IAdminWebSocketItemState {
   refreshing: boolean;
   webSocketInfo: IWebSocketInfo[];
   page: number;
-  tab: 'socket' | 'broadcaster';
+  tab: "socket" | "broadcaster";
 }
 
 interface IWebSocketInfo {
@@ -59,15 +59,15 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
     super(props);
     this.state = {
       webSocketInfo: webSocketData.webSocketInfo,
-      broadcast: '',
-      broadcastArg0: '',
-      broadcastArg1: '',
-      broadcastArg2: '',
-      redirect: '',
-      newTab: '',
-      closeTab: '',
+      broadcast: "",
+      broadcastArg0: "",
+      broadcastArg1: "",
+      broadcastArg2: "",
+      redirect: "",
+      newTab: "",
+      closeTab: "",
       refreshing: false,
-      tab: 'socket',
+      tab: "socket",
       page: 0,
     };
   }
@@ -81,7 +81,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
 
   async getInfo() {
     this.setState({ refreshing: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -89,7 +89,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
 
     try {
       const response = await Axios.get<IResponse<IWebSocketInfo[]>>(
-        '/api/v1/admin/web-sockets-info',
+        "/api/v1/admin/web-sockets-info",
         axiosRequestConfig,
       );
       const webSocketInfo = response.data.success;
@@ -102,7 +102,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
 
   async broadcast(value: string, arg0: string, arg1?: string, arg2?: string) {
     this.setState({ refreshing: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -112,15 +112,15 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
 
     try {
       const response = await Axios.post<IResponse<string>>(
-        '/api/v1/admin/socket-broadcast',
+        "/api/v1/admin/socket-broadcast",
         socketBroadcast,
         axiosRequestConfig,
       );
-      this.props.notificationHandler.info('Broadcast sent', response.data.success);
+      this.props.notificationHandler.info("Broadcast sent", response.data.success);
     } catch (error) {
       this.setState({ refreshing: false });
       console.error(error);
-      this.props.notificationHandler.info('Broadcast Error', `Failed to broadcast ${error.message}`);
+      this.props.notificationHandler.info("Broadcast Error", `Failed to broadcast ${error.message}`);
       throw new Error(error);
     }
     this.setState({ refreshing: false });
@@ -132,7 +132,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
     const broadcastArg1 = this.state.broadcastArg1 || undefined;
     const broadcastArg2 = this.state.broadcastArg2 || undefined;
     if (!broadcast || broadcastArg1) return;
-    this.setState({ broadcast: '', broadcastArg0: '', broadcastArg1: '', broadcastArg2: '' });
+    this.setState({ broadcast: "", broadcastArg0: "", broadcastArg1: "", broadcastArg2: "" });
 
     try {
       await this.broadcast(broadcast, broadcastArg0, broadcastArg1, broadcastArg2);
@@ -144,9 +144,9 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   redirect = async () => {
     if (!this.state.redirect) return;
     const redirect = this.state.redirect;
-    this.setState({ redirect: '' });
+    this.setState({ redirect: "" });
     try {
-      await this.broadcast('redirect', redirect);
+      await this.broadcast("redirect", redirect);
     } catch (error) {
       this.setState({ redirect });
     }
@@ -155,9 +155,9 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   openNewTab = async () => {
     if (!this.state.newTab) return;
     const newTab = this.state.newTab;
-    this.setState({ newTab: '' });
+    this.setState({ newTab: "" });
     try {
-      await this.broadcast('open-new-tab', newTab);
+      await this.broadcast("open-new-tab", newTab);
     } catch (error) {
       this.setState({ newTab });
     }
@@ -166,9 +166,9 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   closeNewTab = async () => {
     if (!this.state.closeTab) return;
     const closeTab = this.state.closeTab;
-    this.setState({ closeTab: '' });
+    this.setState({ closeTab: "" });
     try {
-      await this.broadcast('close-new-tab', closeTab);
+      await this.broadcast("close-new-tab", closeTab);
     } catch (error) {
       this.setState({ newTab: closeTab });
     }
@@ -207,7 +207,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
 
   get refreshButton() {
     if (this.state.refreshing) {
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
     }
     return (
       <button className='btn btn-terminal' onClick={() => this.getInfo()}>
@@ -222,9 +222,9 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
         {this.state.refreshing ? null : (
           <button
             className='btn btn-terminal'
-            onClick={() => this.setState({ tab: this.state.tab === 'broadcaster' ? 'socket' : 'broadcaster' })}
+            onClick={() => this.setState({ tab: this.state.tab === "broadcaster" ? "socket" : "broadcaster" })}
           >
-            {this.state.tab === 'broadcaster' ? 'Sockets' : 'Mics'}
+            {this.state.tab === "broadcaster" ? "Sockets" : "Mics"}
           </button>
         )}
         {this.renderWebsocketInfo}
@@ -234,7 +234,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   }
 
   get renderBroadcast() {
-    if (this.state.tab !== 'broadcaster') return;
+    if (this.state.tab !== "broadcaster") return;
     return (
       <div className='m-2 p-2 border border-terminal'>
         <div>
@@ -317,7 +317,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   }
 
   get renderWebsocketInfo() {
-    if (this.state.tab !== 'socket') return;
+    if (this.state.tab !== "socket") return;
 
     return (
       <div className='m-2'>

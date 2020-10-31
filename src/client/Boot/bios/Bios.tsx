@@ -1,8 +1,8 @@
-import React from 'react';
-import { UAParser } from 'ua-parser-js';
-import { Keypress } from '../../essential/constants/Keypress';
-import Axios from 'axios';
-import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
+import React from "react";
+import { UAParser } from "ua-parser-js";
+import { Keypress } from "../../essential/constants/Keypress";
+import Axios from "axios";
+import { IP, IIPResponse } from "../../../shared/ApiUsersRequestsResponds";
 import {
   BiosStyled,
   BiosTop,
@@ -22,17 +22,17 @@ import {
   BiosTopInfo,
   BiosBottomInfo,
   BiosBottom,
-} from './BiosStyled';
-import { inIframe } from '../../utils/util';
-import { BiosTermsAndPolicy } from './TermsAndPolicy';
-import { internal } from '../../services/internals/Internal';
+} from "./BiosStyled";
+import { inIframe } from "../../utils/util";
+import { BiosTermsAndPolicy } from "./TermsAndPolicy";
+import { internal } from "../../services/internals/Internal";
 
 interface IBIOSProps {
   next: () => void;
 }
 
-declare type Tab = 'main' | 'network' | 'exit';
-const TAB: Tab[] = ['main', 'network', 'exit'];
+declare type Tab = "main" | "network" | "exit";
+const TAB: Tab[] = ["main", "network", "exit"];
 declare type GradientColours = [number, number, number];
 
 interface IBIOSState {
@@ -93,11 +93,11 @@ function initGradient() {
   return gradientColours;
 }
 
-const MAIN_TAB_INFO = 'This section is showing info about your system';
+const MAIN_TAB_INFO = "This section is showing info about your system";
 
 export class Bios extends React.Component<IBIOSProps, IBIOSState> {
-  private readonly BROWSER_STORAGE_KEY = '__BIOS_STORAGE__';
-  private networkStatus: 'unknown' | 'fetched' | 'noConnection' | 'fetching' | 'notAvailable' = 'unknown';
+  private readonly BROWSER_STORAGE_KEY = "__BIOS_STORAGE__";
+  private networkStatus: "unknown" | "fetched" | "noConnection" | "fetching" | "notAvailable" = "unknown";
   private interval: NodeJS.Timeout;
 
   constructor(props: IBIOSProps) {
@@ -107,12 +107,12 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
       progress: 50,
       forward: false,
       rightSideInfo: MAIN_TAB_INFO,
-      tab: 'main',
+      tab: "main",
     };
   }
 
   render() {
-    const footerText = 'V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Inc';
+    const footerText = "V01.00 (C)Copyright 2020-2020, Lidcer MegaBin Inc";
     if (showTermsOfPolicy()) {
       return (
         <BiosStyled>
@@ -144,13 +144,13 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           <BiosGradient> {this.renderGradient}</BiosGradient>
         </BiosTop>
         <BiosNavBar>
-          <span className={this.state.tab === 'main' ? 'active' : null} onClick={() => this.changeTab('main')}>
+          <span className={this.state.tab === "main" ? "active" : null} onClick={() => this.changeTab("main")}>
             Main
           </span>
-          <span className={this.state.tab === 'network' ? 'active' : null} onClick={() => this.changeTab('network')}>
+          <span className={this.state.tab === "network" ? "active" : null} onClick={() => this.changeTab("network")}>
             Network
           </span>
-          <span className={this.state.tab === 'exit' ? 'active' : null} onClick={() => this.changeTab('exit')}>
+          <span className={this.state.tab === "exit" ? "active" : null} onClick={() => this.changeTab("exit")}>
             Exit
           </span>
         </BiosNavBar>
@@ -180,19 +180,19 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           onAcceptTermsOfPolicy={() => {
             this.setState({
               popup: {
-                title: 'Have you read it all?',
-                content: 'With this action you agreed that you have read everything that has been written on page',
+                title: "Have you read it all?",
+                content: "With this action you agreed that you have read everything that has been written on page",
                 firstButton: {
-                  content: 'Accept',
+                  content: "Accept",
                   selected: false,
                   fun: () => {
-                    localStorage.setItem('terms-of-policy', 'true');
+                    localStorage.setItem("terms-of-policy", "true");
                     location.reload();
-                    this.setState({ popup: undefined, tab: 'exit' });
+                    this.setState({ popup: undefined, tab: "exit" });
                   },
                 },
                 secondButton: {
-                  content: 'Read it again',
+                  content: "Read it again",
                   selected: true,
                   fun: () => {
                     this.setState({ popup: undefined });
@@ -203,7 +203,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
                   selected: false,
                   fun: () => {
                     localStorage.clear();
-                    location.href = 'https://duckduckgo.com/';
+                    location.href = "https://duckduckgo.com/";
                   },
                 },
               },
@@ -211,7 +211,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           }}
         />
       );
-    } else if (this.state.tab === 'main')
+    } else if (this.state.tab === "main")
       return (
         <BiosSettings>
           {this.systemInfo}
@@ -234,7 +234,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           </table>
         </BiosSettings>
       );
-    else if (this.state.tab === 'network') {
+    else if (this.state.tab === "network") {
       if (STATIC) {
         return (
           <BiosSettings>
@@ -245,18 +245,18 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         );
       }
 
-      if (this.networkStatus === 'unknown') {
-        this.networkStatus = 'fetching';
-        Axios.get<IIPResponse>('/api/v1/ip')
+      if (this.networkStatus === "unknown") {
+        this.networkStatus = "fetching";
+        Axios.get<IIPResponse>("/api/v1/ip")
           .then(result => {
             const props = { ...this.state };
             props.networkInfo = result.data.success;
-            this.networkStatus = 'fetched';
+            this.networkStatus = "fetched";
             this.setState(props);
           })
           .catch(err => {
             console.error(err);
-            this.networkStatus = 'noConnection';
+            this.networkStatus = "noConnection";
             this.setState({});
           });
       }
@@ -280,29 +280,29 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
           </BiosSettings>
         );
       }
-    } else if (this.state.tab === 'exit') {
+    } else if (this.state.tab === "exit") {
       return (
         <BiosSettings>
           <table>
             <tbody>
               <tr>
                 <td>
-                  <BiosButton className={true ? '' : 'active'}>{'[Save changes & reboot]'}</BiosButton>
+                  <BiosButton className={true ? "" : "active"}>{"[Save changes & reboot]"}</BiosButton>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <BiosButton className={false ? '' : 'active'}>{'[Discard changes & reboot]'}</BiosButton>
+                  <BiosButton className={false ? "" : "active"}>{"[Discard changes & reboot]"}</BiosButton>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <BiosButton className={false ? '' : 'active'}>{'[Discard changes]'}</BiosButton>
+                  <BiosButton className={false ? "" : "active"}>{"[Discard changes]"}</BiosButton>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <BiosButton className={false ? '' : 'active'}>{'[Load defaults]'}</BiosButton>
+                  <BiosButton className={false ? "" : "active"}>{"[Load defaults]"}</BiosButton>
                 </td>
               </tr>
             </tbody>
@@ -322,9 +322,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     const engine = userAgent.getEngine();
     return (
       <BiosSystemInfo>
-        <span>OS: {inIframe() ? 'Lindows Alpha 1.0.0' : `${os.name} ${os.version}`}</span>
-        <span>Browser: {inIframe() ? 'Virtual crate(unknown)' : `${browser.name}(${browser.version})`}</span>
-        <span>Engine: {inIframe() ? 'Link(unknown)' : `${engine.name}(${engine.version})`}</span>
+        <span>OS: {inIframe() ? "Lindows Alpha 1.0.0" : `${os.name} ${os.version}`}</span>
+        <span>Browser: {inIframe() ? "Virtual crate(unknown)" : `${browser.name}(${browser.version})`}</span>
+        <span>Engine: {inIframe() ? "Link(unknown)" : `${engine.name}(${engine.version})`}</span>
         {cpu.architecture ? <span>CPU: {cpu.architecture}</span> : null}
         <span>Language: {systemInfo.language}</span>
         {this.getDevice(userAgent)}
@@ -346,16 +346,16 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
             <BiosPopupButtons>
               <button
-                className={popup.firstButton.selected ? 'bios-active' : ''}
-                onMouseOver={() => this.selectHoverButtonPopup('first')}
+                className={popup.firstButton.selected ? "bios-active" : ""}
+                onMouseOver={() => this.selectHoverButtonPopup("first")}
                 onClick={() => popup.firstButton.fun()}
               >
                 {popup.firstButton.content}
               </button>
               {popup.secondButton ? (
                 <button
-                  className={popup.secondButton.selected ? 'bios-active' : ''}
-                  onMouseOver={() => this.selectHoverButtonPopup('second')}
+                  className={popup.secondButton.selected ? "bios-active" : ""}
+                  onMouseOver={() => this.selectHoverButtonPopup("second")}
                   onClick={() => popup.secondButton.fun()}
                 >
                   {popup.secondButton.content}
@@ -363,8 +363,8 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
               ) : null}
               {popup.thirdButton ? (
                 <button
-                  className={popup.thirdButton.selected ? 'bios-active' : ''}
-                  onMouseOver={() => this.selectHoverButtonPopup('third')}
+                  className={popup.thirdButton.selected ? "bios-active" : ""}
+                  onMouseOver={() => this.selectHoverButtonPopup("third")}
                   onClick={() => popup.thirdButton.fun()}
                 >
                   {popup.thirdButton.content}
@@ -381,10 +381,10 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     const state = { ...this.state };
 
     state.popup = {
-      title: 'Reset All settings',
-      content: 'You are about to reset all the settings. Are you sure that you want to do that?',
+      title: "Reset All settings",
+      content: "You are about to reset all the settings. Are you sure that you want to do that?",
       firstButton: {
-        content: 'Yes',
+        content: "Yes",
         selected: false,
         fun: async () => {
           internal.browserStorage.clear();
@@ -392,7 +392,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         },
       },
       secondButton: {
-        content: 'No',
+        content: "No",
         selected: true,
         fun: () => {
           this.closePopup();
@@ -429,7 +429,7 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     //   this.props.next(data.bootInLindows ? 'lindows' : 'webpage');
     //   return;
     // }
-    document.addEventListener('keyup', this.keyboardListener, false);
+    document.addEventListener("keyup", this.keyboardListener, false);
   }
 
   bootOptionPopup = () => {
@@ -458,10 +458,10 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 
   componentWillUnmount() {
     clearTimeout(this.interval);
-    document.removeEventListener('keyup', this.keyboardListener, false);
+    document.removeEventListener("keyup", this.keyboardListener, false);
   }
 
-  selectHoverButtonPopup = (button: 'first' | 'second' | 'third') => {
+  selectHoverButtonPopup = (button: "first" | "second" | "third") => {
     const state = this.state;
     if (!state.popup) return;
     state.popup.firstButton.selected = false;
@@ -469,13 +469,13 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     if (state.popup.thirdButton) state.popup.thirdButton.selected = false;
 
     switch (button) {
-      case 'first':
+      case "first":
         state.popup.firstButton.selected = true;
         break;
-      case 'second':
+      case "second":
         if (state.popup.secondButton) state.popup.secondButton.selected = true;
         break;
-      case 'third':
+      case "third":
         if (state.popup.thirdButton) state.popup.thirdButton.selected = true;
         break;
     }
@@ -507,9 +507,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   getDevice(userAgent: UAParser) {
     const device = userAgent.getDevice();
     if (!device.model || !device.vendor) return null;
-    const model = device.model || '';
-    const vendor = device.vendor || '';
-    const type = device.type || '';
+    const model = device.model || "";
+    const vendor = device.vendor || "";
+    const type = device.type || "";
 
     const deviceString = `${vendor} ${type} ${model}`;
     return <span>Device: {deviceString}</span>;
@@ -534,9 +534,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     switch (ev.keyCode) {
       case Keypress.ArrowRight:
         if (st.popup) {
-          if (st.popup.firstButton.selected && st.popup.secondButton) this.selectHoverButtonPopup('second');
+          if (st.popup.firstButton.selected && st.popup.secondButton) this.selectHoverButtonPopup("second");
           else if (st.popup.secondButton && st.popup.secondButton.selected && st.popup.thirdButton)
-            this.selectHoverButtonPopup('third');
+            this.selectHoverButtonPopup("third");
         } else {
           this.nextOrPreviousTab(true);
         }
@@ -544,9 +544,9 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
         return;
       case Keypress.ArrowLeft:
         if (st.popup) {
-          if (st.popup.secondButton && st.popup.secondButton.selected) this.selectHoverButtonPopup('first');
+          if (st.popup.secondButton && st.popup.secondButton.selected) this.selectHoverButtonPopup("first");
           else if (st.popup.thirdButton && st.popup.thirdButton.selected && st.popup.secondButton)
-            this.selectHoverButtonPopup('second');
+            this.selectHoverButtonPopup("second");
         } else {
           this.nextOrPreviousTab(false);
         }
@@ -565,5 +565,5 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
 }
 
 export function showTermsOfPolicy() {
-  return localStorage.getItem('terms-of-policy') !== 'true' && !STATIC;
+  return localStorage.getItem("terms-of-policy") !== "true" && !STATIC;
 }

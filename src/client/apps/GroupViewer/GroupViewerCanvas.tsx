@@ -1,5 +1,5 @@
-import React from 'react';
-import { stringify } from 'querystring';
+import React from "react";
+import { stringify } from "querystring";
 
 interface IGroupViewerCanvasState {
   Initialized: boolean;
@@ -34,7 +34,7 @@ export class GroupViewerCanvas extends React.Component<IGroupViewerCanvasProps, 
   }
 
   componentDidMount() {
-    const ctx = this.canvas.current.getContext('2d');
+    const ctx = this.canvas.current.getContext("2d");
     this.props.canvasInteraction({
       ctx,
       addEventListiner: this.addEventListiner,

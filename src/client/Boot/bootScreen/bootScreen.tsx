@@ -1,6 +1,6 @@
-import React from 'react';
-import { internal } from '../../services/internals/Internal';
-import { SECOND } from '../../../shared/constants';
+import React from "react";
+import { internal } from "../../services/internals/Internal";
+import { SECOND } from "../../../shared/constants";
 
 import {
   BootScreenStyled,
@@ -8,11 +8,11 @@ import {
   BootScreenTop,
   BootScreenBottom,
   BootScreenInfo,
-} from './bootScreenStyled';
-import { inIframe } from '../../utils/util';
+} from "./bootScreenStyled";
+import { inIframe } from "../../utils/util";
 
 interface IBootScreenProps {
-  next: (bios?: 'bios' | 'bootLindows') => void;
+  next: (bios?: "bios" | "bootLindows") => void;
   goToBios: () => void;
 }
 
@@ -73,7 +73,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     if (this.timeout === undefined) {
       this.timeout = setTimeout(() => {
         this.state.messageToDisplay.push(
-          'This is taking to long! Your system might be broken you can try and reset browser storage!',
+          "This is taking to long! Your system might be broken you can try and reset browser storage!",
         );
         this.takingToLong = true;
       }, SECOND * 15);
@@ -82,23 +82,23 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     if (internal.ready) {
       this.readyToBoot();
     }
-    internal.on('readyToBoot', this.readyToBoot);
-    internal.on('onServiceReady', this.onServiceReady);
-    internal.on('onServiceFailed', this.onServiceFailed);
-    document.addEventListener('keydown', this.keypress, false);
-    document.addEventListener('touchstart', this.onTouchStart, false);
-    document.addEventListener('touchend', this.onTouchEnd, false);
+    internal.on("readyToBoot", this.readyToBoot);
+    internal.on("onServiceReady", this.onServiceReady);
+    internal.on("onServiceFailed", this.onServiceFailed);
+    document.addEventListener("keydown", this.keypress, false);
+    document.addEventListener("touchstart", this.onTouchStart, false);
+    document.addEventListener("touchend", this.onTouchEnd, false);
   }
   componentWillUnmount() {
     if (this.timeout !== undefined) {
       clearTimeout(this.timeout);
     }
-    internal.removeListener('readyToBoot', this.readyToBoot);
-    internal.removeListener('onServiceReady', this.onServiceReady);
-    internal.removeListener('onServiceFailed', this.onServiceFailed);
-    document.removeEventListener('keydown', this.keypress, false);
-    document.removeEventListener('touchstart', this.onTouchStart, false);
-    document.removeEventListener('touchend', this.onTouchEnd, false);
+    internal.removeListener("readyToBoot", this.readyToBoot);
+    internal.removeListener("onServiceReady", this.onServiceReady);
+    internal.removeListener("onServiceFailed", this.onServiceFailed);
+    document.removeEventListener("keydown", this.keypress, false);
+    document.removeEventListener("touchstart", this.onTouchStart, false);
+    document.removeEventListener("touchend", this.onTouchEnd, false);
     if (this.onTouchTimeoutFunction) clearTimeout(this.onTouchTimeoutFunction);
   }
 
@@ -122,9 +122,9 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   }
 
   keypress = (ev: KeyboardEvent) => {
-    if (ev.key.toLowerCase() === 'delete') {
+    if (ev.key.toLowerCase() === "delete") {
       if (this.takingToLong) {
-        return this.props.next('bios');
+        return this.props.next("bios");
       }
       this.setState({ goToBios: true });
     }

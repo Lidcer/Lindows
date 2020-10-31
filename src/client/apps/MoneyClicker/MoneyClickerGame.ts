@@ -1,18 +1,18 @@
-import { MSG } from './src/MessageBox';
-import { Background } from './src/Background';
-import { RotatingThing } from './src/RotatingThing';
-import { Money } from './src/Money';
-import { ShopIcon } from './src/ShopIcon';
-import { TextCounter } from './src/TextCounter';
-import { ShopInterface } from './src/ShopInterface';
-import { MoneyClickerSaveGameData, Values } from './src/Values';
-import { MoneyImages } from './src/MoneyImages';
+import { MSG } from "./src/MessageBox";
+import { Background } from "./src/Background";
+import { RotatingThing } from "./src/RotatingThing";
+import { Money } from "./src/Money";
+import { ShopIcon } from "./src/ShopIcon";
+import { TextCounter } from "./src/TextCounter";
+import { ShopInterface } from "./src/ShopInterface";
+import { MoneyClickerSaveGameData, Values } from "./src/Values";
+import { MoneyImages } from "./src/MoneyImages";
 
-import { BlackHole } from './src/BlackHole';
-import { MoneyClickerPictureReferences } from './src/ImageReferences';
-import { attachToWindowIfDev } from '../../essential/requests';
-import { MoneyClicker } from './MoneyClicker';
-import { ImageLoader } from './src/ImageLoader';
+import { BlackHole } from "./src/BlackHole";
+import { MoneyClickerPictureReferences } from "./src/ImageReferences";
+import { attachToWindowIfDev } from "../../essential/requests";
+import { MoneyClicker } from "./MoneyClicker";
+import { ImageLoader } from "./src/ImageLoader";
 
 export class MoneyClickerGame {
   private background: Background;
@@ -84,23 +84,23 @@ export class MoneyClickerGame {
 
     //navigation.loadingAnimation('0', true);
 
-    this.canvas.addEventListener('mousedown', event => {
+    this.canvas.addEventListener("mousedown", event => {
       this.mouseDown = true;
     });
 
-    this.canvas.addEventListener('mouseup', () => {
+    this.canvas.addEventListener("mouseup", () => {
       this.mouseDown = false;
       this.background.mouseDownDisable();
     });
 
-    this.canvas.addEventListener('wheel', wheel => {
+    this.canvas.addEventListener("wheel", wheel => {
       if (this.upgrades.isOpen) this.upgrades.scrollSystem(wheel.deltaY);
       if (this.smallBang.isOpen) this.smallBang.scrollSystem(wheel.deltaY);
       if (this.vor.isOpen) this.vor.scrollSystem(wheel.deltaY);
     });
 
     this.canvas.addEventListener(
-      'touchend',
+      "touchend",
       event => {
         const rect = this.canvas.getBoundingClientRect();
 
@@ -136,7 +136,7 @@ export class MoneyClickerGame {
       false,
     );
 
-    this.canvas.addEventListener('mousemove', event => {
+    this.canvas.addEventListener("mousemove", event => {
       if (this.mouseDown) {
         this.background.clickDetector(event.offsetX, event.offsetY);
         this.vor.clickDetector(event.offsetX, event.offsetY);
@@ -145,7 +145,7 @@ export class MoneyClickerGame {
       }
     });
 
-    this.canvas.addEventListener('touchmove', event => {
+    this.canvas.addEventListener("touchmove", event => {
       const rect = this.canvas.getBoundingClientRect();
       this.background.touchDetector(event.touches[0].pageX - rect.left, event.touches[0].pageY - rect.top);
       this.vor.clickDetector(event.touches[0].pageX - rect.left, event.touches[0].pageY - rect.top);
@@ -153,7 +153,7 @@ export class MoneyClickerGame {
       this.upgrades.clickDetector(event.touches[0].pageX - rect.left, event.touches[0].pageY - rect.top);
     });
 
-    this.canvas.addEventListener('click', event => {
+    this.canvas.addEventListener("click", event => {
       if (!this.mobileTouch) {
         if (this.money.click(event.offsetX, event.offsetY)) this.values.moneyClick();
 
@@ -204,9 +204,9 @@ export class MoneyClickerGame {
           this.msgDisableClicks();
           const selected = await this.messageBox.show(
             "You need to buy Vor relay \nin shop 'upgrades' to get access \nto Vor Network!",
-            'Missing proxy',
-            'OK',
-            'Upgrades',
+            "Missing proxy",
+            "OK",
+            "Upgrades",
           );
           this.msgenableClicks();
           if (selected === 1) {
@@ -455,7 +455,7 @@ export class MoneyClickerGame {
 
   startGame() {
     this.addEventListeners();
-    const ctx = this.canvas.getContext('2d');
+    const ctx = this.canvas.getContext("2d");
     //navigation.startGame();
     //this.canvas.style.display = "";
 
@@ -470,7 +470,7 @@ export class MoneyClickerGame {
     this.textLabel = new TextCounter(ctx, this.canvas, this.values);
 
     this.vor = new ShopInterface({
-      shopName: 'vor',
+      shopName: "vor",
       canvas: this.canvas,
       topImg: this.vorTop,
       middleImg: this.vorMid,
@@ -480,7 +480,7 @@ export class MoneyClickerGame {
     });
 
     this.smallBang = new ShopInterface({
-      shopName: 'smallBang',
+      shopName: "smallBang",
       canvas: this.canvas,
       topImg: this.sBTop,
       middleImg: this.slBMid,
@@ -489,7 +489,7 @@ export class MoneyClickerGame {
       shopListImg: this.sBL,
     });
     this.upgrades = new ShopInterface({
-      shopName: 'upgrades',
+      shopName: "upgrades",
       canvas: this.canvas,
       topImg: this.upTop,
       middleImg: this.upBMid,
@@ -497,26 +497,26 @@ export class MoneyClickerGame {
       bottomImgLandscape: this.upBotL,
       shopListImg: this.upL,
     });
-    attachToWindowIfDev('rotatingThingPic', this.rotatingThingPic);
+    attachToWindowIfDev("rotatingThingPic", this.rotatingThingPic);
     this.background = new Background(ctx, this.canvas, 37, 19, 8);
     this.rotatingThing = new RotatingThing(ctx, this.canvas, this.rotatingThingPic, 95);
     this.money = new Money(ctx, this.canvas, this.moneyPics.money1, 85);
 
     this.blackHole = new BlackHole(ctx, this.canvas, this.blackHoleImg);
 
-    this.blackHole.on('blackHoleFull', async () => {
-      this.canvas.classList.remove('shake');
+    this.blackHole.on("blackHoleFull", async () => {
+      this.canvas.classList.remove("shake");
 
       const selected = await this.endGameMessageBox.show(
-        'You have finished the game. You bought black hole and everything is gone thanks to you.... Thank you for playing',
-        'Game Over',
-        'Play again',
-        'Do not play again',
+        "You have finished the game. You bought black hole and everything is gone thanks to you.... Thank you for playing",
+        "Game Over",
+        "Play again",
+        "Do not play again",
       );
 
       switch (selected) {
         case 0:
-          await this.endGameMessageBox.show('Are you sure you want to reset settings?', 'yes', 'no');
+          await this.endGameMessageBox.show("Are you sure you want to reset settings?", "yes", "no");
           break;
         case 1:
           break;
@@ -536,49 +536,49 @@ export class MoneyClickerGame {
     this.onResolutionChange();
     this.drawGame();
 
-    this.vor.on('bought', (item: any) => {
-      if (item.shopName !== 'vor') return;
+    this.vor.on("bought", (item: any) => {
+      if (item.shopName !== "vor") return;
       this.values.vorBought(item);
     });
 
-    this.smallBang.on('bought', (item: any) => {
-      if (item.shopName !== 'smallBang') return;
+    this.smallBang.on("bought", (item: any) => {
+      if (item.shopName !== "smallBang") return;
       this.values.smallBangBought(item);
     });
 
-    this.upgrades.on('bought', (item: any) => {
-      if (item.shopName !== 'upgrades') return;
+    this.upgrades.on("bought", (item: any) => {
+      if (item.shopName !== "upgrades") return;
       this.values.upgradesBought(item);
     });
 
-    this.values.on('failedToBought', async (msg: string) => {
+    this.values.on("failedToBought", async (msg: string) => {
       this.msgDisableClicks();
       const result = await this.messageBox.show(
         "You don't have enough money\nto buy this item!",
-        'Your wallet is empty',
-        'Ok',
+        "Your wallet is empty",
+        "Ok",
       );
       if (result != undefined) {
         this.msgenableClicks();
       }
     });
 
-    this.values.on('endGame', () => {
+    this.values.on("endGame", () => {
       //msgDisableClicks();
 
-      this.canvas.classList.add('shake');
+      this.canvas.classList.add("shake");
       this.endGame = true;
     });
 
-    this.values.on('needAction', async (msg: string) => {
+    this.values.on("needAction", async (msg: string) => {
       this.msgDisableClicks();
-      const result = await this.messageBox.show('You need to buy other items first.', 'Hmm', 'Ok');
+      const result = await this.messageBox.show("You need to buy other items first.", "Hmm", "Ok");
       if (result != undefined) {
         this.msgenableClicks();
       }
     });
 
-    this.values.on('update', (number: number) => {
+    this.values.on("update", (number: number) => {
       if (number === -1) number = 0;
       if (number === 0) {
       } else {
@@ -596,10 +596,10 @@ export class MoneyClickerGame {
 
   private createImage(source: string) {
     if (this.images.find(i => i.src === source)) {
-      throw new Error('Trying to create already existing image');
+      throw new Error("Trying to create already existing image");
     }
     const image = new Image();
-    image.addEventListener('error', ev => {
+    image.addEventListener("error", ev => {
       this.imageError = ev;
     });
     image.src = source;

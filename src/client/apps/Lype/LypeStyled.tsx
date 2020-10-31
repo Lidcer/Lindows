@@ -1,11 +1,11 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
-const $lypeBottomHeight = '50px';
-const $lypeAnimationSpace = '60px';
-const $lypeAnimationWidth = '32px';
-const $lypeAnimationHeight = '25px';
-const $lypeAnimationLeft = '83px';
-const $lypeLoadingIconColour = '#00a323 !important';
+const $lypeBottomHeight = "50px";
+const $lypeAnimationSpace = "60px";
+const $lypeAnimationWidth = "32px";
+const $lypeAnimationHeight = "25px";
+const $lypeAnimationLeft = "83px";
+const $lypeLoadingIconColour = "#00a323 !important";
 
 export const Lype = styled.div`
   background-color: #232323;

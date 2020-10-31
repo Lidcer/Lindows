@@ -1,6 +1,6 @@
-import React from 'react';
-import { random } from 'lodash';
-import { BlueScreenStyle, BSODTitle, BSODContent, BSODwaiting, BSODStopCode } from './BlueScreenStyle';
+import React from "react";
+import { random } from "lodash";
+import { BlueScreenStyle, BSODTitle, BSODContent, BSODwaiting, BSODStopCode } from "./BlueScreenStyle";
 
 export interface IBlueScreenProps {
   errorCode?: string;
@@ -23,7 +23,7 @@ export class BlueScreen extends React.Component<IBlueScreenProps, IState> {
 
   count() {
     if (this.state.time >= 100) {
-      document.location.href = '/';
+      document.location.href = "/";
       return;
     }
     const number = this.state.time + 1;
@@ -40,13 +40,13 @@ export class BlueScreen extends React.Component<IBlueScreenProps, IState> {
       <BlueScreenStyle>
         <BSODTitle>:(</BSODTitle>
         <BSODContent>
-          Your browser ran in to a problem and it needs to be redirected. We&apos;re not collecting any data because
-          we don&apos;t really care. We&apos;ll redirect you shortly.
+          Your browser ran in to a problem and it needs to be redirected. We&apos;re not collecting any data because we
+          don&apos;t really care. We&apos;ll redirect you shortly.
         </BSODContent>
 
         <BSODwaiting> {this.state.time}% waiting</BSODwaiting>
         <BSODStopCode>
-          Stop code: {this.props.errorCode ? this.props.errorCode : 'ERROR_404_PAGE_NOT_FOUND'}
+          Stop code: {this.props.errorCode ? this.props.errorCode : "ERROR_404_PAGE_NOT_FOUND"}
         </BSODStopCode>
       </BlueScreenStyle>
     );

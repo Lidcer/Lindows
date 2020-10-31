@@ -1,12 +1,12 @@
-import React, { Component } from 'react';
-import { TOKEN_HEADER } from '../../shared/constants';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import Navigation from './AdminNavigation';
-import moment from 'moment';
-import { IAdminWebSocket } from './Websocket';
-import { Link } from 'react-router-dom';
-import ReactLoading from 'react-loading';
+import React, { Component } from "react";
+import { TOKEN_HEADER } from "../../shared/constants";
+import Axios, { AxiosRequestConfig } from "axios";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import Navigation from "./AdminNavigation";
+import moment from "moment";
+import { IAdminWebSocket } from "./Websocket";
+import { Link } from "react-router-dom";
+import ReactLoading from "react-loading";
 
 export interface IEventLog {
   id: string;
@@ -17,7 +17,7 @@ export interface IEventLog {
   error?: string;
 }
 
-type ButtonTypes = 'none' | 'fatal' | 'error' | 'warn' | 'info' | 'log';
+type ButtonTypes = "none" | "fatal" | "error" | "warn" | "info" | "log";
 interface IAdminEventLogState {
   warn: string;
   refreshing: boolean;
@@ -47,20 +47,20 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
     this.state = {
       eventLogs: eventLogData.eventLogs,
       page: 0,
-      warn: '',
+      warn: "",
       refreshing: false,
-      search: '',
-      buttonEnabled: 'none',
+      search: "",
+      buttonEnabled: "none",
     };
   }
   componentDidMount() {
     if (!eventLogData.eventLogs.length) this.getInfo();
-    this.props.adminWebSocket.on('event-log', this.addEventLogFromSocket);
+    this.props.adminWebSocket.on("event-log", this.addEventLogFromSocket);
     this.setState({ eventLogs: eventLogData.eventLogs });
   }
 
   componentWillUnmount() {
-    this.props.adminWebSocket.removeListener('event-log', this.addEventLogFromSocket);
+    this.props.adminWebSocket.removeListener("event-log", this.addEventLogFromSocket);
   }
 
   addEventLogFromSocket = (eventLog: IEventLog) => {
@@ -77,16 +77,16 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
 
   async getInfo() {
     this.setState({ refreshing: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
 
     try {
-      const response = await Axios.get<IResponse<IEventLog[]>>('/api/v1/admin/event-logs', axiosRequestConfig);
+      const response = await Axios.get<IResponse<IEventLog[]>>("/api/v1/admin/event-logs", axiosRequestConfig);
       let eventLogs = response.data.success;
-      if (!eventLogs) throw new Error('Missing data');
+      if (!eventLogs) throw new Error("Missing data");
       eventLogs = eventLogs.sort((a, b) => new Date(b.time).getMilliseconds() - new Date(a.time).getTime());
       eventLogData = { eventLogs, date: new Date() };
       setTimeout(() => {
@@ -94,9 +94,9 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
       });
     } catch (error) {
       console.error(error);
-      this.setState({ warn: 'Unable to fetch data' });
+      this.setState({ warn: "Unable to fetch data" });
     }
-    this.setState({ warn: '', refreshing: false });
+    this.setState({ warn: "", refreshing: false });
   }
 
   get refreshButton() {
@@ -108,7 +108,7 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
   }
 
   get warn() {
-    const width = { width: '250px' };
+    const width = { width: "250px" };
     if (this.state.refreshing) {
       return (
         <div className='text-info' style={width}>
@@ -133,34 +133,34 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
   }
 
   getEvent(event: IEventLog) {
-    const style: React.CSSProperties = { borderColor: 'ffffff' };
-    let borderClass = 'border';
+    const style: React.CSSProperties = { borderColor: "ffffff" };
+    let borderClass = "border";
     switch (event.type.toLowerCase()) {
-      case 'fatal':
-        style.borderColor = 'f90000';
-        borderClass = 'border border-danger';
-        style.backgroundColor = 'rgba(255, 0, 0, 0.50)';
+      case "fatal":
+        style.borderColor = "f90000";
+        borderClass = "border border-danger";
+        style.backgroundColor = "rgba(255, 0, 0, 0.50)";
         break;
-      case 'error':
-        borderClass = 'border border-danger';
-        style.borderColor = 'af0000';
-        style.backgroundColor = 'rgba(255, 0, 0, 0.15)';
+      case "error":
+        borderClass = "border border-danger";
+        style.borderColor = "af0000";
+        style.backgroundColor = "rgba(255, 0, 0, 0.15)";
         break;
-      case 'warn':
-        borderClass = 'border border-warn';
-        style.borderColor = 'ff5a00';
+      case "warn":
+        borderClass = "border border-warn";
+        style.borderColor = "ff5a00";
         break;
-      case 'info':
-        style.borderColor = '72ff00';
+      case "info":
+        style.borderColor = "72ff00";
         break;
     }
 
     return (
-      <Link className='router-link' to={`/admin/event-log/${event.id}`} style={{ textDecoration: 'none' }}>
+      <Link className='router-link' to={`/admin/event-log/${event.id}`} style={{ textDecoration: "none" }}>
         <div className={`m-2 p-2 event-log admin-clickable ${borderClass}`} style={style}>
           <div>
             <b>{event.type.toUpperCase()}</b>
-            {moment(event.time).format('MMMM Do YYYY, HH:mm:ss')} {moment(event.time).fromNow()}
+            {moment(event.time).format("MMMM Do YYYY, HH:mm:ss")} {moment(event.time).fromNow()}
           </div>
           <div>{event.message}</div>
           <div>{event.error}</div>
@@ -190,15 +190,15 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
 
   updateList() {
     let eventLogs = eventLogData.eventLogs;
-    if (this.state.buttonEnabled !== 'none') {
+    if (this.state.buttonEnabled !== "none") {
       eventLogs = eventLogs.filter(e => e.type === this.state.buttonEnabled);
     }
     if (this.state.search) {
       eventLogs = eventLogs
         .filter(e => {
           const message = e.message;
-          const details = e.details || '';
-          const error = e.error || '';
+          const details = e.details || "";
+          const error = e.error || "";
           const msg = `${message}${details}${error}`;
           return msg.toLowerCase().includes(this.state.search.toLowerCase());
         })
@@ -210,7 +210,7 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
 
   render() {
     if (this.state.refreshing) {
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
     }
 
     if (!eventLogData) {
@@ -223,12 +223,12 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
     }
 
     const btnC = (btn: ButtonTypes) => {
-      return this.state.buttonEnabled === btn ? ' selected' : '';
+      return this.state.buttonEnabled === btn ? " selected" : "";
     };
 
     const cl = (btn: ButtonTypes) => {
       if (this.state.buttonEnabled === btn) {
-        this.setState({ buttonEnabled: 'none' });
+        this.setState({ buttonEnabled: "none" });
       } else {
         this.setState({ buttonEnabled: btn });
       }
@@ -242,7 +242,7 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
     };
 
     const key = (ev: React.KeyboardEvent<HTMLInputElement>) => {
-      if (ev.key === 'Enter') {
+      if (ev.key === "Enter") {
         setTimeout(() => {
           this.updateList();
         });
@@ -250,7 +250,7 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
     };
 
     const time = eventLogData.date ? (
-      <span className='p-2'> {moment(eventLogData.date).format('MMMM Do YYYY, HH:mm:ss')}</span>
+      <span className='p-2'> {moment(eventLogData.date).format("MMMM Do YYYY, HH:mm:ss")}</span>
     ) : null;
 
     return (
@@ -266,19 +266,19 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
             placeholder='Search'
             onKeyDown={key}
           />
-          <button className={`btn btn-sm btn-terminal${btnC('fatal')}`} onClick={e => cl('fatal')}>
+          <button className={`btn btn-sm btn-terminal${btnC("fatal")}`} onClick={e => cl("fatal")}>
             Fatal
           </button>
-          <button className={`btn btn-sm btn-terminal${btnC('error')}`} onClick={e => cl('error')}>
+          <button className={`btn btn-sm btn-terminal${btnC("error")}`} onClick={e => cl("error")}>
             Error
           </button>
-          <button className={`btn btn-sm btn-terminal${btnC('warn')}`} onClick={e => cl('warn')}>
+          <button className={`btn btn-sm btn-terminal${btnC("warn")}`} onClick={e => cl("warn")}>
             Warn
           </button>
-          <button className={`btn btn-sm btn-terminal${btnC('info')}`} onClick={e => cl('info')}>
+          <button className={`btn btn-sm btn-terminal${btnC("info")}`} onClick={e => cl("info")}>
             Info
           </button>
-          <button className={`btn btn-sm btn-terminal${btnC('log')}`} onClick={e => cl('log')}>
+          <button className={`btn btn-sm btn-terminal${btnC("log")}`} onClick={e => cl("log")}>
             Log
           </button>
           {this.eventPage()}

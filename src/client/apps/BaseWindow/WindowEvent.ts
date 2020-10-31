@@ -1,20 +1,20 @@
-import { BaseWindow } from './BaseWindow';
-import { EventEmitter } from 'events';
+import { BaseWindow } from "./BaseWindow";
+import { EventEmitter } from "events";
 
 export declare type IBaseWindowEmitterType =
-  | 'exit'
-  | 'buttonExit'
-  | 'buttonMinimize'
-  | 'buttonMaximize'
-  | 'buttonRestoreDown'
-  | 'move'
-  | 'blur'
-  | 'focus'
-  | 'ready'
-  | 'resize'
-  | 'stateUpdate';
+  | "exit"
+  | "buttonExit"
+  | "buttonMinimize"
+  | "buttonMaximize"
+  | "buttonRestoreDown"
+  | "move"
+  | "blur"
+  | "focus"
+  | "ready"
+  | "resize"
+  | "stateUpdate";
 
-export declare type KeyboardEmitterType = 'keypress' | 'keydown' | 'keyup';
+export declare type KeyboardEmitterType = "keypress" | "keydown" | "keyup";
 
 export interface IJSONWindowEvent {
   shouldDoDefault: boolean;

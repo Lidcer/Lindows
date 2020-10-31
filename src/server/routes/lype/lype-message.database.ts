@@ -1,6 +1,6 @@
-import { Document, Schema } from 'mongoose';
-import { mongoose } from '../../database/database';
-import { IMongooseLypeChannelSchema } from './lype-channel-database';
+import { Document, Schema } from "mongoose";
+import { mongoose } from "../../database/database";
+import { IMongooseLypeChannelSchema } from "./lype-channel-database";
 
 export interface IMongooseLypeMessageSchema extends Document {
   userID: string;
@@ -22,14 +22,14 @@ const LypeMessageSchema = new Schema<IMongooseLypeMessageSchema>(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-const LypeMessage = mongoose.model<IMongooseLypeMessageSchema>('LypeMessages', LypeMessageSchema);
+const LypeMessage = mongoose.model<IMongooseLypeMessageSchema>("LypeMessages", LypeMessageSchema);
 
 export async function addMessageToChannel(channel: IMongooseLypeChannelSchema, message: IMongooseLypeMessageSchema) {
   const indexOf = channel.messages.indexOf(message._id);

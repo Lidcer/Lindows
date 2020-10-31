@@ -19,19 +19,19 @@ export class LindowError extends Error {
       this._nativeError = arg;
       this._message = arg.message;
       this._stack = arg.stack;
-    } else if (typeof arg === 'string') {
+    } else if (typeof arg === "string") {
       this._nativeError = new Error(arg);
       this._message = arg;
       this._stack = this._nativeError.stack;
     } else {
-      this._nativeError = new Error('');
-      this._message = '';
+      this._nativeError = new Error("");
+      this._message = "";
       this._stack = this._nativeError.stack;
     }
   }
 
   toString() {
-    return 'Lindow error';
+    return "Lindow error";
   }
 
   get message() {
@@ -66,7 +66,7 @@ export function pushUniqToArray<I = any>(array: I[], item: I): boolean {
   return false;
 }
 
-export function createKeyboardEvent(key: string, type = 'keyup', ctrlKey = false, altKey = false) {
+export function createKeyboardEvent(key: string, type = "keyup", ctrlKey = false, altKey = false) {
   return new KeyboardEvent(type, {
     bubbles: true,
     cancelable: false,

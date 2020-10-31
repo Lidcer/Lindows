@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const MousePropertiesWarper = styled.div`
   height: 100%;

@@ -1,5 +1,5 @@
-import { clamp } from 'lodash';
-import { Renderer } from './SnakeRender';
+import { clamp } from "lodash";
+import { Renderer } from "./SnakeRender";
 
 export abstract class Drawable {
   private readonly maxColourRage = 255;

@@ -1,5 +1,5 @@
-import { WebSocket } from '../../websocket/SocketHandler';
-import { logger } from '../../database/EventLog';
+import { WebSocket } from "../../websocket/SocketHandler";
+import { logger } from "../../database/EventLog";
 
 export function setupAdminWebsocket(websocket: WebSocket) {
   // websocket.on<string, string>('admin-broadcast', (client, value, link) => {

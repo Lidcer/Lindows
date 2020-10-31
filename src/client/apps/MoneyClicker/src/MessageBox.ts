@@ -40,8 +40,8 @@ export class MSG {
   selected: number;
   drawinTime = 250; //5 second
 
-  buttonColor = '#4040ff';
-  textColor = 'white';
+  buttonColor = "#4040ff";
+  textColor = "white";
 
   openAnimation = false;
   closeAnimation = false;
@@ -226,22 +226,22 @@ export class MSG {
       this.box();
       this.buttons();
       this.text();
-      const c = this.canvas.getContext('2d');
+      const c = this.canvas.getContext("2d");
       c.drawImage(this.id, this.imagePos[0], this.imagePos[1], this.imagePos[2], this.imagePos[3]);
       c.fillStyle = this.buttonColor;
       c.fillRect(this.buttonPos0[0], this.buttonPos0[1], this.buttonPos0[2], this.buttonPos0[3]);
       c.fillRect(this.buttonPos1[0], this.buttonPos1[1], this.buttonPos1[2], this.buttonPos1[3]);
       c.fillRect(this.buttonPos2[0], this.buttonPos2[1], this.buttonPos2[2], this.buttonPos2[3]);
-      c.font = this.titleSize + 'px Arial';
-      c.textAlign = 'center';
+      c.font = this.titleSize + "px Arial";
+      c.textAlign = "center";
       c.fillStyle = this.textColor;
       c.fillText(this.title, this.titlePos[0], this.titlePos[1]);
-      c.font = this.buttonTextSize + 'px Arial';
+      c.font = this.buttonTextSize + "px Arial";
       c.fillText(this.button0Text, this.buttonTextPos0[0], this.buttonTextPos0[1]);
       c.fillText(this.button1Text, this.buttonTextPos1[0], this.buttonTextPos1[1]);
       c.fillText(this.button2Text, this.buttonTextPos2[0], this.buttonTextPos2[1]);
-      c.textAlign = 'left';
-      c.font = this.textSize + 'px Arial';
+      c.textAlign = "left";
+      c.font = this.textSize + "px Arial";
       c.fillText(this.text0, this.text0Pos[0], this.text0Pos[1]);
       c.fillText(this.text1, this.text1Pos[0], this.text1Pos[1]);
       c.fillText(this.text2, this.text2Pos[0], this.text2Pos[1]);
@@ -255,25 +255,25 @@ export class MSG {
   }
 
   //await MessageBox.show("Text","title","button","button1","button2");
-  public show(text: string, title = '', button0 = 'OK', button1 = '', button2 = '') {
+  public show(text: string, title = "", button0 = "OK", button1 = "", button2 = "") {
     this.selected = undefined;
     const splitLine = 30;
 
-    const formatText = text.split('\n');
+    const formatText = text.split("\n");
 
-    this.text0 = formatText[0] ? formatText[0] : '';
-    this.text1 = formatText[1] ? formatText[1] : '';
-    this.text2 = formatText[2] ? formatText[2] : '';
-    this.text3 = formatText[3] ? formatText[3] : '';
+    this.text0 = formatText[0] ? formatText[0] : "";
+    this.text1 = formatText[1] ? formatText[1] : "";
+    this.text2 = formatText[2] ? formatText[2] : "";
+    this.text3 = formatText[3] ? formatText[3] : "";
 
     this.open = true;
     this.openAnimation = true;
     this.closeAnimation = false;
     this.title = title;
 
-    if (button1 == '') {
+    if (button1 == "") {
       this.button = 0;
-    } else if (button2 == '') {
+    } else if (button2 == "") {
       this.button = 1;
     } else {
       this.button = 2;

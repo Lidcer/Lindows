@@ -1,6 +1,6 @@
-import { EventEmitter } from 'events';
-import { BaseService, SystemServiceStatus } from './BaseSystemService';
-import { attachToWindowIfDev } from '../../essential/requests';
+import { EventEmitter } from "events";
+import { BaseService, SystemServiceStatus } from "./BaseSystemService";
+import { attachToWindowIfDev } from "../../essential/requests";
 
 export class Broadcaster extends BaseService {
   private broadcastChannel: BroadcastChannel;
@@ -10,25 +10,25 @@ export class Broadcaster extends BaseService {
 
   constructor() {
     super();
-    attachToWindowIfDev('BroadCaster', this);
+    attachToWindowIfDev("BroadCaster", this);
   }
 
   init() {
-    if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this.status() !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
 
     const start = () => {
-      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
+      if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error("Service is not in state for start");
       this.origin = location.origin;
-      this.broadcastChannel = new BroadcastChannel('lindows-tab-emitter');
-      this.broadcastChannel.addEventListener('message', this.onMessage);
+      this.broadcastChannel = new BroadcastChannel("lindows-tab-emitter");
+      this.broadcastChannel.addEventListener("message", this.onMessage);
       this._status = SystemServiceStatus.Ready;
     };
     const destroy = () => {
-      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
       if (!this.broadcastChannel) return;
-      this.broadcastChannel.removeEventListener('message', this.onMessage);
+      this.broadcastChannel.removeEventListener("message", this.onMessage);
     };
 
     return {

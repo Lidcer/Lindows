@@ -1,7 +1,7 @@
-import { BaseWindow, IManifest } from '../BaseWindow/BaseWindow';
-import React from 'react';
-import { VirtualCrateWarper, Frame } from './VirtualCrateStyled';
-import { WebsiteOperationSystems } from './VirtualCrate';
+import { BaseWindow, IManifest } from "../BaseWindow/BaseWindow";
+import React from "react";
+import { VirtualCrateWarper, Frame } from "./VirtualCrateStyled";
+import { WebsiteOperationSystems } from "./VirtualCrate";
 
 export interface VirtualOsState {
   details?: WebsiteOperationSystems;

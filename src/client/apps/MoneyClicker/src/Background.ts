@@ -11,13 +11,13 @@ export class Background {
 
   clicksEnabled = true;
 
-  color0 = '#8282fb';
-  color1 = '#4040ff';
+  color0 = "#8282fb";
+  color1 = "#4040ff";
   //color2 = '#000000';
-  color3 = '#00e0fa';
+  color3 = "#00e0fa";
 
   //color0 = '#8282FB';
-  color2 = '#2C2C99';
+  color2 = "#2C2C99";
   //color2 = '#B0DAFF';
   //color3 = '#FFB670';
 

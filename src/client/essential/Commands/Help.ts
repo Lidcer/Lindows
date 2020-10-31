@@ -1,20 +1,20 @@
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { internal } from '../../services/internals/Internal';
-import { isDirectory, FileSystemDirectory, FileSystemFile } from '../../utils/FileSystemDirectory';
+import { BaseCommand, ExecutionParameters } from "./BaseCommand";
+import { internal } from "../../services/internals/Internal";
+import { isDirectory, FileSystemDirectory, FileSystemFile } from "../../utils/FileSystemDirectory";
 
 export class HelpCommand extends BaseCommand {
-  public static help = 'shows help message';
+  public static help = "shows help message";
   execute() {
     const system = internal.processor.symbol;
     const directories = internal.fileSystem.root.contents(system);
-    const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
+    const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
     if (!bin) {
-      this.finish('Unable to get commands');
+      this.finish("Unable to get commands");
       return 1;
     }
-    const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
+    const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === "cmd") as FileSystemDirectory;
     if (!cmd) {
-      this.finish('Unable to get commands');
+      this.finish("Unable to get commands");
       return 1;
     }
     const contents = cmd.contents(system);
@@ -23,11 +23,11 @@ export class HelpCommand extends BaseCommand {
     for (const file of files) {
       const command = file.getContent(system) as new () => BaseCommand;
       const helpMessage = (command as any).help as string;
-      if (helpMessage && typeof helpMessage === 'string') {
+      if (helpMessage && typeof helpMessage === "string") {
         helps.push(`${file.name} ${helpMessage}`);
       }
     }
-    this.finish(helps.join('\n'));
+    this.finish(helps.join("\n"));
     return 0;
   }
 }

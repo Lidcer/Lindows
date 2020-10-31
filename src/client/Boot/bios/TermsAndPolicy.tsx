@@ -1,14 +1,14 @@
-import React from 'react';
-import { BiosButtonActive, TermsAndPolicyContainer } from './BiosStyled';
+import React from "react";
+import { BiosButtonActive, TermsAndPolicyContainer } from "./BiosStyled";
 
 export interface BiosTermsAndPolicyState {
   onAcceptTermsOfPolicy(): void;
 }
 
 export class BiosTermsAndPolicy extends React.Component<BiosTermsAndPolicyState> {
-  private readonly date = '12/10/2020';
+  private readonly date = "12/10/2020";
   private readonly address = location.origin;
-  private readonly country = '';
+  private readonly country = "";
 
   render() {
     return (
@@ -87,7 +87,7 @@ export class BiosTermsAndPolicy extends React.Component<BiosTermsAndPolicyState>
         <p>
           Unauthorized use of any materials contained on this Website or within the Service may violate copyright laws,
           trademark laws, the laws of privacy and publicity, and/or other regulations and statutes. If you believe that
-          any of the materials infringe on any third party&#39;s rights, please contact{' '}
+          any of the materials infringe on any third party&#39;s rights, please contact{" "}
           <span className='website_name'>Lindows</span> immediately at the address provided below.
         </p>
 

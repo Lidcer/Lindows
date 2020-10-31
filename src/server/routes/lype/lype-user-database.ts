@@ -1,8 +1,8 @@
-import { Document, Schema } from 'mongoose';
-import { mongoose } from '../../database/database';
-import { IMongooseUserSchema, getUserById, getUserImage, findSimilarUser } from '../users/users-database';
-import { ILypeAccount, LypeStatus } from '../../../shared/ApiLypeRequestsResponds';
-import { logger } from '../../database/EventLog';
+import { Document, Schema } from "mongoose";
+import { mongoose } from "../../database/database";
+import { IMongooseUserSchema, getUserById, getUserImage, findSimilarUser } from "../users/users-database";
+import { ILypeAccount, LypeStatus } from "../../../shared/ApiLypeRequestsResponds";
+import { logger } from "../../database/EventLog";
 
 export interface IMongooseLypeUserSchema extends Document {
   userID: string;
@@ -28,14 +28,14 @@ const LypeUserSchema = new Schema<IMongooseLypeUserSchema>(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-const LypeUser = mongoose.model<IMongooseLypeUserSchema>('LypeUser', LypeUserSchema);
+const LypeUser = mongoose.model<IMongooseLypeUserSchema>("LypeUser", LypeUserSchema);
 
 export async function findUsers(query: string) {
   try {
@@ -112,7 +112,7 @@ export async function setupLypeUser(user: IMongooseUserSchema): Promise<IMongoos
     blocked: [],
     easyDiscoverable: true,
     customStatus: null,
-    status: 'online',
+    status: "online",
     online: false,
   });
 
@@ -138,10 +138,10 @@ export async function getUserFriendsForClient(lypeUser: IMongooseLypeUserSchema)
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
-      logger.error('Unable to get friend requests', error);
+      logger.error("Unable to get friend requests", error);
     }
   }
-  logger.debug('friends', result);
+  logger.debug("friends", result);
   return result;
 }
 
@@ -161,10 +161,10 @@ export async function getUserPendingFriendRequest(lypeUser: IMongooseLypeUserSch
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
-      logger.error('Unable to get friend requests', error);
+      logger.error("Unable to get friend requests", error);
     }
   }
-  logger.debug('pending requests', result);
+  logger.debug("pending requests", result);
   return result;
 }
 
@@ -178,10 +178,10 @@ export async function getUserBlocksForClient(lypeUser: IMongooseLypeUserSchema) 
       if (!fetchedFriend) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
-      logger.error('Unable to get blocks', error);
+      logger.error("Unable to get blocks", error);
     }
   }
-  logger.debug('blocks', result);
+  logger.debug("blocks", result);
   return result;
 }
 
@@ -198,15 +198,15 @@ export async function getUserFriendsRequestForClient(lypeUser: IMongooseLypeUser
   for (const friend of filteredFriends) {
     try {
       const fetchedFriend = await getLypeUserWithUser(friend);
-      logger.log('friend user', lypeUser._id.toString());
+      logger.log("friend user", lypeUser._id.toString());
       if (!fetchedFriend.lypeUser.friends.includes(lypeUser._id.toString())) continue;
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
-      logger.error('Unable to get friend', error);
+      logger.error("Unable to get friend", error);
     }
   }
-  logger.debug('friends requests', result);
+  logger.debug("friends requests", result);
   return result;
 }
 
@@ -214,7 +214,7 @@ export async function getUserFriendsRequestForClient(lypeUser: IMongooseLypeUser
 // false if friend has already been added
 export async function addFriend(target: IMongooseLypeUserSchema, friend: IMongooseLypeUserSchema, shouldSave = true) {
   const isBlocked = target.blocked.find(u => u === friend._id.toString());
-  if (isBlocked) throw new Error('User is on your user block list');
+  if (isBlocked) throw new Error("User is on your user block list");
   const isFriend = target.friends.indexOf(friend._id.toString());
   const onFriendList = target.friendRequests.indexOf(friend._id.toString());
   if (onFriendList !== -1) {
@@ -329,7 +329,7 @@ export async function updateCustomStatus(
 
 export async function getLypeAccount(user: IMongooseUserSchema) {
   const lypeUser = await getLypeUserWithUserID(user._id.toString());
-  if (!lypeUser) throw new Error('User does not have lype account');
+  if (!lypeUser) throw new Error("User does not have lype account");
   const lypeAccount: ILypeAccount = {
     id: user._id.toString(),
     username: user.username,

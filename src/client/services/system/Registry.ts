@@ -1,6 +1,6 @@
-import { StringSymbol } from '../../utils/FileSystemDirectory';
-import { BaseService, SystemServiceStatus } from '../internals/BaseSystemService';
-import { Internal } from '../internals/Internal';
+import { StringSymbol } from "../../utils/FileSystemDirectory";
+import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService";
+import { Internal } from "../internals/Internal";
 
 interface BaseRegistryData<T> {
   type: string;
@@ -10,19 +10,19 @@ interface BaseRegistryData<T> {
 }
 
 interface RegistryString extends BaseRegistryData<string> {
-  type: 'string';
+  type: "string";
   data: string;
 }
 interface RegistryNumber extends BaseRegistryData<number> {
-  type: 'number';
+  type: "number";
   data: number;
 }
 interface RegistryBoolean extends BaseRegistryData<boolean> {
-  type: 'boolean';
+  type: "boolean";
   data: boolean;
 }
 interface RegistryAny<T = any> extends BaseRegistryData<T> {
-  type: 'any';
+  type: "any";
   data: T;
 }
 
@@ -40,7 +40,7 @@ const internal = new WeakMap<Registry, Internal>();
 const registryKeys = new WeakMap<Registry, RegistryKeys>();
 export class Registry extends BaseService {
   private _status = SystemServiceStatus.Uninitialized;
-  private user = '';
+  private user = "";
   private userSymbol: StringSymbol;
 
   constructor(_internal: Internal) {
@@ -55,7 +55,7 @@ export class Registry extends BaseService {
   }
 
   init() {
-    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error('Service has already been initialized');
+    if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
 
     const start = () => {
@@ -64,7 +64,7 @@ export class Registry extends BaseService {
     };
 
     const destroy = () => {
-      if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
+      if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
       internal.delete(this);
       registryKeys.delete(this);
@@ -80,7 +80,7 @@ export class Registry extends BaseService {
   setUserItem(key: string, value: any) {
     const int = internal.get(this);
     const user = int.system.user.userName;
-    if (!user) throw new Error('User is not found');
+    if (!user) throw new Error("User is not found");
     const data = registryKeys.get(this);
 
     if (!data.HKEY_USER[user]) {
@@ -95,7 +95,7 @@ export class Registry extends BaseService {
   getUserItem(key: string) {
     const int = internal.get(this);
     const user = int.system.user.userName;
-    if (!user) throw new Error('User is not found');
+    if (!user) throw new Error("User is not found");
     const data = registryKeys.get(this);
 
     if (!data.HKEY_USER[user]) {
@@ -109,7 +109,7 @@ export class Registry extends BaseService {
 
   async setRootItem<D = any>(key: string, value: D, system: StringSymbol) {
     const int = internal.get(this);
-    if (!int.systemSymbol.equals(system)) throw new Error('Missing permissions');
+    if (!int.systemSymbol.equals(system)) throw new Error("Missing permissions");
     const data = registryKeys.get(this);
     const regData = this.getRegistryData(value, data.HKEY_ROOT[key]);
     data.HKEY_ROOT[key] = regData;
@@ -117,7 +117,7 @@ export class Registry extends BaseService {
   }
   getRootItem(key: string, system: StringSymbol) {
     const int = internal.get(this);
-    if (!int.systemSymbol.equals(system)) throw new Error('Missing permissions');
+    if (!int.systemSymbol.equals(system)) throw new Error("Missing permissions");
     const data = registryKeys.get(this);
     if (data.HKEY_ROOT[key]) {
       return { ...data.HKEY_ROOT[key] };
@@ -127,7 +127,7 @@ export class Registry extends BaseService {
 
   _setUser(name: string, system: StringSymbol) {
     const int = internal.get(this);
-    if (!int.systemSymbol.equals(system)) throw new Error('Unauthorized access');
+    if (!int.systemSymbol.equals(system)) throw new Error("Unauthorized access");
     this.user = name;
     this.userSymbol = new StringSymbol(name);
   }
@@ -145,24 +145,24 @@ export class Registry extends BaseService {
     registryData.dateModified = now;
 
     switch (type) {
-      case 'boolean':
+      case "boolean":
         const registryBoolean = (registryData as unknown) as RegistryBoolean;
-        registryBoolean.type = 'boolean';
+        registryBoolean.type = "boolean";
         registryBoolean.data = !!data;
         return registryBoolean;
-      case 'string':
+      case "string":
         const registryString = (registryData as unknown) as RegistryString;
-        registryString.type = 'string';
+        registryString.type = "string";
         registryString.data = (data as unknown) as string;
         return registryString;
-      case 'number':
+      case "number":
         const registryNumber = (registryData as unknown) as RegistryNumber;
-        registryNumber.type = 'number';
+        registryNumber.type = "number";
         registryNumber.data = (data as unknown) as number;
         return registryNumber;
       default:
         const registryAny = (registryData as unknown) as RegistryAny<D>;
-        registryAny.type = 'any';
+        registryAny.type = "any";
         registryAny.data = data;
         return registryAny;
     }

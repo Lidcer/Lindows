@@ -1,13 +1,13 @@
-import { Schema, Document } from 'mongoose';
-import { mongoose } from '../../database/database';
-import { hashPassword } from '../../database/passwordHasher';
-import { join } from 'path';
-import { exists, mkdir, unlink } from 'fs';
-import * as Jimp from 'jimp';
-import { StringSchema } from '@hapi/joi';
+import { Schema, Document } from "mongoose";
+import { mongoose } from "../../database/database";
+import { hashPassword } from "../../database/passwordHasher";
+import { join } from "path";
+import { exists, mkdir, unlink } from "fs";
+import * as Jimp from "jimp";
+import { StringSchema } from "@hapi/joi";
 
-export const imagesPath = ['data', 'avatars'];
-export const dataImages = join(process.cwd(), 'data', 'avatars');
+export const imagesPath = ["data", "avatars"];
+export const dataImages = join(process.cwd(), "data", "avatars");
 
 export function setupImages(): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -25,7 +25,7 @@ export function setupImages(): Promise<void> {
   });
 }
 
-export declare type UserAccountFlags = 'noImageUpload';
+export declare type UserAccountFlags = "noImageUpload";
 export interface IMongooseUserSchema extends Document {
   username: string;
   displayedName: string;
@@ -62,15 +62,15 @@ const UserSchema = new Schema(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-export const MongoUser = mongoose.model<IMongooseUserSchema>('User', UserSchema);
-MongoUser.collection.createIndex({ username: 'text', displayedName: 'text' });
+export const MongoUser = mongoose.model<IMongooseUserSchema>("User", UserSchema);
+MongoUser.collection.createIndex({ username: "text", displayedName: "text" });
 
 export async function getUserById(id: string): Promise<IMongooseUserSchema> {
   return await MongoUser.findById(id);
@@ -85,7 +85,7 @@ export async function doesUserWithDisplayedNamesExist(name: string) {
 }
 
 export async function findUserByName(username: string) {
-  return await MongoUser.findOne({ username: username.toLowerCase().replace(/\s/g, '') });
+  return await MongoUser.findOne({ username: username.toLowerCase().replace(/\s/g, "") });
 }
 
 export async function findUserByEmail(email: string) {
@@ -100,15 +100,15 @@ export async function registerUserInDatabase(
 ): Promise<IMongooseUserSchema> {
   const hashedPassword = await hashPassword(password);
   const schema = new MongoUser({
-    username: username.toLowerCase().replace(/\s/g, ''),
+    username: username.toLowerCase().replace(/\s/g, ""),
     displayedName: username,
     password: hashedPassword,
     createdAt: Date.now(),
     lastOnlineAt: Date.now(),
     banned: false,
     compromised: false,
-    note: '',
-    settings: '',
+    note: "",
+    settings: "",
     email,
     flags: [],
     roles: [],
@@ -152,7 +152,7 @@ export async function changeEmailOnAccount(user: IMongooseUserSchema, email: str
 
 export async function changeAvatar(user: IMongooseUserSchema, data: Buffer): Promise<void> {
   await removeAvatarIfExist(user);
-  const clearedName = user.username.replace(/[^a-zA-Z ]/g, '');
+  const clearedName = user.username.replace(/[^a-zA-Z ]/g, "");
   const ImageName = `${clearedName}${Date.now()}.png`;
   const imagePath = join(dataImages, `${ImageName}`);
   await storeImage(data, imagePath);
@@ -209,5 +209,5 @@ export function getUserImage(user: IMongooseUserSchema): string | null {
   const avatar = user.avatar;
   if (!avatar) return null;
 
-  return `/${imagesPath.join('/')}/${avatar}`;
+  return `/${imagesPath.join("/")}/${avatar}`;
 }

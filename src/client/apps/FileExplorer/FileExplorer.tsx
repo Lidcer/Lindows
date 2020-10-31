@@ -1,5 +1,5 @@
-import { IManifest, BaseWindow, MessageBox } from '../BaseWindow/BaseWindow';
-import React from 'react';
+import { IManifest, BaseWindow, MessageBox } from "../BaseWindow/BaseWindow";
+import React from "react";
 
 import {
   FileExploreBottom,
@@ -9,8 +9,8 @@ import {
   FileExplorerList,
   FileExplorerUrlBar,
   FileExplorerWarper,
-} from './FileExplorerStyled';
-import { internal } from '../../services/internals/Internal';
+} from "./FileExplorerStyled";
+import { internal } from "../../services/internals/Internal";
 import {
   canReadFileOrDirectory,
   everyone,
@@ -21,8 +21,8 @@ import {
   isDirectory,
   sanitizeName,
   StringSymbol,
-} from '../../utils/FileSystemDirectory';
-import { IElement, showContext } from '../../components/ContextMenu/ContextMenu';
+} from "../../utils/FileSystemDirectory";
+import { IElement, showContext } from "../../components/ContextMenu/ContextMenu";
 
 interface IFileExplorerState {
   path: string;
@@ -31,14 +31,14 @@ interface IFileExplorerState {
 }
 
 export class FileExplorer extends BaseWindow<IFileExplorerState> {
-  private readonly folderImage = './assets/images/folderIcon.svg';
-  private readonly fileImage = './assets/images/fileIcon.svg';
+  private readonly folderImage = "./assets/images/folderIcon.svg";
+  private readonly fileImage = "./assets/images/fileIcon.svg";
   private readonly folderSize = 15;
   private folderPermission = everyone;
   public static manifest: IManifest = {
-    fullAppName: 'File Explorer',
-    launchName: 'fileExplorer',
-    icon: '/assets/images/appsIcons/FileExplorerIcon.svg',
+    fullAppName: "File Explorer",
+    launchName: "fileExplorer",
+    icon: "/assets/images/appsIcons/FileExplorerIcon.svg",
   };
 
   constructor(props) {
@@ -51,7 +51,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         height: 300,
       },
       {
-        path: '',
+        path: "",
         directory: internal.fileSystem.home,
         renaming: undefined,
       },
@@ -60,7 +60,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
 
   onKeyUp(ev: KeyboardEvent) {
     if (!this.state.variables.renaming) return;
-    if (ev.key.toLowerCase() === 'enter') {
+    if (ev.key.toLowerCase() === "enter") {
       const dir = this.state.variables.renaming.structure;
       const newName = this.state.variables.renaming.value;
       if (newName !== dir.name) {
@@ -71,14 +71,14 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
         }
       }
       this.setVariables({ renaming: undefined });
-    } else if (ev.key.toLowerCase() === 'escape') {
+    } else if (ev.key.toLowerCase() === "escape") {
       this.setVariables({ renaming: undefined });
     }
   }
 
   private parseDirectory(path: string): FileSystemDirectory | null {
-    path = path.replace(/\\/g, '/');
-    const folders = path.split('/');
+    path = path.replace(/\\/g, "/");
+    const folders = path.split("/");
     let currentScanner = internal.fileSystem.root;
     for (const folderName of folders) {
       if (currentScanner.name === folderName) {
@@ -103,13 +103,13 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   }
 
   async shown() {
-    if (!this.hasLaunchFlag('permissioneveryone')) {
-      if (this.hasLaunchFlag('admin')) {
+    if (!this.hasLaunchFlag("permissioneveryone")) {
+      if (this.hasLaunchFlag("admin")) {
         const processor = this.getProcessor();
         if (!processor) {
           const result = await this.requestAdmin();
           if (!result) {
-            await MessageBox.Show(this, 'Unable to obtain admin permission', 'Failed');
+            await MessageBox.Show(this, "Unable to obtain admin permission", "Failed");
             this.exit();
             return;
           }
@@ -172,7 +172,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
 
         const elements: IElement[] = [];
         elements.push({
-          content: 'Open',
+          content: "Open",
           onClick: () => {
             if (isDirectory(c)) {
               const directory = this.parseDirectory(c.path);
@@ -188,7 +188,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           c.getPermission(this.folderPermission) === FileSystemPermissions.ReadAndWrite
         ) {
           elements.push({
-            content: 'Rename',
+            content: "Rename",
             onClick: () => {
               this.setVariables({ renaming: { structure: c, value: c.name } });
             },
@@ -199,7 +199,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           c.getPermission(this.folderPermission) === FileSystemPermissions.ReadAndWrite
         ) {
           elements.push({
-            content: 'Delete',
+            content: "Delete",
             onClick: () => {
               if (isDirectory(c)) {
                 c.deleteDirectory(this.folderPermission);
@@ -211,7 +211,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           });
         }
 
-        elements.push({ content: 'Properties', onClick: () => {} });
+        elements.push({ content: "Properties", onClick: () => {} });
 
         showContext(elements, ev.clientX, ev.clientY);
       };
@@ -243,7 +243,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   createNewDirectory = () => {
     const newName = internal.fileSystem.getUniqueName(
       this.variables.directory,
-      'New folder',
+      "New folder",
       internal.processor.symbol,
     );
     this.variables.directory.createDirectory(newName, this.folderPermission);
@@ -251,16 +251,16 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
   };
 
   createNewFile = () => {
-    const newName = internal.fileSystem.getUniqueName(this.variables.directory, 'New File', internal.processor.symbol);
-    this.variables.directory.createFile(newName, 'text', '', this.folderPermission);
+    const newName = internal.fileSystem.getUniqueName(this.variables.directory, "New File", internal.processor.symbol);
+    this.variables.directory.createFile(newName, "text", "", this.folderPermission);
     this.forceUpdate();
   };
 
   get parentFolder() {
     if (this.variables.directory === internal.fileSystem.root) return null;
-    const folders = this.variables.directory.path.split('/');
+    const folders = this.variables.directory.path.split("/");
     folders.pop();
-    const directory = this.parseDirectory(folders.join('/'));
+    const directory = this.parseDirectory(folders.join("/"));
     if (!directory) return null;
     const perms = directory.getPermission(this.folderPermission);
     if (!canReadFileOrDirectory(perms)) return null;
@@ -270,11 +270,11 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
 
       const elements: IElement[] = [];
       elements.push({
-        content: 'goto Parent folder',
+        content: "goto Parent folder",
         onClick: () => {
-          const folders = this.variables.directory.path.split('/');
+          const folders = this.variables.directory.path.split("/");
           folders.pop();
-          const directory = this.parseDirectory(folders.join('/'));
+          const directory = this.parseDirectory(folders.join("/"));
           if (directory) {
             this.setVariables({ directory });
           }
@@ -292,7 +292,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
           height={this.folderSize}
           draggable='false'
         />
-        {'...'}
+        {"..."}
       </FileExplorerFileOrDirectory>
     );
   }
@@ -302,29 +302,29 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
     showContext(
       [
         {
-          content: 'Refresh',
+          content: "Refresh",
           onClick: () => {
             this.forceUpdate();
           },
         },
         {
-          content: 'new',
+          content: "new",
           elements: [
             {
-              content: 'Folder',
+              content: "Folder",
               onClick: () => {
                 this.createNewDirectory();
               },
             },
             {
-              content: 'File',
+              content: "File",
               onClick: () => {
                 this.createNewFile();
               },
             },
           ],
         },
-        { content: 'Properties' },
+        { content: "Properties" },
       ],
       cm.clientX,
       cm.clientY,

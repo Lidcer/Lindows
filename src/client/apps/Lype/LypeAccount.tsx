@@ -1,7 +1,7 @@
-import React from 'react';
-import { ILypeAccount } from '../../../shared/ApiLypeRequestsResponds';
-import { getStatusColour } from '../../services/backgroundService/LypeServices';
-import { DEFAULT_AVATAR } from '../AccountManager/AccountManagerWebpage';
+import React from "react";
+import { ILypeAccount } from "../../../shared/ApiLypeRequestsResponds";
+import { getStatusColour } from "../../services/backgroundService/LypeServices";
+import { DEFAULT_AVATAR } from "../AccountManager/AccountManagerWebpage";
 import {
   LypeAccountInfoBTN,
   LypeAccountInfoButtons,
@@ -12,7 +12,7 @@ import {
   LypeAccountStatusBadge,
   LypeAccountInfoStyle,
   LypeAccountStatusBadgeBig,
-} from './LypeStyled';
+} from "./LypeStyled";
 
 interface ILypeAccountInfo {
   account: ILypeAccount;
@@ -44,7 +44,7 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
     return (
       <LypeAccountInfoButtons>
         {this.props.buttons.map((b, i) => {
-          if (typeof b.content === 'string') {
+          if (typeof b.content === "string") {
             return (
               <LypeAccountInfoBTN key={i} onClick={e => b.onClick(e)}>
                 {b.content}
@@ -96,7 +96,7 @@ export class LypeAccountInfo extends React.Component<ILypeAccountInfo, {}> {
   render() {
     return (
       <LypeAccountInfoStyle
-        className={`${this.props.onClick ? ' clickable' : ''}`}
+        className={`${this.props.onClick ? " clickable" : ""}`}
         onContextMenu={this.handleContentMenu}
         onClick={this.handleClick}
       >

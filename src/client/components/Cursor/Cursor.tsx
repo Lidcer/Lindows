@@ -1,7 +1,7 @@
-import React from 'react';
-import { EventEmitter } from 'events';
-import { internal } from '../../services/internals/Internal';
-import { CursorStyle } from './CursorStyled';
+import React from "react";
+import { EventEmitter } from "events";
+import { internal } from "../../services/internals/Internal";
+import { CursorStyle } from "./CursorStyled";
 interface IState {
   cursorType: CursorType;
   enabled: boolean;
@@ -17,31 +17,31 @@ interface IMouseHistory {
   y: number;
 }
 export declare type CursorType =
-  | 'normal'
-  | 'verticalResize'
-  | 'horizontalResize'
-  | 'diagonalResize1'
-  | 'diagonalResize2';
+  | "normal"
+  | "verticalResize"
+  | "horizontalResize"
+  | "diagonalResize1"
+  | "diagonalResize2";
 
 const dynamicMouse = true;
 
 const storageProperties = {
-  enabled: 'lindow-mouse-enabled',
+  enabled: "lindow-mouse-enabled",
 };
 
 declare interface IMousePointer {
-  on(event: 'change', listener: (type: CursorType) => void): this;
-  on(event: 'enableDisable', listener: (bool: boolean, callback: (result: boolean) => void) => void): this;
+  on(event: "change", listener: (type: CursorType) => void): this;
+  on(event: "enableDisable", listener: (bool: boolean, callback: (result: boolean) => void) => void): this;
 }
 
 class IMousePointer extends EventEmitter {
   changeMouse(type: CursorType) {
-    this.emit('change', type);
+    this.emit("change", type);
   }
 
   async enableDisableMouse(bool: boolean) {
     return new Promise<boolean>(resolve => {
-      this.emit('enableDisable', bool, (result: boolean) => {
+      this.emit("enableDisable", bool, (result: boolean) => {
         resolve(result);
       });
     });
@@ -65,7 +65,7 @@ export class Cursor extends React.Component<{}, IState> {
     super(props);
 
     this.state = {
-      cursorType: 'normal',
+      cursorType: "normal",
       enabled: false,
       cursor: {
         rotate: 5,
@@ -76,30 +76,30 @@ export class Cursor extends React.Component<{}, IState> {
   }
 
   componentDidMount() {
-    window.addEventListener('mousemove', this.mouseMove, false);
-    mousePointer.on('change', this.onMouseChangeFixPos);
-    mousePointer.on('enableDisable', this.enableDisable);
+    window.addEventListener("mousemove", this.mouseMove, false);
+    mousePointer.on("change", this.onMouseChangeFixPos);
+    mousePointer.on("enableDisable", this.enableDisable);
     const enabled = !!internal.browserStorage.getItem(storageProperties.enabled);
     this.setState({ enabled });
     if (enabled) {
-      document.body.style.cursor = 'none';
+      document.body.style.cursor = "none";
     }
   }
 
   componentWillUnmount() {
-    window.removeEventListener('mousemove', this.mouseMove, false);
-    mousePointer.removeListener('change', this.onMouseChangeFixPos);
-    mousePointer.removeListener('enableDisable', this.enableDisable);
-    document.body.style.cursor = '';
+    window.removeEventListener("mousemove", this.mouseMove, false);
+    mousePointer.removeListener("change", this.onMouseChangeFixPos);
+    mousePointer.removeListener("enableDisable", this.enableDisable);
+    document.body.style.cursor = "";
   }
 
   enableDisable = async (bool: boolean, callback: (result: boolean) => void) => {
     await internal.browserStorage.setItem(storageProperties.enabled, !!bool);
     this.setState({ enabled: !!bool });
     if (bool) {
-      document.body.style.cursor = 'none';
+      document.body.style.cursor = "none";
     } else {
-      document.body.style.cursor = '';
+      document.body.style.cursor = "";
     }
     callback(!!bool);
   };
@@ -112,10 +112,10 @@ export class Cursor extends React.Component<{}, IState> {
     if (!this.state.enabled) return;
 
     switch (cursorType) {
-      case 'diagonalResize1':
-      case 'diagonalResize2':
-      case 'verticalResize':
-      case 'horizontalResize':
+      case "diagonalResize1":
+      case "diagonalResize2":
+      case "verticalResize":
+      case "horizontalResize":
         this.anchorPointX = 0;
         this.anchorPointY = 0;
 
@@ -130,7 +130,7 @@ export class Cursor extends React.Component<{}, IState> {
 
   mouseMove = (event: MouseEvent) => {
     if (!this.state.enabled) return;
-    if (this.state.cursorType !== 'normal' || !dynamicMouse) {
+    if (this.state.cursorType !== "normal" || !dynamicMouse) {
       this.setState({
         //        cursorType,
         cursor: {
@@ -198,13 +198,13 @@ export class Cursor extends React.Component<{}, IState> {
 
   updateMouseAngle = () => {
     switch (this.state.cursorType) {
-      case 'verticalResize':
+      case "verticalResize":
         return 0;
-      case 'horizontalResize':
+      case "horizontalResize":
         return 90;
-      case 'diagonalResize1':
+      case "diagonalResize1":
         return 45;
-      case 'diagonalResize2':
+      case "diagonalResize2":
         return 135;
       default:
         return 336;
@@ -236,13 +236,13 @@ export class Cursor extends React.Component<{}, IState> {
   get mouseSrc() {
     const cursorType: CursorType = this.state.cursorType;
     switch (cursorType) {
-      case 'verticalResize':
-      case 'horizontalResize':
-      case 'diagonalResize1':
-      case 'diagonalResize2':
-        return './assets/images/cursors/resize.svg';
+      case "verticalResize":
+      case "horizontalResize":
+      case "diagonalResize1":
+      case "diagonalResize2":
+        return "./assets/images/cursors/resize.svg";
       default:
-        return './assets/images/cursors/normal.svg';
+        return "./assets/images/cursors/normal.svg";
     }
   }
 

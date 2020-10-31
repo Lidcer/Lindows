@@ -1,15 +1,15 @@
-import React from 'react';
-import { internal } from '../../services/internals/Internal';
-import { ActivationWatermarkStyle } from './activationWatermarkStyled';
+import React from "react";
+import { internal } from "../../services/internals/Internal";
+import { ActivationWatermarkStyle } from "./activationWatermarkStyled";
 
 export class ActivationWatermark extends React.Component {
   componentDidMount() {
-    internal.account.on('login', this.refresh);
-    internal.account.on('logout', this.refresh);
+    internal.account.on("login", this.refresh);
+    internal.account.on("logout", this.refresh);
   }
   componentWillUnmount() {
-    internal.account.on('login', this.refresh);
-    internal.account.on('logout', this.refresh);
+    internal.account.on("login", this.refresh);
+    internal.account.on("logout", this.refresh);
   }
 
   refresh = () => {

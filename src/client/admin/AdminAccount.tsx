@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { IAccount } from '../../shared/ApiUsersRequestsResponds';
+import React, { Component } from "react";
+import { IAccount } from "../../shared/ApiUsersRequestsResponds";
 
 interface IAdminAccountsProps {
   account?: IAccount;

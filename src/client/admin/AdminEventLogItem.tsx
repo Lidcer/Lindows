@@ -1,13 +1,13 @@
-import React, { Component } from 'react';
-import { TOKEN_HEADER } from '../../shared/constants';
-import Axios, { AxiosRequestConfig } from 'axios';
-import { IResponse } from '../../shared/ApiUsersRequestsResponds';
-import moment from 'moment';
-import { withRouter } from 'react-router-dom';
-import ReactLoading from 'react-loading';
-import { Link } from 'react-router-dom';
-import { IEventLog, eventLogData } from './AdminEventLogList';
-import { INotificationHandler } from './NotificationHandler';
+import React, { Component } from "react";
+import { TOKEN_HEADER } from "../../shared/constants";
+import Axios, { AxiosRequestConfig } from "axios";
+import { IResponse } from "../../shared/ApiUsersRequestsResponds";
+import moment from "moment";
+import { withRouter } from "react-router-dom";
+import ReactLoading from "react-loading";
+import { Link } from "react-router-dom";
+import { IEventLog, eventLogData } from "./AdminEventLogList";
+import { INotificationHandler } from "./NotificationHandler";
 
 interface IAdminEventLogItemState {
   fetching: boolean;
@@ -47,7 +47,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
 
   async getInfo() {
     this.setState({ fetching: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
@@ -55,7 +55,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
 
     try {
       const response = await Axios.post<IResponse<IEventLog>>(
-        '/api/v1/admin/event-log',
+        "/api/v1/admin/event-log",
         { eventID: this.eventID },
         axiosRequestConfig,
       );
@@ -68,16 +68,16 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
 
   removeEvent = async () => {
     this.setState({ fetching: true });
-    const token = localStorage.getItem('auth');
+    const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
     axiosRequestConfig.data = { eventID: this.eventID };
     try {
-      await Axios.delete<IResponse<IEventLog>>('/api/v1/admin/event-log', axiosRequestConfig);
+      await Axios.delete<IResponse<IEventLog>>("/api/v1/admin/event-log", axiosRequestConfig);
       if (!this.mounted) return;
-      this.props.notificationHandler.info('Event Remove', `Event has been removed ${this.eventID}`);
+      this.props.notificationHandler.info("Event Remove", `Event has been removed ${this.eventID}`);
       const event = eventLogData.eventLogs.find(e => e.id === this.eventID);
       const indexOf = eventLogData.eventLogs.indexOf(event);
       if (indexOf !== -1) {
@@ -85,7 +85,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
       }
       this.setState({ eventLog: undefined });
     } catch (error) {
-      this.props.notificationHandler.danger('Unable to remove event', `Couldn't remove event ${this.eventID}`);
+      this.props.notificationHandler.danger("Unable to remove event", `Couldn't remove event ${this.eventID}`);
     }
     this.setState({ fetching: false });
   };
@@ -93,25 +93,25 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
   get event() {
     const event = this.state.eventLog;
     if (!event) return <div className='p-2 event-log border border-terminal d-inline-block'>Event not found</div>;
-    const style: React.CSSProperties = { borderColor: 'ffffff' };
-    let borderClass = 'border';
+    const style: React.CSSProperties = { borderColor: "ffffff" };
+    let borderClass = "border";
     switch (event.type.toLowerCase()) {
-      case 'fatal':
-        style.borderColor = 'f90000';
-        borderClass = 'border border-danger';
-        style.backgroundColor = 'rgba(255, 0, 0, 0.50)';
+      case "fatal":
+        style.borderColor = "f90000";
+        borderClass = "border border-danger";
+        style.backgroundColor = "rgba(255, 0, 0, 0.50)";
         break;
-      case 'error':
-        borderClass = 'border border-danger';
-        style.borderColor = 'af0000';
-        style.backgroundColor = 'rgba(255, 0, 0, 0.15)';
+      case "error":
+        borderClass = "border border-danger";
+        style.borderColor = "af0000";
+        style.backgroundColor = "rgba(255, 0, 0, 0.15)";
         break;
-      case 'warn':
-        borderClass = 'border border-warn';
-        style.borderColor = 'ff5a00';
+      case "warn":
+        borderClass = "border border-warn";
+        style.borderColor = "ff5a00";
         break;
-      case 'info':
-        style.borderColor = '72ff00';
+      case "info":
+        style.borderColor = "72ff00";
         break;
     }
     return (
@@ -119,7 +119,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
         <div className={`m-2 p-2 d-inline-block event-log ${borderClass}`} style={style}>
           <h1>{event.id}</h1>
           <div>
-            <b>{event.type.toUpperCase()}</b> {moment(event.time).format('MMMM Do YYYY, HH:mm:ss')}{' '}
+            <b>{event.type.toUpperCase()}</b> {moment(event.time).format("MMMM Do YYYY, HH:mm:ss")}{" "}
             {moment(event.time).fromNow()}
           </div>
           <div>{event.message}</div>
@@ -135,7 +135,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
 
   render() {
     if (this.state.fetching)
-      return <ReactLoading className='m-2' type={'bars'} color={'#00ff00'} height={50} width={50} />;
+      return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
 
     return (
       <>

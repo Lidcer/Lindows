@@ -1,10 +1,19 @@
-import React from 'react';
-import { internal } from '../../services/internals/Internal';
-import { IAccountInfo } from '../../services/system/Account';
-import { VerificationType } from '../../../shared/ApiUsersRequestsResponds';
-import { OpenFileDialog } from '../../essential/FileDialog';
-import { SECOND } from '../../../shared/constants';
-import { AccountManagerPage, AccountManager, AccountManagerAvatar, AccountManagerScrollabled, AccountManagerCard, AccountManagerInfo, AccountManagerCardAlt, InputDisabled } from './AccountManagerStyled';
+import React from "react";
+import { internal } from "../../services/internals/Internal";
+import { IAccountInfo } from "../../services/system/Account";
+import { VerificationType } from "../../../shared/ApiUsersRequestsResponds";
+import { OpenFileDialog } from "../../essential/FileDialog";
+import { SECOND } from "../../../shared/constants";
+import {
+  AccountManagerPage,
+  AccountManager,
+  AccountManagerAvatar,
+  AccountManagerScrollabled,
+  AccountManagerCard,
+  AccountManagerInfo,
+  AccountManagerCardAlt,
+  InputDisabled,
+} from "./AccountManagerStyled";
 
 interface IAccountProps {
   window?: boolean;
@@ -59,7 +68,7 @@ interface IAccountState {
   info: string;
 }
 
-export const DEFAULT_AVATAR = '/assets/images/appsIcons/AccountManager.svg';
+export const DEFAULT_AVATAR = "/assets/images/appsIcons/AccountManager.svg";
 
 export class AccountManagerWebpage extends React.Component<IAccountProps, IAccountState> {
   private destroyed = false;
@@ -67,46 +76,46 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     super(props);
     this.state = {
       register: {
-        email: '',
-        password: '',
-        repeatPassword: '',
-        username: '',
+        email: "",
+        password: "",
+        repeatPassword: "",
+        username: "",
       },
       login: {
-        password: '',
-        usernameOrEmail: '',
+        password: "",
+        usernameOrEmail: "",
       },
       resetPassword: {
-        password: '',
-        repeatPassword: '',
+        password: "",
+        repeatPassword: "",
       },
       settings: {
-        displayedName: '',
-        newEmail: '',
-        newPassword: '',
-        repeatPassword: '',
-        password: '',
+        displayedName: "",
+        newEmail: "",
+        newPassword: "",
+        repeatPassword: "",
+        password: "",
         alteringProfile: [],
         file: undefined,
       },
       forgetPassword: {
-        email: '',
+        email: "",
       },
-      verifyResult: '',
+      verifyResult: "",
       tab: Tab.Loading,
       inProgress: false,
       logined: false,
-      currentUserName: '',
-      email: '',
+      currentUserName: "",
+      email: "",
       avatar: DEFAULT_AVATAR,
-      info: '',
-      error: '',
+      info: "",
+      error: "",
     };
   }
 
   render() {
     if (STATIC) {
-      return <div className='text-danger'>Unavailable</div>
+      return <div className='text-danger'>Unavailable</div>;
     }
 
     if (this.props.window)
@@ -138,7 +147,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         <h1>Forgot Password</h1>
 
         <input
-          onChange={ev => this.onChange(ev, 'forgetPassword', 'email')}
+          onChange={ev => this.onChange(ev, "forgetPassword", "email")}
           type='text'
           name='forgot-password-email'
           id='forgot-password-email'
@@ -162,7 +171,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         <h1>Login</h1>
 
         <input
-          onChange={ev => this.onChange(ev, 'login', 'usernameOrEmail')}
+          onChange={ev => this.onChange(ev, "login", "usernameOrEmail")}
           type='text'
           name='login-username-email'
           id='login-username-email'
@@ -170,7 +179,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
           autoComplete='off'
         />
         <input
-          onChange={ev => this.onChange(ev, 'login', 'password')}
+          onChange={ev => this.onChange(ev, "login", "password")}
           type='password'
           name='login-password'
           id='login-password'
@@ -193,7 +202,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         <h1>Password reset</h1>
 
         <input
-          onChange={ev => this.onChange(ev, 'resetPassword', 'password')}
+          onChange={ev => this.onChange(ev, "resetPassword", "password")}
           type='password'
           name='reset-password'
           id='reset-password'
@@ -202,7 +211,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         />
 
         <input
-          onChange={ev => this.onChange(ev, 'resetPassword', 'repeatPassword')}
+          onChange={ev => this.onChange(ev, "resetPassword", "repeatPassword")}
           type='password'
           name='reset-repeat-password'
           id='reset-repeat-password'
@@ -224,7 +233,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
         <input
           value={this.state.register.username}
-          onChange={ev => this.onChange(ev, 'register', 'username')}
+          onChange={ev => this.onChange(ev, "register", "username")}
           type='text'
           name='register-username'
           id='register-username'
@@ -233,7 +242,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         />
         <input
           value={this.state.register.password}
-          onChange={ev => this.onChange(ev, 'register', 'password')}
+          onChange={ev => this.onChange(ev, "register", "password")}
           type='password'
           name='register-password'
           id='register-password'
@@ -242,7 +251,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         />
         <input
           value={this.state.register.repeatPassword}
-          onChange={ev => this.onChange(ev, 'register', 'repeatPassword')}
+          onChange={ev => this.onChange(ev, "register", "repeatPassword")}
           type='password'
           name='register-repeat-password'
           id='register-repeat-password'
@@ -251,7 +260,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         />
         <input
           value={this.state.register.email}
-          onChange={ev => this.onChange(ev, 'register', 'email')}
+          onChange={ev => this.onChange(ev, "register", "email")}
           type='register-email'
           name='register-email'
           id='register-email'
@@ -313,7 +322,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                   type='text'
                   value={this.state.settings.displayedName}
                   autoComplete='off'
-                  onChange={ev => this.onChange(ev, 'settings', 'displayedName')}
+                  onChange={ev => this.onChange(ev, "settings", "displayedName")}
                 />
               </div>
             </AccountManagerInfo>
@@ -328,7 +337,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 placeholder='Password'
                 autoComplete='off'
                 value={this.state.settings.newPassword}
-                onChange={ev => this.onChange(ev, 'settings', 'newPassword')}
+                onChange={ev => this.onChange(ev, "settings", "newPassword")}
               />
               <input
                 type='password'
@@ -337,7 +346,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 placeholder='Repeat Password'
                 autoComplete='off'
                 value={this.state.settings.repeatPassword}
-                onChange={ev => this.onChange(ev, 'settings', 'repeatPassword')}
+                onChange={ev => this.onChange(ev, "settings", "repeatPassword")}
               />
             </AccountManagerCard>
 
@@ -348,7 +357,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 placeholder='New email'
                 autoComplete='off'
                 value={this.state.settings.newEmail}
-                onChange={ev => this.onChange(ev, 'settings', 'newEmail')}
+                onChange={ev => this.onChange(ev, "settings", "newEmail")}
               />
             </AccountManagerCard>
           </div>
@@ -362,7 +371,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
                 placeholder='Current Password'
                 autoComplete='off'
                 value={this.state.settings.password}
-                onChange={ev => this.onChange(ev, 'settings', 'password')}
+                onChange={ev => this.onChange(ev, "settings", "password")}
               />
               {this.changes}
               <div hidden={this.qt}>
@@ -407,7 +416,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     this.resetWarnings();
     const state = { ...this.state };
     const pass = state.settings.password;
-    state.settings.password = '';
+    state.settings.password = "";
     const ap = state.settings.alteringProfile;
     const ac = internal.account;
 
@@ -420,7 +429,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
     try {
       if (state.settings.file) {
-        ap.push('Uploading file....');
+        ap.push("Uploading file....");
         const result = await ac.changeAvatar(pass, state.settings.file, n => {
           if (this.destroyed) return;
           ap[1] = `Upload process... ${n}%`;
@@ -432,7 +441,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         this.setState(state);
       }
       if (ac.account.displayedName !== state.settings.displayedName) {
-        ap.push('altering displayed Name....');
+        ap.push("altering displayed Name....");
         const result = await ac.changeDisplayName(state.settings.displayedName, pass);
         ap.push(result);
         if (this.destroyed) return;
@@ -440,35 +449,35 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         this.setState(state);
       }
       if (state.settings.newEmail) {
-        ap.push('Altering Email....');
+        ap.push("Altering Email....");
         const result = await ac.changeEmail(pass, state.settings.newEmail);
         ap.push(result);
-        state.settings.newEmail = '';
+        state.settings.newEmail = "";
         if (this.destroyed) return;
         this.setState(state);
       }
 
       if (state.settings.newPassword) {
-        ap.push('Altering Password....');
+        ap.push("Altering Password....");
         await ac.changePassword(pass, state.settings.newPassword, state.settings.repeatPassword);
-        state.settings.newPassword = '';
-        state.settings.repeatPassword = '';
-        ap.push('Password has been changed');
+        state.settings.newPassword = "";
+        state.settings.repeatPassword = "";
+        ap.push("Password has been changed");
         if (this.destroyed) return;
         this.setState(state);
       }
 
-      ap.push('Done...');
+      ap.push("Done...");
       ap.push(
         <button className='btn btn-secondary' onClick={goBack}>
           Go back
         </button>,
       );
-      this.setInfoMsg('All altering jobs have finished');
+      this.setInfoMsg("All altering jobs have finished");
     } catch (error) {
       state.error = error.message;
       if (this.destroyed) return;
-      ap.push('Altering Failed!');
+      ap.push("Altering Failed!");
       ap.push(
         <button className='btn btn-secondary' onClick={goBack}>
           Go back
@@ -489,7 +498,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     const ac = internal.account.account;
     if (st.displayedName !== ac.displayedName)
       changes.push(`Displayed name: ${ac.displayedName} => ${st.displayedName}`);
-    if (st.newPassword) changes.push('Password: ******* => ********');
+    if (st.newPassword) changes.push("Password: ******* => ********");
     if (st.newEmail) changes.push(`Email: [HIDDEN] => ${st.newEmail}`);
     if (st.file) changes.push(`Avatar: ${st.file.name}`);
     if (!changes.length) return null;
@@ -515,7 +524,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   openFile = async () => {
     const fileDialog = new OpenFileDialog();
     const state = { ...this.state };
-    fileDialog.acceptTypes = 'image/jpeg, image/png';
+    fileDialog.acceptTypes = "image/jpeg, image/png";
     fileDialog
       .ShowDialog()
       .then(files => {
@@ -583,7 +592,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
         this.state.register.repeatPassword,
       );
       this.setState({
-        error: '',
+        error: "",
         info: response,
       });
       this.updateTabAccordingToUser();
@@ -668,7 +677,7 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
       if (tokenType === VerificationType.PasswordReset) {
         this.switchTab(Tab.ResetPassword);
       } else if (tokenType === VerificationType.ChangeEmail || tokenType === VerificationType.Verificaiton) {
-        this.setState({ verifyResult: 'Validating...' });
+        this.setState({ verifyResult: "Validating..." });
         internal.account
           .verifyEmail(token)
           .then(msg => {
@@ -699,45 +708,45 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   componentDidMount() {
     if (internal.ready) return this.startup();
-    internal.on('allReady', this.startup);
+    internal.on("allReady", this.startup);
   }
 
   componentWillUnmount() {
     this.destroyed = true;
-    internal.removeListener('allReady', this.startup);
-    internal.account.removeListener('login', this.updateTabAccordingToUser);
-    internal.account.removeListener('logout', this.updateTabAccordingToUser);
+    internal.removeListener("allReady", this.startup);
+    internal.account.removeListener("login", this.updateTabAccordingToUser);
+    internal.account.removeListener("logout", this.updateTabAccordingToUser);
   }
 
   startup = () => {
-    internal.account.on('login', this.updateTabAccordingToUser);
-    internal.account.on('logout', this.updateTabAccordingToUser);
+    internal.account.on("login", this.updateTabAccordingToUser);
+    internal.account.on("logout", this.updateTabAccordingToUser);
     this.updateTabAccordingToUser();
   };
 
   clearParameters() {
     const state = { ...this.state };
     state.forgetPassword = {
-      email: '',
+      email: "",
     };
     state.settings = {
-      displayedName: internal.account.account ? internal.account.account.displayedName : '',
-      newEmail: '',
-      newPassword: '',
-      password: '',
-      repeatPassword: '',
+      displayedName: internal.account.account ? internal.account.account.displayedName : "",
+      newEmail: "",
+      newPassword: "",
+      password: "",
+      repeatPassword: "",
       alteringProfile: [],
       file: undefined,
     };
     state.login = {
-      password: '',
-      usernameOrEmail: '',
+      password: "",
+      usernameOrEmail: "",
     };
     state.register = {
-      email: '',
-      password: '',
-      repeatPassword: '',
-      username: '',
+      email: "",
+      password: "",
+      repeatPassword: "",
+      username: "",
     };
     this.setState(state);
   }
@@ -771,26 +780,26 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   onChange = (
     ev: React.ChangeEvent<HTMLInputElement>,
-    type: 'login' | 'register' | 'resetPassword' | 'forgetPassword' | 'settings',
+    type: "login" | "register" | "resetPassword" | "forgetPassword" | "settings",
     key: string,
   ) => {
     const value = ev.target.value;
     const state = { ...this.state };
 
     switch (type) {
-      case 'login':
+      case "login":
         state.login[key] = value;
         break;
-      case 'register':
+      case "register":
         state.register[key] = value;
         break;
-      case 'forgetPassword':
+      case "forgetPassword":
         state.forgetPassword[key] = value;
         break;
-      case 'resetPassword':
+      case "resetPassword":
         state.resetPassword[key] = value;
         break;
-      case 'settings':
+      case "settings":
         state.settings[key] = value;
         break;
       default:
@@ -815,8 +824,8 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
   private resetWarnings() {
     if (this.destroyed) return;
     this.setState({
-      info: '',
-      error: '',
+      info: "",
+      error: "",
     });
   }
 
@@ -842,14 +851,14 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
 
   get temporarilyToken() {
     const url = new URL(document.location.href);
-    return url.searchParams.get('v');
+    return url.searchParams.get("v");
   }
 
   get redirectToApp() {
     const url = new URL(document.location.href);
-    const app = url.searchParams.get('a');
+    const app = url.searchParams.get("a");
     switch (app) {
-      case 'lype':
+      case "lype":
         return app;
       default:
         return null;

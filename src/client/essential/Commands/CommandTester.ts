@@ -1,8 +1,8 @@
-import { SECOND } from '../../../shared/constants';
-import { BaseCommand, ExecutionParameters } from './BaseCommand';
+import { SECOND } from "../../../shared/constants";
+import { BaseCommand, ExecutionParameters } from "./BaseCommand";
 
 export class CommandTester extends BaseCommand {
-  public static help = 'time';
+  public static help = "time";
   private canWork = true;
   private listenToKeyboard = false;
 
@@ -16,31 +16,31 @@ export class CommandTester extends BaseCommand {
       return 1;
     }
 
-    if (this.args.map(e => e.toLocaleLowerCase()).includes('help')) {
+    if (this.args.map(e => e.toLocaleLowerCase()).includes("help")) {
       const helpMessage = [
         `Example '${this.args[0]} 5' will count 5 seconds`,
         `or '${this.args[0]} keyboard' will test keyboard`,
       ];
-      this.finish(helpMessage.join('\n'));
+      this.finish(helpMessage.join("\n"));
       return 0;
     }
 
-    if (this.hasArg('keyboard')) {
+    if (this.hasArg("keyboard")) {
       this.listenToKeyboard = true;
       return new Promise<number>(resolve => (resolve = this.resolve));
     }
 
     const stringNumber = this.args[1];
     if (!stringNumber) {
-      this.finish('You are using this command incorrectly!');
+      this.finish("You are using this command incorrectly!");
       return 1;
     }
     const number = parseInt(stringNumber);
     if (isNaN(number)) {
-      this.finish('Number was expected provided something else?');
+      this.finish("Number was expected provided something else?");
       return 1;
     }
-    const history = this.hasArg('history') ? true : false;
+    const history = this.hasArg("history") ? true : false;
 
     for (let i = 0; i < number; i++) {
       if (history) {
@@ -51,14 +51,14 @@ export class CommandTester extends BaseCommand {
       await new Promise(resolve => {
         setTimeout(() => {
           if (!this.canWork) {
-            this.finish('And we are done');
+            this.finish("And we are done");
             return 1;
           }
           resolve();
         }, SECOND);
       });
     }
-    this.finish('Done');
+    this.finish("Done");
     return 0;
   }
   sigKill() {

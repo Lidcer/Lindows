@@ -1,7 +1,7 @@
-import React, { ChangeEvent } from 'react';
-import { internal } from '../../services/internals/Internal';
-import { launchApp } from '../../essential/apps';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import React, { ChangeEvent } from "react";
+import { internal } from "../../services/internals/Internal";
+import { launchApp } from "../../essential/apps";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUserPlus,
   faHome,
@@ -16,12 +16,12 @@ import {
   faUserMinus,
   faUserSlash,
   faCheck,
-} from '@fortawesome/free-solid-svg-icons';
+} from "@fortawesome/free-solid-svg-icons";
 
-import { ILypeAccount } from '../../../shared/ApiLypeRequestsResponds';
-import { LypeAccountInfo } from './LypeAccount';
-import { popup } from '../../components/Popup/popupRenderer';
-import { ContextMenu, IElement } from '../../components/ContextMenu/ContextMenu';
+import { ILypeAccount } from "../../../shared/ApiLypeRequestsResponds";
+import { LypeAccountInfo } from "./LypeAccount";
+import { popup } from "../../components/Popup/popupRenderer";
+import { ContextMenu, IElement } from "../../components/ContextMenu/ContextMenu";
 import {
   Lype,
   LypeContent,
@@ -60,17 +60,17 @@ import {
   LypeLeftNavbarButton,
   LypeMessages,
   LypeAccountStatusBadgeBig,
-} from './LypeStyled';
-import { getNotification, NotificationSystem } from '../../components/Desktop/Notifications';
-import { BaseWindow } from '../BaseWindow/BaseWindow';
-import { getStatusColour, LypeService, LypeServiceState } from '../../services/backgroundService/LypeServices';
-import { bgRunningService, bgService, killBGService } from '../../services/backgroundService/ServicesHandler';
+} from "./LypeStyled";
+import { getNotification, NotificationSystem } from "../../components/Desktop/Notifications";
+import { BaseWindow } from "../BaseWindow/BaseWindow";
+import { getStatusColour, LypeService, LypeServiceState } from "../../services/backgroundService/LypeServices";
+import { bgRunningService, bgService, killBGService } from "../../services/backgroundService/ServicesHandler";
 interface ILypeProps {
   window?: BaseWindow;
   destroy?: () => void;
 }
 
-type Tab = 'friends' | 'addFriends' | 'friendRequests' | 'blockedUsers';
+type Tab = "friends" | "addFriends" | "friendRequests" | "blockedUsers";
 
 interface ILypeState {
   ready: boolean;
@@ -89,10 +89,10 @@ interface ILypeState {
 }
 
 export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
-  private lypeService = bgRunningService<LypeService>('lype');
+  private lypeService = bgRunningService<LypeService>("lype");
   private ref: React.RefObject<HTMLDivElement>;
   private performance = -1;
-  private animationState: 'start' | 'loop' | 'end' | 'idle' = 'idle';
+  private animationState: "start" | "loop" | "end" | "idle" = "idle";
   private animationIdle = 0;
   private animationMaxOffset = 45;
   private notification: NotificationSystem;
@@ -102,14 +102,14 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     super(props);
     this.ref = React.createRef();
     this.state = {
-      tab: 'friends',
+      tab: "friends",
       ready: false,
-      error: '',
-      filterTab: '',
-      searchAutoComplete: 'filter',
+      error: "",
+      filterTab: "",
+      searchAutoComplete: "filter",
       inProgress: false,
-      searchBar: '',
-      warn: '',
+      searchBar: "",
+      warn: "",
       friendsSearch: [],
       animation: {
         x: this.animationMaxOffset,
@@ -143,7 +143,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
         <LypeWarnContent className='animated bounceIn faster'>
           {this.state.warn}
           <LypeWarnIgnore>
-            <FontAwesomeIcon onClick={() => this.setState({ warn: '' })} icon={faTimes}></FontAwesomeIcon>
+            <FontAwesomeIcon onClick={() => this.setState({ warn: "" })} icon={faTimes}></FontAwesomeIcon>
           </LypeWarnIgnore>
         </LypeWarnContent>
       );
@@ -153,7 +153,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   get lypeContent() {
     if (this.state.error) return this.showError;
     if (this.shouldLoad) return this.loadingAnimation;
-    if (this.lypeService.state === 'createAccount') return this.connectAccount;
+    if (this.lypeService.state === "createAccount") return this.connectAccount;
     if (!this.lypeService || !this.lypeService.account) return this.loginAccount;
 
     if (!this.lypeService.account) return <div>?</div>;
@@ -198,7 +198,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   }
 
   get connectAccount() {
-    const name = internal.account.account ? internal.account.account.username : '';
+    const name = internal.account.account ? internal.account.account.username : "";
     return (
       <Lype>
         <LypeLoginRequired>
@@ -245,26 +245,26 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
         <LypeLeftNavbar>
           <LypeLeftNavbarButtons>
             <LypeLeftNavbarButton
-              className={`${this.state.tab === 'friends' ? 'llnb-active' : ''}`}
-              onClick={() => this.switchTab('friends')}
+              className={`${this.state.tab === "friends" ? "llnb-active" : ""}`}
+              onClick={() => this.switchTab("friends")}
             >
               <FontAwesomeIcon title='Add home' icon={faHome}></FontAwesomeIcon>
             </LypeLeftNavbarButton>
             <LypeLeftNavbarButton
-              className={`${this.state.tab === 'addFriends' ? 'llnb-active' : ''}`}
-              onClick={() => this.switchTab('addFriends')}
+              className={`${this.state.tab === "addFriends" ? "llnb-active" : ""}`}
+              onClick={() => this.switchTab("addFriends")}
             >
               <FontAwesomeIcon title='Add friend' icon={faUserPlus}></FontAwesomeIcon>
             </LypeLeftNavbarButton>
             <LypeLeftNavbarButton
-              className={`${this.state.tab === 'friendRequests' ? 'llnb-active' : ''}`}
-              onClick={() => this.switchTab('friendRequests')}
+              className={`${this.state.tab === "friendRequests" ? "llnb-active" : ""}`}
+              onClick={() => this.switchTab("friendRequests")}
             >
               <FontAwesomeIcon title='Friend request' icon={faUserClock}></FontAwesomeIcon>
             </LypeLeftNavbarButton>
             <LypeLeftNavbarButton
-              className={`${this.state.tab === 'blockedUsers' ? 'llnb-active' : ''}`}
-              onClick={() => this.switchTab('blockedUsers')}
+              className={`${this.state.tab === "blockedUsers" ? "llnb-active" : ""}`}
+              onClick={() => this.switchTab("blockedUsers")}
             >
               <FontAwesomeIcon title='Blocked users' icon={faUserTimes}></FontAwesomeIcon>
             </LypeLeftNavbarButton>
@@ -305,15 +305,15 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   searchKeyUp = async (ev: React.KeyboardEvent<HTMLInputElement>) => {
     if (ev.keyCode !== 13) return;
-    if (this.state.tab !== 'addFriends') return;
+    if (this.state.tab !== "addFriends") return;
     if (!this.state.searchBar) return;
-    if (this.state.warn) this.setState({ warn: '' });
+    if (this.state.warn) this.setState({ warn: "" });
     this.setState({ inProgress: true });
     await this.startLoading();
     try {
       const result = await this.lypeService.findUsers(this.state.searchBar);
       const state = { ...this.state };
-      if (!result.length) return this.setState({ warn: 'Nothing found', inProgress: false });
+      if (!result.length) return this.setState({ warn: "Nothing found", inProgress: false });
       state.friendsSearch = result;
       state.inProgress = false;
       this.setState(state);
@@ -338,7 +338,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   handleLogin = () => {
     if (this.props.window) {
-      launchApp('accountmgr');
+      launchApp("accountmgr");
     } else {
       location.href = `${location.origin}/account/?a=lype`;
     }
@@ -358,13 +358,13 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     const lypeAccount = this.lypeService.account;
 
     switch (this.state.tab) {
-      case 'friends':
+      case "friends":
         return this.renderFriendsTab();
-      case 'addFriends':
+      case "addFriends":
         return this.renderAddFriendsTab();
-      case 'friendRequests':
+      case "friendRequests":
         return this.renderFriendRequestsTab();
-      case 'blockedUsers':
+      case "blockedUsers":
         return this.renderBlockedUsersTab();
 
       default:
@@ -374,7 +374,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
             <a
               onClick={ev => {
                 ev.stopPropagation();
-                this.switchTab('addFriends');
+                this.switchTab("addFriends");
               }}
             >
               Click here
@@ -392,7 +392,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
         y={ev.clientY}
         onAnyClick={() => popup.remove(element)}
         elements={[
-          { content: 'Are you sure' },
+          { content: "Are you sure" },
           {
             content: <span className='text-success'>Yes</span>,
             iconOrPicture: faCheck,
@@ -416,7 +416,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   openContentMenu = (ev: React.MouseEvent<HTMLDivElement, MouseEvent>, account: ILypeAccount) => {
     const iElements: IElement[] = [];
     if (this.lypeService.friends.find(f => f.id === account.id)) {
-      iElements.push({ content: 'Call', iconOrPicture: faPhoneAlt });
+      iElements.push({ content: "Call", iconOrPicture: faPhoneAlt });
       iElements.push({
         content: <span className='text-danger'>Remove friend</span>,
         iconOrPicture: faUserMinus,
@@ -550,7 +550,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
                   this.setState(state);
                   this.onAddOrRemoveFriend(e.id, true);
                 },
-                content: 'Add friend',
+                content: "Add friend",
               },
             ]}
           />
@@ -568,7 +568,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
                 onClick: () => {
                   this.onAddOrRemoveFriend(e.id, false);
                 },
-                content: 'Remove friend Request',
+                content: "Remove friend Request",
               },
             ]}
           />
@@ -579,8 +579,8 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   onAddOrRemoveFriend = async (id: string, add: boolean) => {
     try {
-      if (this.state.warn) this.setState({ warn: '' });
-      this.setState({ warn: '', inProgress: true });
+      if (this.state.warn) this.setState({ warn: "" });
+      this.setState({ warn: "", inProgress: true });
       await this.startLoading();
       await this.lypeService.addOrRemoveFriend(id, add);
       if (!this.destroyed) this.setState({ inProgress: false });
@@ -610,13 +610,13 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
                   onClick: () => {
                     this.onAddOrRemoveFriend(e.id, true);
                   },
-                  content: 'Accept',
+                  content: "Accept",
                 },
                 {
                   onClick: () => {
                     this.onAddOrRemoveFriend(e.id, false);
                   },
-                  content: 'Deny',
+                  content: "Deny",
                 },
               ]}
             />
@@ -648,7 +648,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
                   onClick: () => {
                     //console.log('should unblock');
                   },
-                  content: 'Unblock',
+                  content: "Unblock",
                 },
               ]}
             />
@@ -688,23 +688,23 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   };
 
   componentDidMount() {
-    if (!this.props.window) window.addEventListener('resize', this.update);
+    if (!this.props.window) window.addEventListener("resize", this.update);
     this.animateLoading();
     this.startup();
   }
 
   componentWillUnmount() {
     this.destroyed = true;
-    internal.removeListener('allReady', this.startup);
-    internal.account.removeListener('login', this.update);
-    internal.account.removeListener('logout', this.update);
-    this.lypeService.removeListener('destroy', this.lypeServiceCrash);
-    window.removeEventListener('resize', this.update);
+    internal.removeListener("allReady", this.startup);
+    internal.account.removeListener("login", this.update);
+    internal.account.removeListener("logout", this.update);
+    this.lypeService.removeListener("destroy", this.lypeServiceCrash);
+    window.removeEventListener("resize", this.update);
   }
 
   lypeServiceCrash = () => {
     const state = { ...this.state };
-    state.error = 'Lype service crashed';
+    state.error = "Lype service crashed";
     this.setState(state);
   };
 
@@ -714,7 +714,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       const state = { ...this.state };
       state.animation.x = this.animationMaxOffset;
       state.animation.y = this.animationMaxOffset;
-      this.animationState = 'idle';
+      this.animationState = "idle";
       this.setState(state);
       return;
     }
@@ -731,11 +731,11 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     const maxLimit = 160;
     const safeSpeed = 0.1;
 
-    if (this.animationState === 'loop') {
+    if (this.animationState === "loop") {
       if (state.animation.y === maxLimit) {
         state.animation.y = 0;
         state.animation.x = 0;
-        this.animationState = 'end';
+        this.animationState = "end";
       }
 
       if (state.animation.x === maxLimit) {
@@ -754,7 +754,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       if (state.animation.x > maxLimit) {
         state.animation.x = maxLimit;
       }
-    } else if (this.animationState === 'start') {
+    } else if (this.animationState === "start") {
       let speed = state.animation.y / this.animationMaxOffset;
       if (speed < safeSpeed) speed = safeSpeed;
       state.animation.y = state.animation.y - current * animationSpeed * speed;
@@ -762,9 +762,9 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       if (state.animation.y < 0) {
         state.animation.x = 0;
         state.animation.y = 0;
-        this.animationState = 'loop';
+        this.animationState = "loop";
       }
-    } else if (this.animationState === 'end') {
+    } else if (this.animationState === "end") {
       let speed = state.animation.y / this.animationMaxOffset;
       if (speed < safeSpeed) speed = safeSpeed;
       state.animation.y = state.animation.y + current * animationSpeed * speed;
@@ -773,14 +773,14 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       if (state.animation.y > this.animationMaxOffset) {
         state.animation.x = this.animationMaxOffset;
         state.animation.y = this.animationMaxOffset;
-        this.animationState = 'idle';
+        this.animationState = "idle";
       }
-    } else if (this.animationState === 'idle') {
+    } else if (this.animationState === "idle") {
       this.animationIdle += current;
 
       if (this.animationIdle > 500) {
         this.animationIdle = 0;
-        this.animationState = 'start';
+        this.animationState = "start";
       }
     }
 
@@ -798,7 +798,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
       this.startLoading();
       return;
     } else if (lypeState === LypeServiceState.Error) {
-      state.error = this.lypeService.errorMessage ? this.lypeService.errorMessage : 'Unknown';
+      state.error = this.lypeService.errorMessage ? this.lypeService.errorMessage : "Unknown";
     }
     this.setState(state);
   };
@@ -808,14 +808,14 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
   };
 
   startup = async () => {
-    this.lypeService = await bgService<LypeService>('lype');
-    if (this.lypeService.state === 'notReady') {
-      this.lypeService.on('stateChange', this.startup);
+    this.lypeService = await bgService<LypeService>("lype");
+    if (this.lypeService.state === "notReady") {
+      this.lypeService.on("stateChange", this.startup);
       return;
     }
-    this.lypeService.removeListener('stateChange', this.startup);
-    this.lypeService.on('stateChange', this.onStateChange);
-    this.lypeService.on('destroy', this.lypeServiceCrash);
+    this.lypeService.removeListener("stateChange", this.startup);
+    this.lypeService.on("stateChange", this.onStateChange);
+    this.lypeService.on("destroy", this.lypeServiceCrash);
     const state = { ...this.state };
     state.ready = true;
     if (this.lypeService.state === LypeServiceState.Error) {
@@ -823,7 +823,7 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     }
     if (this.props.window) {
       this.notification = getNotification();
-      this.raiseNotification('Startup', 'App just started up');
+      this.raiseNotification("Startup", "App just started up");
     }
     this.setState(state);
   };
@@ -839,15 +839,15 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   get shouldLoad() {
     if (!this.lypeService) return true;
-    if (this.lypeService.state === 'notReady') return true;
-    if (this.lypeService.state === 'loading') return true;
+    if (this.lypeService.state === "notReady") return true;
+    if (this.lypeService.state === "loading") return true;
     if (!this.state.ready) return true;
     return false;
   }
 
   switchTab(tab: Tab) {
     const state = { ...this.state };
-    state.searchBar = '';
+    state.searchBar = "";
     state.tab = tab;
     this.setState(state);
   }
@@ -857,8 +857,8 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
     if (this.props.destroy) {
       await this.props.destroy();
       setTimeout(async () => {
-        await killBGService('lype');
-        launchApp('lype');
+        await killBGService("lype");
+        launchApp("lype");
       }, 500);
     }
     if (!this.props.window) location.reload();
@@ -866,6 +866,6 @@ export class LypeWebpage extends React.Component<ILypeProps, ILypeState> {
 
   raiseNotification(title: string, content: string) {
     if (!this.props.window) return;
-    this.notification.raise(this.props.window, 'Startup', 'App just started up');
+    this.notification.raise(this.props.window, "Startup", "App just started up");
   }
 }

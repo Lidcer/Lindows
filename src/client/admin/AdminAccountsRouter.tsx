@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
-import { IAdminWebSocket } from './Websocket';
-import { Route, Switch } from 'react-router-dom';
-import { AdminAccountsList } from './AdminAccountsList';
-import { INotificationHandler } from './NotificationHandler';
-import AdminAccountsItem from './AdminAccountsItem';
+import React, { Component } from "react";
+import { IAdminWebSocket } from "./Websocket";
+import { Route, Switch } from "react-router-dom";
+import { AdminAccountsList } from "./AdminAccountsList";
+import { INotificationHandler } from "./NotificationHandler";
+import AdminAccountsItem from "./AdminAccountsItem";
 
 interface IAdminAccountsProps {
   adminWebSocket: IAdminWebSocket;

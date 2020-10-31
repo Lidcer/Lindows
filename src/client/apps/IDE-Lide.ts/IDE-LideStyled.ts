@@ -1,4 +1,4 @@
-import styled from 'styled-components';
+import styled from "styled-components";
 
 export const WarperIDE = styled.div`
   overflow: hidden;
@@ -33,7 +33,7 @@ export const EditorArea = styled.div`
   display: flex;
   flex-flow: column;
   * {
-    font-family: monospace, 'Courier New', Courier;
+    font-family: monospace, "Courier New", Courier;
   }
 `;
 

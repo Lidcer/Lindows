@@ -1,17 +1,17 @@
-import { internal } from '../../services/internals/Internal';
-import { BaseCommand, ExecutionParameters as ExecutionData } from './BaseCommand';
-import { Cd } from './Cd';
-import { HelpCommand } from './Help';
-import { LsCommand } from './Ls';
-import { Start } from './Start';
-import { Sudo } from './Sudo';
-import { Take } from './Take';
-import { CommandTester } from './CommandTester';
-import { Grep } from './Grep';
-import { createKeyboardEvent } from '../../utils/util';
-import { MkDir } from './Mkdir';
-import { EchoCommand } from './Echo';
-import { Cat } from './Cat';
+import { internal } from "../../services/internals/Internal";
+import { BaseCommand, ExecutionParameters as ExecutionData } from "./BaseCommand";
+import { Cd } from "./Cd";
+import { HelpCommand } from "./Help";
+import { LsCommand } from "./Ls";
+import { Start } from "./Start";
+import { Sudo } from "./Sudo";
+import { Take } from "./Take";
+import { CommandTester } from "./CommandTester";
+import { Grep } from "./Grep";
+import { createKeyboardEvent } from "../../utils/util";
+import { MkDir } from "./Mkdir";
+import { EchoCommand } from "./Echo";
+import { Cat } from "./Cat";
 import {
   everyone,
   FileSystemDirectory,
@@ -19,8 +19,8 @@ import {
   isDirectory,
   isNameValid,
   StringSymbol,
-} from '../../utils/FileSystemDirectory';
-import { attachToWindowIfDev } from '../requests';
+} from "../../utils/FileSystemDirectory";
+import { attachToWindowIfDev } from "../requests";
 
 export interface CommandForExecute {
   entry: string;
@@ -35,27 +35,27 @@ export async function installCommand(command: BaseCommand, name: string, owner =
     throw new Error(validName.reason);
   }
   if (!/^[a-z]+$/gi.test(name)) {
-    throw new Error('Invalid name');
+    throw new Error("Invalid name");
   }
   const system = internal.processor.symbol;
   const directories = internal.fileSystem.root.contents(system);
-  const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
-  if (!bin) throw new Error('Corrupted file system');
-  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
-  if (!cmd) throw new Error('Corrupted file system');
+  const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
+  if (!bin) throw new Error("Corrupted file system");
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === "cmd") as FileSystemDirectory;
+  if (!cmd) throw new Error("Corrupted file system");
   const contents = cmd.contents(system);
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (existing && !isDirectory(existing)) {
-    throw new Error('Command already installed!');
+    throw new Error("Command already installed!");
   } else if (existing) {
-    throw new Error('Failed to install command under this name!');
+    throw new Error("Failed to install command under this name!");
   }
-  return await cmd.createFile(name.toLowerCase(), 'lindowObject', command, owner);
+  return await cmd.createFile(name.toLowerCase(), "lindowObject", command, owner);
 }
 
 export async function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
   if (system.getHash !== internal.processor.symbol.getHash) {
-    throw new Error('You do not have admin permission to install this command');
+    throw new Error("You do not have admin permission to install this command");
   }
   return installCommand(command, name, system);
 }
@@ -63,46 +63,46 @@ export async function installSystemCommand(command: BaseCommand | any, name: str
 export function uninstallCommand(name: string, owner = everyone) {
   const system = internal.processor.symbol;
   const directories = internal.fileSystem.root.contents(system);
-  const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
-  if (!bin) throw new Error('Corrupted file system');
-  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
-  if (!cmd) throw new Error('Corrupted file system');
+  const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
+  if (!bin) throw new Error("Corrupted file system");
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === "cmd") as FileSystemDirectory;
+  if (!cmd) throw new Error("Corrupted file system");
   const contents = cmd.contents(system);
 
   const existing = contents.find(c => c.name.toLowerCase() == name.toLowerCase());
   if (!existing) {
-    throw new Error('Command is not installed!');
+    throw new Error("Command is not installed!");
   }
   if (!isDirectory(existing)) {
     existing.deleteFile(owner);
   } else {
-    throw new Error('File is a directory');
+    throw new Error("File is a directory");
   }
 }
 
 export async function installPreInstalledCommands() {
-  await installSystemCommand(HelpCommand, 'help', internal.processor.symbol);
-  await installSystemCommand(Grep, 'grep', internal.processor.symbol);
-  await installSystemCommand(Sudo, 'sudo', internal.processor.symbol);
-  await installSystemCommand(Start, 'start', internal.processor.symbol);
-  await installSystemCommand(LsCommand, 'ls', internal.processor.symbol);
-  await installSystemCommand(Cd, 'cd', internal.processor.symbol);
-  await installSystemCommand(MkDir, 'mkdir', internal.processor.symbol);
-  await installSystemCommand(EchoCommand, 'echo', internal.processor.symbol);
-  await installSystemCommand(Cat, 'cat', internal.processor.symbol);
+  await installSystemCommand(HelpCommand, "help", internal.processor.symbol);
+  await installSystemCommand(Grep, "grep", internal.processor.symbol);
+  await installSystemCommand(Sudo, "sudo", internal.processor.symbol);
+  await installSystemCommand(Start, "start", internal.processor.symbol);
+  await installSystemCommand(LsCommand, "ls", internal.processor.symbol);
+  await installSystemCommand(Cd, "cd", internal.processor.symbol);
+  await installSystemCommand(MkDir, "mkdir", internal.processor.symbol);
+  await installSystemCommand(EchoCommand, "echo", internal.processor.symbol);
+  await installSystemCommand(Cat, "cat", internal.processor.symbol);
   if (DEV) {
-    await installSystemCommand(CommandTester, 'dev', internal.processor.symbol);
-    await installSystemCommand(Take, 'take', internal.processor.symbol);
+    await installSystemCommand(CommandTester, "dev", internal.processor.symbol);
+    await installSystemCommand(Take, "take", internal.processor.symbol);
   }
 }
 
 export function getCommand(commandName: string) {
   const system = internal.processor.symbol;
   const directories = internal.fileSystem.root.contents(system);
-  const bin = directories.find(b => isDirectory(b) && b.name === 'bin') as FileSystemDirectory;
-  if (!bin) throw new Error('Corrupted file system');
-  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === 'cmd') as FileSystemDirectory;
-  if (!cmd) throw new Error('Corrupted file system');
+  const bin = directories.find(b => isDirectory(b) && b.name === "bin") as FileSystemDirectory;
+  if (!bin) throw new Error("Corrupted file system");
+  const cmd = bin.contents(system).find(b => isDirectory(b) && b.name === "cmd") as FileSystemDirectory;
+  if (!cmd) throw new Error("Corrupted file system");
   const contents = cmd.contents(system);
   const command = contents.find(c => !isDirectory(c) && c.name === commandName) as FileSystemFile;
   if (command) {
@@ -133,16 +133,16 @@ export function executeCommand(text: string, response: CommandResponse, object?:
     object = createExecutionData();
   }
 
-  const commands = text.split('&&');
+  const commands = text.split("&&");
   const validCommands = commands.map(c => {
     c = c.trim();
-    const pipes = c.split('||').map(c => c.trim());
+    const pipes = c.split("||").map(c => c.trim());
     pipes.shift();
 
     const executablePipes: CommandForExecute[] = [];
 
     for (const pipe of pipes) {
-      const cmd = pipe.split(' ')[0];
+      const cmd = pipe.split(" ")[0];
       executablePipes.push({
         entry: pipe,
         command: cmd,
@@ -150,7 +150,7 @@ export function executeCommand(text: string, response: CommandResponse, object?:
       });
     }
 
-    const cmd = c.split(' ')[0];
+    const cmd = c.split(" ")[0];
     const executable: CommandForExecute = {
       entry: c,
       command: cmd,
@@ -176,9 +176,9 @@ function executeCommands(commands: Required<CommandForExecute>[], response: Comm
   const responseValidator = (key: string) => {
     if (!response[key]) throw new Error(`Expected function ${key}`);
     const type = typeof response[key];
-    if (type !== 'function') throw new Error(`Expected function ${key} got ${type}`);
+    if (type !== "function") throw new Error(`Expected function ${key} got ${type}`);
   };
-  const validate = ['addHistory', 'update', 'finish'];
+  const validate = ["addHistory", "update", "finish"];
   validate.forEach(e => responseValidator(e));
 
   const command = commands.shift();
@@ -191,7 +191,7 @@ function executeCommands(commands: Required<CommandForExecute>[], response: Comm
   }
 
   executor.addHistory = text => {
-    let textToAdd = '';
+    let textToAdd = "";
     if (text) {
       textToAdd = text;
     }
@@ -202,7 +202,7 @@ function executeCommands(commands: Required<CommandForExecute>[], response: Comm
   };
   executor.finish = text => {
     setTimeout(() => {
-      let textToPush = '';
+      let textToPush = "";
       if (text) {
         textToPush = text;
       }
@@ -241,7 +241,7 @@ function executeCommands(commands: Required<CommandForExecute>[], response: Comm
 }
 
 function mockExecuter(command: string) {
-  if (typeof command !== 'string') {
+  if (typeof command !== "string") {
     throw new Error(`Expected string got ${typeof command}`);
   } else if (!command.length) {
     return;

@@ -1,7 +1,7 @@
-import { Document, Schema } from 'mongoose';
-import { mongoose } from '../../database/database';
+import { Document, Schema } from "mongoose";
+import { mongoose } from "../../database/database";
 
-type ChannelType = 'group' | 'dm';
+type ChannelType = "group" | "dm";
 export interface IMongooseLypeChannelSchema extends Document {
   type: ChannelType;
   messages: string[];
@@ -18,11 +18,11 @@ const LypeChannelSchema = new Schema<IMongooseLypeChannelSchema>(
   },
   {
     writeConcern: {
-      w: 'majority',
+      w: "majority",
       j: true,
       wtimeout: 1000,
     },
   },
 );
 
-const LypeChannel = mongoose.model<IMongooseLypeChannelSchema>('LypeChannel', LypeChannelSchema);
+const LypeChannel = mongoose.model<IMongooseLypeChannelSchema>("LypeChannel", LypeChannelSchema);

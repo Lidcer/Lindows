@@ -1,5 +1,5 @@
-import styled from 'styled-components';
-import { alwaysOnTop } from './../../Constants';
+import styled from "styled-components";
+import { alwaysOnTop } from "./../../Constants";
 export const zIndex = alwaysOnTop;
 
 export const Aero = styled.div`
@@ -132,7 +132,6 @@ export const TaskBarShowDesktopVer = styled.div`
 export const TaskBarStartBtnVer = styled.div`
   ${hover}
   padding: 5pt;
-
 
   text-align: center;
 

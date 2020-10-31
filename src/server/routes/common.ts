@@ -1,11 +1,11 @@
-import { Response, Request } from 'express';
-import { IMongooseUserSchema, getUserImage } from './users/users-database';
-import { IResponse, IAccount, VerificationType } from '../../shared/ApiUsersRequestsResponds';
-import { ObjectSchema } from '@hapi/joi';
-import { TOKEN_HEADER } from '../../shared/constants';
-import * as jwt from 'jsonwebtoken';
-import { logger } from '../database/EventLog';
-import { PRIVATE_KEY } from '../config';
+import { Response, Request } from "express";
+import { IMongooseUserSchema, getUserImage } from "./users/users-database";
+import { IResponse, IAccount, VerificationType } from "../../shared/ApiUsersRequestsResponds";
+import { ObjectSchema } from "@hapi/joi";
+import { TOKEN_HEADER } from "../../shared/constants";
+import * as jwt from "jsonwebtoken";
+import { logger } from "../database/EventLog";
+import { PRIVATE_KEY } from "../config";
 
 export interface IJWTAccount {
   id: string;
@@ -19,19 +19,19 @@ export interface IJWVerificationCode extends IJWTAccount {
 
 export function rIsUserForbidden(res: Response, user: IMongooseUserSchema, verification = false): boolean {
   if (!user) {
-    respondWithError(res, 400, 'Account does not exist');
+    respondWithError(res, 400, "Account does not exist");
     return true;
   }
   if (!user.verified && verification) {
-    respondWithError(res, 400, 'User has not verified email');
+    respondWithError(res, 400, "User has not verified email");
     return true;
   }
   if (user.banned) {
-    respondWithError(res, 400, 'Account has been banned');
+    respondWithError(res, 400, "Account has been banned");
     return true;
   }
   if (user.compromised) {
-    respondWithError(res, 400, 'Account has been compromised');
+    respondWithError(res, 400, "Account has been compromised");
     return true;
   }
   return false;
@@ -79,34 +79,34 @@ export async function rGetTokenData(
 ): Promise<IJWTAccount | IJWVerificationCode | null> {
   const token = getToken(req);
   if (!token) {
-    respondWithError(res, 400, 'Missing token');
+    respondWithError(res, 400, "Missing token");
     return null;
   }
-  if (typeof token !== 'string') {
-    respondWithError(res, 400, 'Invalid token provided');
+  if (typeof token !== "string") {
+    respondWithError(res, 400, "Invalid token provided");
     return null;
   }
-  const data = await jwt.verify(token, PRIVATE_KEY) as IJWVerificationCode;
+  const data = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
   if (!data) {
-    respondWithError(res, 400, 'Invalid token');
+    respondWithError(res, 400, "Invalid token");
     return null;
   }
   if (data.id && data.exp) {
-    if (typeof data.exp !== 'number') {
-      respondWithError(res, 400, 'Invalid token');
+    if (typeof data.exp !== "number") {
+      respondWithError(res, 400, "Invalid token");
       return null;
     }
     if (data.exp < Date.now()) {
-      respondWithError(res, 401, 'Token has expired');
+      respondWithError(res, 401, "Token has expired");
       return null;
     }
     if (verificaiton && !data.type) {
-      respondWithError(res, 401, 'Problem with token');
+      respondWithError(res, 401, "Problem with token");
       return null;
     }
     return data;
   }
-  respondWithError(res, 400, 'Could not authenticate user');
+  respondWithError(res, 400, "Could not authenticate user");
   return null;
 }
 
@@ -114,16 +114,16 @@ export async function getTokenData(req?: Request, token?: string): Promise<IJWTA
   if (!req && !token) return null;
   if (!token && req) {
     const t = req.headers[TOKEN_HEADER];
-    if (typeof t !== 'string') return null;
+    if (typeof t !== "string") return null;
     token = t;
   }
   if (!token) return null;
-  if (typeof token !== 'string') return null;
-  const data = await jwt.verify(token, PRIVATE_KEY) as IJWVerificationCode;
+  if (typeof token !== "string") return null;
+  const data = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
   if (!data) return null;
 
   if (data.id && data.exp) {
-    if (typeof data.exp !== 'number') return null;
+    if (typeof data.exp !== "number") return null;
     if (data.exp < Date.now()) return null;
     return data;
   }

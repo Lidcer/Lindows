@@ -1,9 +1,9 @@
-import React, { Component } from 'react';
-import { Route, Switch } from 'react-router-dom';
-import { AdminEventLogList } from './AdminEventLogList';
-import AdminEventLogItem from './AdminEventLogItem';
-import { IAdminWebSocket } from './Websocket';
-import { INotificationHandler } from './NotificationHandler';
+import React, { Component } from "react";
+import { Route, Switch } from "react-router-dom";
+import { AdminEventLogList } from "./AdminEventLogList";
+import AdminEventLogItem from "./AdminEventLogItem";
+import { IAdminWebSocket } from "./Websocket";
+import { INotificationHandler } from "./NotificationHandler";
 
 interface IAdminEventLogRouterProps {
   adminWebSocket: IAdminWebSocket;
