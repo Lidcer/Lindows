@@ -1,5 +1,5 @@
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { ActivationWatermarkStyle } from './activationWatermarkStyled';
 
 export class ActivationWatermark extends React.Component {

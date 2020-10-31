@@ -1,13 +1,13 @@
 import React from 'react';
 import { TaskBar } from '../TaskBar/TaskBar';
 import { Cursor } from '../Cursor/Cursor';
-import { ContextMenu, IElement, showContext } from '../ContextMenu/ContextMenu';
+import { IElement, showContext } from '../ContextMenu/ContextMenu';
 import { SelectBox } from '../SelectBox/SelectBox';
 import Axios from 'axios';
 import { launchApp } from '../../essential/apps';
 import { HotKeyHandler } from '../../essential/apphotkeys';
 import { BlueScreen } from '../BlueScreen/BlueScreen';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { Keypress } from '../../essential/constants/Keypress';
 import { startBackgroundServices, backgroundServices } from '../../services/backgroundService/ServicesHandler';
 import { ActivationWatermark } from '../activationWatermark/activationWatermark';

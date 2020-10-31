@@ -10,7 +10,7 @@ import {
   FileExplorerUrlBar,
   FileExplorerWarper,
 } from './FileExplorerStyled';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import {
   canReadFileOrDirectory,
   everyone,

@@ -1,21 +1,21 @@
 import styled from 'styled-components';
 
 export const AdminNavbar = styled.div`
-    background-color: transparent !important;
-    .nav-link{
-        color: lime !important;
-        &:hover{
-            background-color: lime !important;
-            color: black !important;
-        }
+  background-color: transparent !important;
+  .nav-link {
+    color: lime !important;
+    &:hover {
+      background-color: lime !important;
+      color: black !important;
     }
-    .active {
-        background-color: rgba(0, 255, 0, 0.25) !important;
-    }
-    
-    ul {
-       list-style-type: none;
-    }
+  }
+  .active {
+    background-color: rgba(0, 255, 0, 0.25) !important;
+  }
+
+  ul {
+    list-style-type: none;
+  }
 `;
 
 // .btn-terminal{

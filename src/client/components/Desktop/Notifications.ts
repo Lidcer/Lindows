@@ -1,9 +1,9 @@
 import { EventEmitter } from 'events';
-import { BrowserStorage } from '../../services/SystemService/BrowserStorageSystem';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { BrowserStorage } from '../../services/internals/__BrowserStorageSystem';
+import { internal } from '../../services/internals/Internal';
 import { BaseWindow, MessageBox } from '../../apps/BaseWindow/BaseWindow';
 import { attachToWindowIfDev } from '../../essential/requests';
-import { Processor } from '../../services/SystemService/ProcessorSystem';
+import { Processor } from '../../services/system/ProcessorSystem';
 
 export interface INotification {
   icon?: string;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { allInstalledApps, AppDescription, installApp, installPreInstalledApps } from '../essential/apps';
-import { internal } from '../services/SystemService/ServiceHandler';
+import { allInstalledApps, AppDescription } from '../essential/apps';
+import { internal } from '../services/internals/Internal';
 
 interface State {
   apps: AppDescription[];

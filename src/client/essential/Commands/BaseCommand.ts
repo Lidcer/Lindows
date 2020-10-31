@@ -1,5 +1,5 @@
 import { MINUTE } from '../../../shared/constants';
-import { Processor } from '../../services/SystemService/ProcessorSystem';
+import { Processor } from '../../services/system/ProcessorSystem';
 import { FileSystemDirectory } from '../../utils/FileSystemDirectory';
 
 interface CommandParameters {

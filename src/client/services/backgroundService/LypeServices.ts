@@ -1,5 +1,5 @@
 
-import { internal } from '../SystemService/ServiceHandler';
+import { internal } from '../internals/Internal';
 import { BaseService } from './BaseService';
 import Axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TOKEN_HEADER } from '../../../shared/constants';
@@ -13,7 +13,7 @@ import {
   ILypeFriendsUserResponse,
 } from '../../../shared/ApiLypeRequestsResponds';
 import { EventEmitter } from 'events';
-import { IAccountInfo } from '../SystemService/AccountSystem';
+import { IAccountInfo } from '../system/Account';
 
 export interface ILypeAccountInfo extends IAccountInfo {
   customStatus?: string;

@@ -49,5 +49,4 @@ export const TerminalBlinkingCursor = styled.span`
   }
 `;
 
-export const TerminalLine = styled.span`
-`;
+export const TerminalLine = styled.span``;

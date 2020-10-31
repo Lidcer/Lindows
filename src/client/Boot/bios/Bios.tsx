@@ -1,8 +1,6 @@
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
 import { UAParser } from 'ua-parser-js';
 import { Keypress } from '../../essential/constants/Keypress';
-import { stat } from 'fs';
 import Axios from 'axios';
 import { IP, IIPResponse } from '../../../shared/ApiUsersRequestsResponds';
 import {
@@ -27,13 +25,12 @@ import {
 } from './BiosStyled';
 import { inIframe } from '../../utils/util';
 import { BiosTermsAndPolicy } from './TermsAndPolicy';
+import { internal } from '../../services/internals/Internal';
 
 interface IBIOSProps {
-  next: (type: WebpageType) => void;
-  shouldStayInBios: boolean;
+  next: () => void;
 }
 
-declare type WebpageType = 'webpage' | 'lindows';
 declare type Tab = 'main' | 'network' | 'exit';
 const TAB: Tab[] = ['main', 'network', 'exit'];
 declare type GradientColours = [number, number, number];
@@ -67,7 +64,7 @@ interface IBIOSStorage {
 
 function initGradient() {
   const COLOUR = [25, 34, 253];
-  const RANGE = internal.fingerprinter.mobile.mobile() ? 25 : 100;
+  const RANGE = internal.hardwareInfo.mobile.mobile() ? 25 : 100;
   const HALF = Math.floor(RANGE * 0.5);
   const R_MULTIPLAYER = COLOUR[0] / HALF;
   const G_MULTIPLAYER = COLOUR[1] / HALF;
@@ -316,14 +313,8 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     return null;
   }
 
-  get bootOption() {
-    const data: IBIOSStorage = internal.browserStorage.getItem(this.BROWSER_STORAGE_KEY);
-    if (!data) return 'NONE';
-    return data.bootInLindows ? 'Lindows' : 'WEBPAGE';
-  }
-
   get systemInfo() {
-    const systemInfo = internal.fingerprinter;
+    const systemInfo = internal.hardwareInfo;
     const userAgent = systemInfo.userAgent;
     const browser = userAgent.getBrowser();
     const cpu = userAgent.getCPU();
@@ -442,27 +433,27 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
   }
 
   bootOptionPopup = () => {
-    const state = { ...this.state };
-    state.popup = {
-      title: 'Select boot option',
-      content: 'Select in which thing would you like to boot',
-      firstButton: {
-        content: 'Lindows',
-        selected: true,
-        fun: () => this.selectOptionsBootOptionFirstBoot('lindows'),
-      },
-      secondButton: {
-        content: 'webpage',
-        selected: false,
-        fun: () => this.selectOptionsBootOptionFirstBoot('webpage'),
-      },
-      thirdButton: {
-        content: 'Close',
-        selected: false,
-        fun: () => this.closePopup(),
-      },
-    };
-    this.setState(state);
+    // const state = { ...this.state };
+    // state.popup = {
+    //   title: 'Select boot option',
+    //   content: 'Select in which thing would you like to boot',
+    //   firstButton: {
+    //     content: 'Lindows',
+    //     selected: true,
+    //     fun: () => this.selectOptionsBootOptionFirstBoot('lindows'),
+    //   },
+    //   secondButton: {
+    //     content: 'webpage',
+    //     selected: false,
+    //     fun: () => this.selectOptionsBootOptionFirstBoot('webpage'),
+    //   },
+    //   thirdButton: {
+    //     content: 'Close',
+    //     selected: false,
+    //     fun: () => this.closePopup(),
+    //   },
+    // };
+    //this.setState(state);
   };
 
   componentWillUnmount() {
@@ -504,14 +495,14 @@ export class Bios extends React.Component<IBIOSProps, IBIOSState> {
     };
   }
 
-  selectOptionsBootOptionFirstBoot = async (type: WebpageType) => {
-    const data: IBIOSStorage = {
-      bootInLindows: type === 'lindows',
-    };
-    this.closePopup();
-    await internal.browserStorage.setItem(this.BROWSER_STORAGE_KEY, data);
-    if (!this.props.shouldStayInBios) this.props.next(type);
-  };
+  // selectOptionsBootOptionFirstBoot = async (type: WebpageType) => {
+  //   const data: IBIOSStorage = {
+  //     bootInLindows: type === 'lindows',
+  //   };
+  //   this.closePopup();
+  //   await internal.browserStorage.setItem(this.BROWSER_STORAGE_KEY, data);
+  //   if (!this.props.shouldStayInBios) this.props.next('bootLindows');
+  // };
 
   getDevice(userAgent: UAParser) {
     const device = userAgent.getDevice();

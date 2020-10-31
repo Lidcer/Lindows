@@ -1,7 +1,7 @@
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { SECOND } from '../../../shared/constants';
-import { launchApp } from '../../essential/apps';
+
 import {
   BootScreenStyled,
   BootScreenMiddle,
@@ -12,7 +12,8 @@ import {
 import { inIframe } from '../../utils/util';
 
 interface IBootScreenProps {
-  next: (bios?: 'bios') => void;
+  next: (bios?: 'bios' | 'bootLindows') => void;
+  goToBios: () => void;
 }
 
 interface IBootScreenState {
@@ -79,9 +80,9 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     }
 
     if (internal.ready) {
-      this.allReady();
+      this.readyToBoot();
     }
-    internal.on('allReady', this.allReady);
+    internal.on('readyToBoot', this.readyToBoot);
     internal.on('onServiceReady', this.onServiceReady);
     internal.on('onServiceFailed', this.onServiceFailed);
     document.addEventListener('keydown', this.keypress, false);
@@ -92,7 +93,7 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     if (this.timeout !== undefined) {
       clearTimeout(this.timeout);
     }
-    internal.removeListener('allReady', this.allReady);
+    internal.removeListener('readyToBoot', this.readyToBoot);
     internal.removeListener('onServiceReady', this.onServiceReady);
     internal.removeListener('onServiceFailed', this.onServiceFailed);
     document.removeEventListener('keydown', this.keypress, false);
@@ -129,10 +130,14 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     }
   };
 
-  allReady = () => {
+  readyToBoot = () => {
     const bootTime = inIframe() ? 5000 : STATIC ? 1000 : 500;
     setTimeout(() => {
-      this.props.next(this.state.goToBios ? 'bios' : undefined);
+      if (this.state.goToBios) {
+        this.props.goToBios();
+      } else {
+        this.props.next();
+      }
     }, bootTime);
     //launchApp('lype');
     // setTimeout(() => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { EventEmitter } from 'events';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { CursorStyle } from './CursorStyled';
 interface IState {
   cursorType: CursorType;

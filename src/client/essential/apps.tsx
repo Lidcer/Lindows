@@ -6,7 +6,7 @@ import { MouseProperties } from '../apps/MouseProperties/MouseProperties';
 import { GroupViewer } from '../apps/GroupViewer/GroupViewer';
 import React from 'react';
 import { IManifest, BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
-import { internal } from '../services/SystemService/ServiceHandler';
+import { internal } from '../services/internals/Internal';
 import { WebExplorer } from '../apps/WebExplorer/WebExplorer';
 import { VirtualCreate } from '../apps/VirtualCreate/VirtualCrate';
 import { attachToWindowIfDev, isDev } from './requests';

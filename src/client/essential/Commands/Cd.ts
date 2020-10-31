@@ -1,5 +1,5 @@
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { FileSystemDirectory, isDirectory } from '../../utils/FileSystemDirectory';
 
 export class Cd extends BaseCommand {

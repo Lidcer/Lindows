@@ -1,19 +1,19 @@
 import React, { PureComponent } from 'react';
 import { Desktop } from './Desktop/Desktop';
-import { Bios, showTermsOfPolicy } from './bios/Bios';
-import { BootScreen } from './bootScreen/bootScreen';
-import { Webpage } from './webpage';
+import { Bios, showTermsOfPolicy } from '../Boot/bios/Bios';
 import { attachToWindowIfDev } from '../essential/requests';
-import { SECOND } from '../../shared/constants';
+import { BootLindows } from '../Boot/BootLindows/BootLindows';
+import { BootScreen } from '../Boot/bootScreen/bootScreen';
 
 //interface IProps { }
 
 interface IState {
-  display: 'bootscreen' | 'bios' | 'bootanimation' | 'lidnows' | 'webpage';
+  display: 'bootscreen' | 'bootos' | 'lidnows' | 'bios';
 }
 
 export class Main extends PureComponent<{} /*IProps*/, IState> {
-  private shouldStayInBios = false;
+  private sequence = ['bootscreen', 'bootos', 'lindows'];
+
   constructor(props) {
     super(props);
 
@@ -23,31 +23,53 @@ export class Main extends PureComponent<{} /*IProps*/, IState> {
     attachToWindowIfDev('b', this);
   }
 
-  next = (boot?: 'lindows' | 'webpage' | 'bios') => {
-    if (boot === 'bios') this.shouldStayInBios = true;
+  next = () => {
+    console.log('?')
+    const index = this.sequence.indexOf(this.state.display);
+    if (index === -1) return;
+    const next = this.sequence[index + 1];
+    console.log(next)
+    if (!next) return;
+
     switch (this.state.display) {
       case 'bootscreen':
-        if (!boot && !showTermsOfPolicy()) {
-          this.setState({ display: 'lidnows' });
-        } else {
+        if (showTermsOfPolicy()) {
           this.setState({ display: 'bios' });
+        } else {
+          this.setState({ display: 'bootos' });
         }
         break;
-      case 'bios':
-        if (boot !== 'bios' && !showTermsOfPolicy()) {
+      case 'bootos':
+        if (showTermsOfPolicy()) {
+          this.setState({ display: 'bios' });
+        } else {
+          this.setState({ display: 'bootos' });
+        }
+      case 'lidnows':
+        if (showTermsOfPolicy()) {
+          this.setState({ display: 'bios' });
+        } else {
           this.setState({ display: 'lidnows' });
-        } else this.setState({ display: 'bios' });
-        break;
+        }
       default:
         break;
     }
   };
+  gotoBios = () => {
+    this.setState({ display: 'bios' });
+  };
 
   render() {
-    if (this.state.display === 'lidnows') return <Desktop></Desktop>;
-    else if (this.state.display === 'webpage') return <Webpage></Webpage>;
-    else if (this.state.display === 'bios')
-      return <Bios next={this.next} shouldStayInBios={this.shouldStayInBios}></Bios>;
-    else if (this.state.display === 'bootscreen') return <BootScreen next={this.next}> </BootScreen>;
+    switch (this.state.display) {
+      case 'lidnows':
+        return <Desktop></Desktop>;
+      case 'bios':
+        return <Bios next={this.next}></Bios>;
+      case 'bootos':
+        return <BootLindows next={this.next}></BootLindows>;
+      case 'bootscreen':
+        return <BootScreen next={this.next} goToBios={this.gotoBios}></BootScreen>;
+    }
+    return <div className='text-danger'>Internal error</div>;
   }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCog, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import { popup } from '../Popup/popupRenderer';
@@ -18,7 +18,7 @@ interface INotificationsDisplayState {
 
 export class NotificationsDisplay extends React.Component<{}, INotificationsDisplayState> {
   private timeouts: NodeJS.Timeout[] = [];
-  private notification = getNotification(); 
+  private notification = getNotification();
   constructor(props) {
     super(props);
     this.state = {
@@ -26,7 +26,6 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     };
   }
   componentDidMount() {
-
     this.notification.on('notification', this.newNotification);
   }
 

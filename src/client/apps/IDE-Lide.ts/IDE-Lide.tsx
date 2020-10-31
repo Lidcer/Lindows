@@ -18,7 +18,7 @@ import safeEval from 'safer-eval';
 import 'ace-builds/src-noconflict/mode-typescript';
 import 'ace-builds/src-noconflict/theme-dracula';
 import './IDE-Lide.scss';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { templateProject } from './template';
 import { IExplorerFile, IExplorerFolder, getFolder, IDEFileExplorer, isFolder } from './FileExplorer';
 import styled from 'styled-components';

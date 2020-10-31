@@ -1,7 +1,7 @@
 import { BaseWindow, IBaseWindowProps, IManifest, MessageBox } from '../BaseWindow/BaseWindow';
 import { uniq } from 'lodash';
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import {
   TerminalBlinkingCursor,
   TerminalCommandContent,
@@ -45,7 +45,7 @@ function terminalName() {
 }
 
 function deviceInfo() {
-  const browser = internal.fingerprinter.userAgent.getBrowser();
+  const browser = internal.hardwareInfo.userAgent.getBrowser();
   if (browser && (browser.name || browser.version)) return `${browser.name || ''}${browser.version || ''}`;
   return 'unknown';
 }

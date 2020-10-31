@@ -1,6 +1,6 @@
 import { BaseWindow, IBaseWindowProps, IManifest } from '../BaseWindow/BaseWindow';
 import React from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { TaskManagerStyle } from './taskManagerStyled';
 
 export class TaskManager extends BaseWindow {

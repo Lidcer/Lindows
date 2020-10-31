@@ -1,4 +1,4 @@
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { BaseCommand, ExecutionParameters as ExecutionData } from './BaseCommand';
 import { Cd } from './Cd';
 import { HelpCommand } from './Help';

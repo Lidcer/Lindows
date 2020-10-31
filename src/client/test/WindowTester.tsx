@@ -1,6 +1,6 @@
 import React from 'react';
 import { appConstructorGenerator, allApps } from '../essential/apps';
-import { internal } from '../services/SystemService/ServiceHandler';
+import { internal } from '../services/internals/Internal';
 import { BaseWindow, MessageBox, AdminPromp } from '../apps/BaseWindow/BaseWindow';
 import { pushUniqToArray, removeFromArray } from '../utils/util';
 interface IWindowTesterState {

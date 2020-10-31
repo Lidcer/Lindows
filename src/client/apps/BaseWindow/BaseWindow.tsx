@@ -9,7 +9,7 @@ import {
   faFile,
 } from '@fortawesome/free-solid-svg-icons';
 import { navBarPos } from '../../components/TaskBar/TaskBar';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { random, clamp } from 'lodash';
 import { ReactGeneratorFunction, appConstructorGenerator, launchApp, AppDescription } from '../../essential/apps';
 import { EventEmitter } from 'events';
@@ -48,7 +48,7 @@ import {
 } from './baseWindowStyled';
 import { alwaysOnTop as alwaysOnTopIndex } from '../../Constants';
 import { WindowEvent } from './WindowEvent';
-import { Network } from '../../services/SystemService/NetworkSystem';
+import { Network } from '../../services/system/NetworkSystem';
 import { attachToWindowIfDev } from '../../essential/requests';
 import './baseWindows.scss';
 import { LindowError } from '../../utils/util';
@@ -304,7 +304,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     securityKeys.set(this, Symbol());
 
-    this._phone = internal.fingerprinter.mobile.phone();
+    this._phone = internal.hardwareInfo.mobile.phone();
     this._minWidth = options && options.minWidth ? options.minWidth : this._minWidth;
     this._minHeight = options && options.minHeight ? options.minHeight : this._minHeight;
 

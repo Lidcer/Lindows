@@ -49,7 +49,7 @@ export class StringSymbol {
     return hashMap.get(this);
   }
 
-  requals(stringSymbol: StringSymbol) {
+  equals(stringSymbol: StringSymbol) {
     const hash = hashMap.get(this);
     const hash2 = hashMap.get(stringSymbol);
     return hash === hash2;

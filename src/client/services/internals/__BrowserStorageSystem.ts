@@ -1,8 +1,8 @@
 import * as compress from 'compress-str';
-import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
+import { Service, SystemServiceStatus } from './BaseSystemService';
 import { inIframe } from '../../utils/util';
 
-export class BrowserStorage extends BaseSystemService {
+export class BrowserStorage extends Service {
   private readonly storageName = '__lindows__';
   private data: any = {};
   private useSession = false;
@@ -15,6 +15,7 @@ export class BrowserStorage extends BaseSystemService {
     const obsoleteBrowser = () => {
       location.href = 'unsupported-browser';
     };
+
     const start = async () => {
       if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error('Service is not in state for start');
       if (!localStorage) {

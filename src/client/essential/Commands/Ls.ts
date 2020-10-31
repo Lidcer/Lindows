@@ -1,5 +1,5 @@
 import { BaseCommand, ExecutionParameters } from './BaseCommand';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { isDirectory, FileSystemDirectory, FileSystemFile, StringSymbol } from '../../utils/FileSystemDirectory';
 
 export class LsCommand extends BaseCommand {

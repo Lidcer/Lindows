@@ -1,10 +1,10 @@
 import fingerprintjs from 'fingerprintjs2';
 import { UAParser } from 'ua-parser-js';
 import MobileDetect from 'mobile-detect';
-import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
+import { BaseService, SystemServiceStatus } from '../internals/BaseSystemService';
 import { SECOND } from '../../../shared/constants';
 
-export class Fingerprinter extends BaseSystemService {
+export class HardwareInfo extends BaseService {
   private result: fingerprintjs.Component[] = [];
   private _status = SystemServiceStatus.Uninitialized;
 

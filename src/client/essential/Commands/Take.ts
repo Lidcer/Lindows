@@ -1,5 +1,5 @@
 import { BaseCommand } from './BaseCommand';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 
 export class Take extends BaseCommand {
   public static help = ['killall, raiseinternalexception'].join('\n');

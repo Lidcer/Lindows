@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCommentAlt } from '@fortawesome/free-solid-svg-icons';
 import { BaseWindow } from '../../apps/BaseWindow/BaseWindow';
 import { StartMenu } from '../StartMenu/StartMenu';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { TaskBarNotificationHor, TaskBarNotificationVer, TaskBarExtended, TaskBarIcon, TaskBarOpenIcons,
    TaskBarClockHor, TaskBarClockVer, TaskBarShowDesktopHor, TaskBarShowDesktopVer, TaskBarStartBtnHor,
     TaskBarStartBtnVer, TaskBarGridHor, TaskBarGridVer, TaskBarBackground, Aero, TaskBarBottom, TaskBarTop,

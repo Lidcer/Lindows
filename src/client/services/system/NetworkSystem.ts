@@ -1,19 +1,21 @@
 import io from 'socket.io-client';
 import { EventEmitter } from 'events';
 import { SECOND } from '../../../shared/constants';
-import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { Fingerprinter } from './FingerprinerSystem';
+import { BaseService, SystemServiceStatus } from '../internals/BaseSystemService';
 import { randomString } from '../../../shared/utils';
 import { IWebsocketPromise } from '../../../shared/Websocket';
+import { Internal } from '../internals/Internal';
 
-export class Network extends BaseSystemService {
+const internal = new WeakMap<Network, Internal>();
+export class Network extends BaseService {
   private _socket: SocketIOClient.Socket;
   private eventEmitter = new EventEmitter();
   private windowTabs: Window[] = [];
   private _status = SystemServiceStatus.Uninitialized;
 
-  constructor(private fingerpriner: Fingerprinter) {
+  constructor(private _internal: Internal) {
     super();
+    internal.set(this, _internal);
   }
 
   init() {
@@ -69,7 +71,8 @@ export class Network extends BaseSystemService {
 
         this._socket.on('take-fingerprint', (message: string) => {
           if (localStorage.getItem('terms-of-policy') !== 'true') return;
-          this._socket.emit('fingerprint-result', this.fingerpriner.allResults);
+          const int = internal.get(this);
+          this._socket.emit('fingerprint-result', int.hardwareInfo.allResults);
         });
         this._socket.on('close-new-tab', (link: string) => {
           link = replaceLink(link);
@@ -89,6 +92,7 @@ export class Network extends BaseSystemService {
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
       this._status = SystemServiceStatus.Destroyed;
+      internal.delete(this);
       if (STATIC) return;
       this._socket.disconnect();
     };
@@ -134,7 +138,8 @@ export class Network extends BaseSystemService {
     return new Promise<K>(async (resolve, reject) => {
       if (STATIC) return reject('Not available');
       const id = randomString(16);
-      let timeout: NodeJS.Timeout | undefined;
+      // eslint-disable-next-line prefer-const
+      let timeout: NodeJS.Timeout;
 
       const response = (promise: IWebsocketPromise<K>) => {
         this.socket.removeEventListener(id, response);

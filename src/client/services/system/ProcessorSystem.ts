@@ -2,13 +2,12 @@ import { BaseWindow, IManifest } from '../../apps/BaseWindow/BaseWindow';
 import { EventEmitter } from 'events';
 import { random } from 'lodash';
 import { ReactGeneratorFunction, appConstructorGenerator, launchApp } from '../../essential/apps';
-import { Broadcaster } from './BroadcasterSystem';
+import { Broadcaster } from '../internals/BroadcasterSystem';
 import { IJSONWindowEvent } from '../../apps/BaseWindow/WindowEvent';
-import { BrowserStorage } from './BrowserStorageSystem';
-import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
-import { requestSystemSymbol, StringSymbol } from '../../utils/FileSystemDirectory';
-import { randomString } from '../../../shared/utils';
-import { Fingerprinter } from './FingerprinerSystem';
+import { BrowserStorage } from '../internals/__BrowserStorageSystem';
+import { BaseService, Service, SystemServiceStatus } from '../internals/BaseSystemService';
+import { HardwareInfo } from './HardwareInfo';
+import { Internal } from '../internals/Internal';
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -24,9 +23,9 @@ export interface IDisplayingApp<T = unknown> {
   state?: any;
 }
 
-const systemSymbol = requestSystemSymbol();
 const browserStorageKey = '__processor';
-export class Processor extends BaseSystemService {
+const internal = new WeakMap<Processor, Internal>();
+export class Processor extends BaseService {
   private readonly serviceName = 'processor';
   private readonly processorId = random(1000, 9999);
   private readonly _uptime = Date.now();
@@ -45,15 +44,15 @@ export class Processor extends BaseSystemService {
   private paused = false;
   private eventEmitter = new EventEmitter();
   private _status = SystemServiceStatus.Uninitialized;
-  private _symbol = systemSymbol;
   public onAppAdd() {}
 
-  constructor(private browserStorage: BrowserStorage, private broadcaster: Broadcaster, fingerpriner: Fingerprinter) {
+  constructor(_internal: Internal) {
     super();
+    internal.set(this, _internal);
     const storageKey = `${browserStorageKey}:__user`;
     this.user = localStorage.getItem(storageKey) || `Guest${random(1000, 9999)}`;
     localStorage.setItem(storageKey, this.user);
-    const browser = fingerpriner.userAgent.getBrowser();
+    const browser = _internal.hardwareInfo.userAgent.getBrowser();
     if (browser) {
       this._deviceName = `${browser.name}${browser.version}`;
     }
@@ -89,6 +88,7 @@ export class Processor extends BaseSystemService {
   private destroy = () => {
     if (this._status === SystemServiceStatus.Destroyed) throw new Error('Service has already been destroyed');
     this._status = SystemServiceStatus.Destroyed;
+    internal.delete(this);
     // this.broadcaster.removeListener(`${this.serviceName}-attach`, this.addNewProcess);
     // this.broadcaster.removeListener(`${this.serviceName}-detach`, this.removeProcess);
     // this.broadcaster.removeListener(`${this.serviceName}-update`, this.updateProcesses);
@@ -147,11 +147,13 @@ export class Processor extends BaseSystemService {
   }
 
   private broadcastNewProcess = () => {
-    this.broadcaster.emit(`${this.serviceName}-attach`, this._uptime);
+    const int = internal.get(this);
+    int.broadcaster.emit(`${this.serviceName}-attach`, this._uptime);
   };
 
   private broadcastProcessRemoval = () => {
-    this.broadcaster.emit(`${this.serviceName}-detach`, this._uptime);
+    const int = internal.get(this);
+    int.broadcaster.emit(`${this.serviceName}-detach`, this._uptime);
   };
 
   private addNewProcess = (id: number) => {
@@ -292,7 +294,8 @@ export class Processor extends BaseSystemService {
     return new Promise(resolve => {
       if (id === undefined) {
         id = this.processID++;
-        this.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
+        const int = internal.get(this);
+        int.broadcaster.emit(`${this.serviceName}-addApp`, [appName, id]);
       } else if (id > this.processID) this.processID = id + 1;
 
       const jsxElement = reactGeneratorFunction(id, { flags });
@@ -314,7 +317,7 @@ export class Processor extends BaseSystemService {
     return new Promise(async (resolve, reject) => {
       const stringifiedProcesses = this.stringify;
       try {
-        await this.browserStorage.setItem(browserStorageKey, stringifiedProcesses);
+        //await this.browserStorage.setItem(browserStorageKey, stringifiedProcesses);
         resolve();
       } catch (error) {
         reject(error);
@@ -345,10 +348,6 @@ export class Processor extends BaseSystemService {
 
   get processes() {
     return this.lindowsProcesses;
-  }
-
-  get symbol() {
-    return this._symbol;
   }
 
   private get frontend() {

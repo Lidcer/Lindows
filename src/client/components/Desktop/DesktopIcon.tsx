@@ -2,7 +2,7 @@ import { clamp } from 'lodash';
 import React from 'react';
 import { MessageBox, MessageBoxButtons, MessageBoxIcon } from '../../apps/BaseWindow/BaseWindow';
 import { launchApp } from '../../essential/apps';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from '../../utils/FileSystemDirectory';
 import { IElement, showContext } from '../ContextMenu/ContextMenu';
 import { DesktopIconCation, DesktopIconRenamingInput, DesktopIconStyle } from './DesktopStyled';

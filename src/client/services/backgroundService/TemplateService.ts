@@ -1,4 +1,4 @@
-import { internal } from '../SystemService/ServiceHandler';
+import { internal } from '../internals/Internal';
 import { BaseService } from './BaseService';
 import { EventEmitter } from 'events';
 

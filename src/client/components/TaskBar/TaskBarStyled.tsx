@@ -8,7 +8,6 @@ export const Aero = styled.div`
   filter: blur(6px);
   backdrop-filter: blur(6px);
   z-index: ${zIndex - 20} !important;
-
 `;
 
 export const hover = `
@@ -18,8 +17,7 @@ export const hover = `
     background-color: rgba(255, 255, 255, 0.15);
     transition: background-color 0.05s ease-out;
   }
-
-`
+`;
 
 export const TaskbarStyled = styled.div`
   color: white;
@@ -39,7 +37,7 @@ export const TaskBarBackground = styled.div`
   background-color: black;
   background-color: rgba(255, 255, 255, 0.5);
   background-image: url(/assets/images/noise.png);
-  `;
+`;
 
 export const TaskBarBottom = styled.div`
   position: absolute;
@@ -57,7 +55,7 @@ export const TaskBarTop = styled.div`
   top: 0;
   width: 100%;
   height: 30pt;
-  `;
+`;
 
 export const TaskBarLeft = styled.div`
   position: absolute;
@@ -65,7 +63,7 @@ export const TaskBarLeft = styled.div`
   z-index: ${zIndex - 10} !important;
   height: 100%;
   width: 50pt;
-  `;
+`;
 
 export const TaskBarRight = styled.div`
   position: absolute;
@@ -82,7 +80,7 @@ export const TaskBarGridHor = styled.div`
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   height: 40px;
-  overflow:hidden;
+  overflow: hidden;
 `;
 
 export const TaskBarGridVer = styled.div`
@@ -92,9 +90,8 @@ export const TaskBarGridVer = styled.div`
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   width: 30px;
-  overflow:hidden;
+  overflow: hidden;
 `;
-
 
 export const TaskBarClockHor = styled.div`
   ${hover}

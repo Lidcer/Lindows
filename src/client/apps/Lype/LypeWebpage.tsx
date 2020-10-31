@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { internal } from '../../services/SystemService/ServiceHandler';
+import { internal } from '../../services/internals/Internal';
 import { launchApp } from '../../essential/apps';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {

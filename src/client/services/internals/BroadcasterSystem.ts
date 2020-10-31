@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
-import { BaseSystemService, SystemServiceStatus } from './BaseSystemService';
+import { BaseService, SystemServiceStatus } from './BaseSystemService';
 import { attachToWindowIfDev } from '../../essential/requests';
 
-export class Broadcaster extends BaseSystemService {
+export class Broadcaster extends BaseService {
   private broadcastChannel: BroadcastChannel;
   private origin: string;
   private eventEmitter = new EventEmitter();
