@@ -7,7 +7,6 @@ export const BlueScreenStyle = styled.div`
   height: 100%;
   width: 100%;
   padding: 10px 5vw;
-}
 `;
 
 export const BSOD = styled.div`

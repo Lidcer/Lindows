@@ -72,8 +72,8 @@ export class MoneyClickerGame {
   constructor(
     private canvas: HTMLCanvasElement,
     private moneyClickerWindow: MoneyClicker,
-    private getData: () => MoneyClickerSaveGameData | undefined,
-    private setData: (data: MoneyClickerSaveGameData, quick: boolean) => Promise<void>,
+    private getData: () => MoneyClickerSaveGameData | null,
+    private setData: (data: MoneyClickerSaveGameData, quick: boolean) => Promise<any>,
   ) {}
 
   private addEventListeners() {
@@ -461,7 +461,6 @@ export class MoneyClickerGame {
 
     //let boxThing = document.querySelector('.box') as HTMLElement;
     //boxThing.style.display = "none";
-
     this.values = new Values(this.setData, this.getData); //__________>
 
     this.vorIcon = new ShopIcon(ctx, this.canvas, this.vorPic, 10, 26, 50, 25, 85, 20);

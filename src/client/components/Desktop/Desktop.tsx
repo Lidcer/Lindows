@@ -209,7 +209,7 @@ export class Desktop extends React.Component<{}, IState> {
     }
 
     const uniqueName = internal.fileSystem.getUniqueName(desktop, "New folder", internal.systemSymbol);
-    internal.fileSystem.saveHome();
+    //internal.fileSystem.saveHome();
     const file = await desktop.createDirectory(uniqueName, new StringSymbol(internal.system.user.cleanUserName));
     this.newFile = {
       x: ev.clientX,
@@ -229,7 +229,7 @@ export class Desktop extends React.Component<{}, IState> {
       y: ev.clientY,
       file,
     };
-    internal.fileSystem.saveHome();
+    //internal.fileSystem.saveHome();
     this.refresh();
   };
 

@@ -363,7 +363,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (manifest) {
       const generator = appConstructorGenerator(manifest.launchName);
       if (generator) {
-        const app = await internal.processor.addApp<BaseWindow>(generator, manifest.launchName);
+        const app = await internal.system.processor.addApp<BaseWindow>(generator, manifest.launchName);
         return app.object;
       }
     }
@@ -375,7 +375,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     );
     anonymous = true;
 
-    const app = await internal.processor.addApp<BaseWindow>(mockGenerator, name);
+    const app = await internal.system.processor.addApp<BaseWindow>(mockGenerator, name);
     return app.object;
   }
 
@@ -415,9 +415,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     const launchFile = this.props && this.props.launchFile && (this.props.launchFile as FileSystemFile<AppDescription>);
     if (!launchFile || launchFile.deleted) {
       this.exit();
-    } else if (launchFile.getType(internal.processor.symbol) !== "lindowApp") {
+    } else if (launchFile.getType(internal.systemSymbol) !== "lindowApp") {
       this.exit();
-    } else if (!launchFile.getContent(internal.processor.symbol).app) {
+    } else if (!launchFile.getContent(internal.systemSymbol).app) {
       this.exit();
     }
 
@@ -448,13 +448,14 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     window.addEventListener("mouseup", this._mouseUp, false);
     window.addEventListener("touchend", this._touchEnd, false);
+
     window.addEventListener("keydown", this._keyboard);
     window.addEventListener("keypress", this._keyboard);
     window.addEventListener("keyup", this._keyboard);
 
-    internal.processor.startProcess(this);
+    internal.system.processor.startProcess(this);
     this.changeActiveState(true);
-    internal.processor.makeActive(this);
+    internal.system.processor.makeActive(this);
     this.setState({ animate: "in" });
     const t = setTimeout(() => {
       this._removeTimeout(t);
@@ -500,12 +501,17 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
     window.removeEventListener("mouseup", this._mouseUp, false);
     window.removeEventListener("touchend", this._touchEnd, false);
+
+    window.removeEventListener("keydown", this._keyboard);
+    window.removeEventListener("keypress", this._keyboard);
+    window.removeEventListener("keyup", this._keyboard);
+
     const timeouts = this.timeouts;
     for (const timeout of timeouts) {
       this._removeTimeout(timeout);
     }
 
-    internal.processor.killProcess(this);
+    internal.system.processor.killProcess(this);
     if (this.closed) {
       try {
         const promise = this.closed();
@@ -636,7 +642,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       }
       this.setState({ active });
     }
-    if (active && doProcess) internal.processor.makeActive(this);
+    if (active && doProcess) internal.system.processor.makeActive(this);
   }
 
   focus() {
@@ -678,7 +684,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
 
   getProcessor() {
     if (adminAllowed.get(this)) {
-      return internal.processor;
+      return internal.system.processor;
     }
     return null;
   }
@@ -691,33 +697,37 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   getAccount(password: string) {
-    return internal.account;
+    return internal.system.account;
   }
 
   get network() {
-    return internal.network;
+    return internal.system.network;
   }
 
   /** Sets item in storage but doesn't save
    * @param {object} value
    */
   setItemQuick<V = string>(value: V) {
-    return internal.browserStorage.setItemQuick(this.getManifest().fullAppName, value);
+    return internal.system.registry.setUserItem(this.getManifest().fullAppName, value);
   }
 
   /** Sets item in storage and saves it if save it
    * @param {object} value
    * @returns {Promise}
    */
-  setItem<V = string>(value: V) {
-    return internal.browserStorage.setItem(this.getManifest().fullAppName, value);
+  setItem<V = any>(value: V) {
+    return internal.system.registry.setUserItem(this.getManifest().fullAppName, value);
   }
 
   /** Gets set item
    * @returns {object | undefined}
    */
-  getItem() {
-    return internal.browserStorage.getItem(this.getManifest().fullAppName);
+  getItem<T = any>(): T | null {
+    return internal.system.registry.getUserItemValue(this.getManifest().fullAppName);
+  }
+
+  getItemReg() {
+    return internal.system.registry.getUserItem(this.getManifest().fullAppName);
   }
 
   get reference() {
@@ -829,7 +839,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
     if (this._frozen) return;
     this._buttonMinimize();
     try {
-      await internal.processor.saveState();
+      await internal.system.processor.saveState();
       document.location.href = this.state.options.redirectToWebpageButton;
     } catch (error) {
       MessageBox.Show(this, `Unable to launch application ${error.message}`);
@@ -1254,7 +1264,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         animate: "out",
       });
       const t = setTimeout(() => {
-        internal.processor.killProcess(this);
+        internal.system.processor.killProcess(this);
         this._destroyed = true;
         this._removeTimeout(t);
         resolve();
@@ -1338,13 +1348,13 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         this.exit();
       });
       return;
-    } else if (launchFile.getType(internal.processor.symbol) !== "lindowApp") {
+    } else if (launchFile.getType(internal.systemSymbol) !== "lindowApp") {
       console.log("not not lindows app");
       setTimeout(() => {
         this.exit();
       });
       return;
-    } else if (!launchFile.getContent(internal.processor.symbol).app) {
+    } else if (!launchFile.getContent(internal.systemSymbol).app) {
       setTimeout(() => {
         this.exit();
       });
@@ -1604,7 +1614,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
+      const messageBox = await internal.system.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
 
       const onClick = (dialogResult: DialogResult) => {
         messageBox.object.msgBoxEmitter.removeListener("onClick", onClick);
@@ -1639,7 +1649,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
     messageBoxButtons?: MessageBoxButtons,
     messageBoxIcon?: MessageBoxIcon,
   ) {
-    const system = internal.processor.symbol;
+    const system = internal.systemSymbol;
     const apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
 
     const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
@@ -1651,7 +1661,7 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
       ></MessageBox>
     );
     setTimeout(async () => {
-      const messageBox = await internal.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
+      const messageBox = await internal.system.processor.addApp<MessageBox>(reactGeneratorFunction, "msgBox");
       messageBox.object.message = message || "";
       messageBox.object.caption = caption || "Message box";
       messageBox.object.buttons = messageBoxButtons === undefined ? MessageBoxButtons.OK : messageBoxButtons;
@@ -1808,7 +1818,7 @@ export class AdminPromp extends BaseWindow {
       const key = securityKeys.get(baseWindow);
       baseWindow.freeze(key);
       const changeActiveState = baseWindow.changeActiveState;
-      const adminPromp = await internal.processor.addApp<AdminPromp>(reactGeneratorFunction, "msgBox");
+      const adminPromp = await internal.system.processor.addApp<AdminPromp>(reactGeneratorFunction, "msgBox");
 
       const onClick = (bool: boolean) => {
         adminPromp.object.adminPrompEmitter.removeListener("onClick", onClick);

@@ -1,5 +1,5 @@
 import React from "react";
-import { appConstructorGenerator, allApps } from "../essential/apps";
+import { appConstructorGenerator } from "../essential/apps";
 import { internal } from "../services/internals/Internal";
 import { BaseWindow, MessageBox, AdminPromp } from "../apps/BaseWindow/BaseWindow";
 import { pushUniqToArray, removeFromArray } from "../utils/util";
@@ -153,12 +153,13 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       (window as any).apps = [];
     }
     if (!internal.ready) {
+      internal.on("readyToBoot", () => internal.system.init());
       internal.on("allReady", () => this.start());
       internal.on("onServiceReady", e => console.info(`ok ${e}`));
       internal.on("onServiceFailed", e => console.error(`nOk ${e}`));
       return;
     }
-    internal.processor.on("appAdd", e => {
+    internal.system.processor.on("appAdd", e => {
       pushUniqToArray((window as any).apps, e);
       if (e.props.id === -1) return;
       const urlParams = new URLSearchParams(window.location.search);
@@ -191,10 +192,10 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
       }
     });
 
-    internal.processor.on("appDisplayingAdd", app => {
+    internal.system.processor.on("appDisplayingAdd", app => {
       this.forceUpdate();
     });
-    internal.processor.on("appRemove", app => {
+    internal.system.processor.on("appRemove", app => {
       removeFromArray((window as any).apps, app);
       //this.forceUpdate();
     });
@@ -215,7 +216,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
 
   get subProcesses() {
     if (!internal.ready) return null;
-    return internal.processor.runningApps.map((a, i) => {
+    return internal.system.processor.runningApps.map((a, i) => {
       return a.app;
     });
   }

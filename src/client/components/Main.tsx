@@ -24,11 +24,9 @@ export class Main extends PureComponent<{} /*IProps*/, IState> {
   }
 
   next = () => {
-    console.log("?");
     const index = this.sequence.indexOf(this.state.display);
     if (index === -1) return;
     const next = this.sequence[index + 1];
-    console.log(next);
     if (!next) return;
 
     switch (this.state.display) {

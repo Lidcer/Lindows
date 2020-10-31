@@ -13,6 +13,7 @@ import {
 import { internal } from "../../services/internals/Internal";
 import {
   canReadFileOrDirectory,
+  DirectoryData,
   everyone,
   FileSystemContent,
   FileSystemDirectory,
@@ -113,7 +114,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
             this.exit();
             return;
           }
-          this.folderPermission = this.getProcessor().symbol;
+          this.folderPermission = this.getProcessor().systemSymbol;
         }
       } else if (internal.system.user.userName) {
         this.folderPermission = new StringSymbol(sanitizeName(internal.system.user.userName));
@@ -139,7 +140,7 @@ export class FileExplorer extends BaseWindow<IFileExplorerState> {
     return <FileExplorerList></FileExplorerList>;
   }
   get folderContent() {
-    let contents: FileSystemContent[];
+    let contents: DirectoryData["contents"];
     try {
       contents = this.variables.directory.contents(this.folderPermission);
     } catch (error) {

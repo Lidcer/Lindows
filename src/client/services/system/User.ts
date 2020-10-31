@@ -26,12 +26,13 @@ export class User extends BaseService {
       if (reg && typeof reg.data === "string") {
         this._userName = reg.data;
       } else {
-        this._userName = `Guest${random(4)}`;
+        this._userName = `Guest${random(1000, 9999)}`;
         await int.system.registry.setRootItem(regKey, this._userName, int.systemSymbol);
       }
-      const userDir = int.fileSystem.home.getDirectory(this._userName, int.systemSymbol);
+
+      const userDir = int.fileSystem.home.getDirectory(sanitizeName(this._userName), int.systemSymbol);
       if (!userDir) {
-        await int.fileSystem.createUserDirectory(this._userName);
+        await int.fileSystem.createUserDirectory(sanitizeName(this._userName), this.userSymbol);
       }
     };
 
@@ -49,7 +50,7 @@ export class User extends BaseService {
   }
   get userDirectory() {
     const int = internal.get(this);
-    return int.fileSystem.home.getDirectory(this.userName);
+    return int.fileSystem.home.getDirectory(sanitizeName(this._userName), int.systemSymbol);
   }
 
   get userName() {

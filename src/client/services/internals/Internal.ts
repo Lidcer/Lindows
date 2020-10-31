@@ -39,10 +39,13 @@ export class Internal {
     this._hardwareInfo = await this.initService(new HardwareInfo(), "HardwareInfo");
     this._broadcaster = await this.initService(new Broadcaster(), "Broadcaster");
 
-    this._eventEmitter.emit("readyToBoot", this);
     this._readyToBoot = true;
 
-    this._system = new System(this);
+    this._system = new System(this, () => {
+      this.isReady = true;
+      this._eventEmitter.emit("allReady");
+    });
+    this._eventEmitter.emit("readyToBoot", this);
   }
   private emitServiceStatus(service: Service<any>, serviceName: string) {
     if (!service.internalMethods || service.internalMethods.status() === SystemServiceStatus.Failed) {
@@ -52,7 +55,7 @@ export class Internal {
     this._eventEmitter.emit("onServiceReady", serviceName);
   }
 
-  // @ts-ignore
+  // @ts-ignorea
   private async initService<S extends Service>(service: S, name: string) {
     const systemInternal: Service<S> = {
       service,

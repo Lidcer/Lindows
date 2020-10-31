@@ -3,7 +3,13 @@ import React from "react";
 import { MessageBox, MessageBoxButtons, MessageBoxIcon } from "../../apps/BaseWindow/BaseWindow";
 import { launchApp } from "../../essential/apps";
 import { internal } from "../../services/internals/Internal";
-import { FileSystemDirectory, FileSystemFile, isDirectory, StringSymbol } from "../../utils/FileSystemDirectory";
+import {
+  DirectoryData,
+  FileSystemDirectory,
+  FileSystemFile,
+  isDirectory,
+  StringSymbol,
+} from "../../utils/FileSystemDirectory";
 import { IElement, showContext } from "../ContextMenu/ContextMenu";
 import { DesktopIconCation, DesktopIconRenamingInput, DesktopIconStyle } from "./DesktopStyled";
 
@@ -22,7 +28,7 @@ interface IPropertyDesktopIcon {
     shown: boolean;
   };
   onUpdate: () => void;
-  contents: (FileSystemDirectory | FileSystemFile)[];
+  contents: DirectoryData["contents"];
 }
 
 interface IStateDesktopIcon {
@@ -115,7 +121,7 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
       }
     }
     desktopDes.setContent(this.dotDesktop, this.sys);
-    internal.fileSystem.saveHome();
+    // internal.fileSystem.saveHome();
   };
 
   unselect = () => {

@@ -84,7 +84,7 @@ export class Terminal extends BaseWindow<ITerminal> {
           this.exit();
           return;
         }
-        this.folderPermission = this.getProcessor().symbol;
+        this.folderPermission = this.getProcessor().systemSymbol;
       }
     } else if (internal.system.processor.username) {
       this.folderPermission = new StringSymbol(sanitizeName(internal.system.processor.username));

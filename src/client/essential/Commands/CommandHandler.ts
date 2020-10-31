@@ -54,7 +54,7 @@ export async function installCommand(command: BaseCommand, name: string, owner =
 }
 
 export async function installSystemCommand(command: BaseCommand | any, name: string, system: StringSymbol) {
-  if (internal.systemSymbol.equals(system)) {
+  if (!internal.systemSymbol.equals(system)) {
     throw new Error("You do not have admin permission to install this command");
   }
   return installCommand(command, name, system);

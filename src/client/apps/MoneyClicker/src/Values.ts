@@ -143,6 +143,7 @@ export class Values extends EventEmitter {
   destroy() {
     clearInterval(this.interval);
     clearInterval(this.updateInterval);
+    this.storageDataToBrowser();
   }
 
   public updateTimer = () => {
@@ -271,7 +272,7 @@ export class Values extends EventEmitter {
     this.playCashSound();
   }
 
-  private storageDataToBrowser() {
+  private storageDataToBrowser(full = false) {
     this.actualSave++;
     const dataToStore: MoneyClickerSaveGameData = {
       actualMoney: this.actualMoney,
@@ -290,6 +291,10 @@ export class Values extends EventEmitter {
       upgradesCps: this.upgradesCps,
       upgradesPrice: this.upgradesPrice,
     };
+    if (full) {
+      return this.setItem(dataToStore, true);
+    }
+
     if (this.actualSave > 50) {
       this.setItem(dataToStore, false);
       this.actualSave = 0;

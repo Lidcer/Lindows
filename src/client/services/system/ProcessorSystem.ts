@@ -20,7 +20,6 @@ export interface IDisplayingApp<T = unknown> {
   state?: any;
 }
 
-const browserStorageKey = "__processor";
 const internal = new WeakMap<Processor, Internal>();
 export class Processor extends BaseService {
   private readonly serviceName = "processor";
@@ -46,9 +45,7 @@ export class Processor extends BaseService {
   constructor(_internal: Internal) {
     super();
     internal.set(this, _internal);
-    const storageKey = `${browserStorageKey}:__user`;
-    this.user = localStorage.getItem(storageKey) || `Guest${random(1000, 9999)}`;
-    localStorage.setItem(storageKey, this.user);
+
     const browser = _internal.hardwareInfo.userAgent.getBrowser();
     if (browser) {
       this._deviceName = `${browser.name}${browser.version}`;
@@ -141,6 +138,11 @@ export class Processor extends BaseService {
 
   removeListener(value: string | symbol, listener: (...args: any[]) => void) {
     this.eventEmitter.removeListener(value, listener);
+  }
+
+  get systemSymbol() {
+    const int = internal.get(this);
+    return int.systemSymbol;
   }
 
   private broadcastNewProcess = () => {

@@ -58,9 +58,24 @@ export class Registry extends BaseService {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
 
-    const start = () => {
+    const start = async () => {
       this._status = SystemServiceStatus.Starting;
-      const fs = internal.get(this);
+      const int = internal.get(this);
+      const reg = registryKeys.get(this);
+      const bin = int.fileSystem.root.getDirectory("bin", int.systemSymbol);
+      if (!bin) throw new Error("Curruped file system");
+      const variables = bin.getDirectory("variables", int.systemSymbol);
+      if (variables) {
+        const fileName = "HKEY_ROOT";
+        const file = variables.getFile(fileName, int.systemSymbol);
+        if (file) {
+          const content = file.getContent(int.systemSymbol) as RegistryKeys["HKEY_ROOT"];
+          const entires = Object.entries(content);
+          for (const [key, regData] of entires) {
+            reg.HKEY_ROOT[key] = regData;
+          }
+        }
+      }
     };
 
     const destroy = () => {
@@ -77,7 +92,7 @@ export class Registry extends BaseService {
     };
   }
 
-  setUserItem(key: string, value: any) {
+  setUserItemQucik(key: string, value: any) {
     const int = internal.get(this);
     const user = int.system.user.userName;
     if (!user) throw new Error("User is not found");
@@ -92,6 +107,25 @@ export class Registry extends BaseService {
     return { ...regData };
   }
 
+  async setUserItem(key: string, value: any): Promise<RegistryData> {
+    const regData = this.setUserItemQucik(key, value);
+    const data = registryKeys.get(this);
+    const int = internal.get(this);
+    const home = int.system.user.userDirectory;
+    const fileName = ".vars";
+    if (!home) throw new Error("Unable to save user directory does not exist");
+    const vars = home.getFile(fileName, int.system.user.userSymbol);
+    const userSymbol = int.system.user.userSymbol;
+    const toSave = data[int.system.user.userName] || {};
+    toSave[key] = regData;
+    if (vars) {
+      await vars.setContent(toSave, userSymbol);
+    } else {
+      await home.createFile(fileName, "json", toSave, userSymbol);
+    }
+    return regData;
+  }
+
   getUserItemValue(key: string) {
     const reg = this.getUserItem(key);
     if (reg) {
@@ -102,26 +136,44 @@ export class Registry extends BaseService {
 
   getUserItem(key: string) {
     const int = internal.get(this);
-    const user = int.system.user.userName;
-    if (!user) throw new Error("User is not found");
-    const data = registryKeys.get(this);
-
-    if (!data.HKEY_USER[user]) {
-      return null;
-    }
-    if (!data.HKEY_USER[user][key]) {
-      return { ...data.HKEY_USER[user][key] };
-    }
-    return null;
+    const home = int.system.user.userDirectory;
+    const fileName = ".vars";
+    const vars = home.getFile(fileName, int.system.user.userSymbol);
+    if (!vars) return null;
+    const content = vars.getContent<BaseRegistryData<any>>(int.system.user.userSymbol);
+    if (!content) return null;
+    return content[key];
   }
 
-  async setRootItem<D = any>(key: string, value: D, system: StringSymbol) {
+  async setRootItemQuick<D = any>(key: string, value: D, system: StringSymbol) {
     const int = internal.get(this);
     if (!int.systemSymbol.equals(system)) throw new Error("Missing permissions");
     const data = registryKeys.get(this);
     const regData = this.getRegistryData(value, data.HKEY_ROOT[key]);
     data.HKEY_ROOT[key] = regData;
     return { ...regData };
+  }
+
+  async setRootItem<D = any>(key: string, value: D, system: StringSymbol) {
+    const regData = this.setRootItemQuick(key, value, system);
+    const data = registryKeys.get(this);
+    const int = internal.get(this);
+    const bin = int.fileSystem.root.getDirectory("bin", int.systemSymbol);
+    if (!bin) throw new Error("Curruped file system");
+    let variables = bin.getDirectory("variables", int.systemSymbol);
+    if (!variables) {
+      variables = await bin.createDirectory("variables", int.systemSymbol);
+    }
+
+    const fileName = "HKEY_ROOT";
+    const file = variables.getFile(fileName, int.systemSymbol);
+    if (file) {
+      await file.setContent(data.HKEY_ROOT, int.systemSymbol);
+    } else {
+      await variables.createFile(fileName, "json", data.HKEY_ROOT, int.systemSymbol);
+    }
+
+    return regData;
   }
   getRootItem(key: string, system: StringSymbol) {
     const int = internal.get(this);
@@ -176,8 +228,24 @@ export class Registry extends BaseService {
     }
   }
 
-  async save() {}
-
+  isBooleanReg(reg: RegistryData): reg is RegistryBoolean {
+    if (reg.type === "boolean" && typeof reg.data === "boolean") {
+      return true;
+    }
+    return false;
+  }
+  isNumberReg(reg: RegistryData): reg is RegistryNumber {
+    if (reg.type === "number" && typeof reg.data === "number") {
+      return true;
+    }
+    return false;
+  }
+  isStringReg(reg: RegistryData): reg is RegistryString {
+    if (reg.type === "string" && typeof reg.data === "string") {
+      return true;
+    }
+    return false;
+  }
   status() {
     return this._status;
   }

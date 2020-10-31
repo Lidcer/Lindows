@@ -14,13 +14,20 @@ export class TestWebPage extends React.Component<{}, State> {
     };
   }
 
+  initSystem = async () => {
+    await internal.system.init();
+    this.componentDidMount();
+  };
+
   componentDidMount = () => {
     internal.removeListener("allReady", this.componentDidMount);
+    internal.removeListener("readyToBoot", this.initSystem);
     if (internal.ready) {
       const apps = allInstalledApps();
       this.setState({ apps });
     } else {
-      internal.addListener("allReady", this.componentDidMount);
+      internal.on("readyToBoot", this.initSystem);
+      internal.on("allReady", this.componentDidMount);
     }
   };
 

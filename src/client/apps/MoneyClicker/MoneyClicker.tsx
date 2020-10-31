@@ -58,6 +58,7 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
   }
   async load() {
     let storage: MoneyClickerStorage = this.getItem();
+    console.log(storage);
     if (!storage) {
       storage = {
         fullscreen: false,
@@ -72,7 +73,6 @@ export class MoneyClicker extends BaseWindow<IMoneyClickerState> {
     if (this.storage.fullscreen) {
       this.changeOptions({ windowType: "fullscreen" });
     }
-
     this.moneyClicker = new MoneyClickerGame(
       this.ref.current,
       this,

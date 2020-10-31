@@ -153,7 +153,9 @@ export async function installPreInstalledApps() {
   await installApp(MoneyClicker, MoneyClicker.manifest.launchName, true, internal.systemSymbol);
   if (!STATIC) {
     await installApp(AccountManager, AccountManager.manifest.launchName, true, internal.systemSymbol);
-    await installApp(Lype, Lype.manifest.launchName, true, internal.systemSymbol);
+    if (DEV) {
+      await installApp(Lype, Lype.manifest.launchName, true, internal.systemSymbol);
+    }
     await installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.systemSymbol);
   }
   await installApp(FileExplorer, FileExplorer.manifest.launchName, true, internal.systemSymbol);

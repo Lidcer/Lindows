@@ -1,19 +1,29 @@
 import { escapeRegExp } from "lodash";
 import { sizeof } from "sizeof";
 import { cloneDeep } from "../../shared/utils";
+import { Collection } from "./Collection";
 
 type Permission = Map<number, FileSystemPermissions>;
+export type FileSystemContent = FileSystemDirectory | FileSystemFile<any>;
+
+export interface ContentMetaData {
+  dateCreated: number;
+  dateModified: number;
+  [key: string]: string | number | boolean;
+}
 
 export interface DirectoryData {
   name: string;
   permission: Permission;
-  contents: (FileSystemDirectory | FileSystemFile)[];
+  contents: Collection<string, FileSystemContent>;
+  metadata: ContentMetaData;
 }
 export interface FileData<T = string> {
   name: string;
   permission: Permission;
   content: T;
   type: "text" | "unknown" | "json" | "lindowObject" | "lindowApp";
+  metadata: ContentMetaData;
 }
 export enum FileSystemPermissions {
   None,
@@ -75,7 +85,6 @@ everyone.getHash = symbol => {
 
 type OnChange = () => Promise<void>;
 
-export type FileSystemContent = FileSystemDirectory | FileSystemFile<any>;
 const directoriesMap = new WeakMap<FileSystemDirectory, DirectoryData>();
 const upperPath = new WeakMap<FileSystemContent, FileSystemDirectory>();
 const rootMap = new WeakMap<FileSystemContent, OnChange>();
@@ -84,10 +93,15 @@ export class FileSystemDirectory {
   constructor(name: string, owner = everyone, onChange: OnChange) {
     const result = isValidName(name);
     if (!result.valid) throw new Error(result.reason);
+    const now = Date.now();
     const directoryData: DirectoryData = {
       name,
-      contents: [],
+      contents: new Collection(),
       permission: new Map(),
+      metadata: {
+        dateCreated: now,
+        dateModified: now,
+      },
     };
     directoryData.permission.set(owner.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     directoryData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
@@ -112,17 +126,14 @@ export class FileSystemDirectory {
       }
       const newDirectory = new FileSystemDirectory(name, owner, onChange);
       upperPath.set(newDirectory, this);
-      directory.contents.push(newDirectory);
+      directory.contents.set(name, newDirectory);
       try {
         await onChange();
       } catch (error) {
         upperPath.delete(newDirectory);
         directoriesMap.delete(newDirectory);
         rootMap.delete(newDirectory);
-        const index = directory.contents.indexOf(newDirectory);
-        if (index !== -1) {
-          directory.contents.splice(index, 1);
-        }
+        directory.contents.delete(name);
         throw error;
       }
       return newDirectory;
@@ -147,16 +158,13 @@ export class FileSystemDirectory {
         throw new Error("Missing root folder!");
       }
       const file = new FileSystemFile(name, type, content, this, onChange, owner);
-      directory.contents.push(file);
+      directory.contents.set(name, file);
       try {
         await onChange();
       } catch (error) {
         rootMap.delete(file);
         directoryLink.delete(file);
-        const index = directory.contents.indexOf(file);
-        if (index !== -1) {
-          directory.contents.splice(index, 1);
-        }
+        directory.contents.delete(name);
         throw error;
       }
       return file;
@@ -182,7 +190,10 @@ export class FileSystemDirectory {
       if (sameNameFolder) {
         throw new Error("Duplicate name!");
       }
+      upper.contents.delete(directory.name);
       directory.name = name;
+      directory.metadata.dateModified = Date.now();
+      upper.contents.set(directory.name, this);
       return;
     }
     throw new Error("You don not have permission to rename this directory!");
@@ -303,10 +314,58 @@ export class FileSystemDirectory {
     const directory = directoriesMap.get(this);
     if (!directory) throw new Error("Directory has been deleted!");
     let size = 0;
-    for (const content of directory.contents) {
+    directory.contents.forEach(content => {
       size += content.size;
-    }
+    });
     return size;
+  }
+
+  getMetadata(key: undefined, owner?: StringSymbol): ContentMetaData;
+  getMetadata(key?: string, owner = everyone) {
+    const directory = directoriesMap.get(this);
+    if (!directory) throw new Error("Directory has been deleted!");
+    const filePermission = directory.permission.get(owner.getHash(verificationSymbol));
+    if (_canReadFileOrDirectory(filePermission)) {
+      if (key) {
+        if (directory.metadata[key]) {
+          return cloneDeep(directory.metadata[key]);
+        }
+      } else {
+        return cloneDeep(directory.metadata);
+      }
+      return null;
+    }
+    throw new Error("Missing Permission to read");
+  }
+  async setMetaData(key: string, value: boolean | string | number, owner = everyone) {
+    const type = typeof value;
+    switch (type) {
+      case "string":
+      case "number":
+      case "boolean":
+        break;
+      default:
+        throw new Error(`Invalid value type`);
+    }
+
+    const directory = directoriesMap.get(this);
+    if (!directory) throw new Error("Directory has been deleted!");
+    const filePermission = directory.permission.get(owner.getHash(verificationSymbol));
+    if (_canModifyFileOrDirectory(filePermission)) {
+      const temp = directory.metadata;
+      const metaClone = cloneDeep(directory.metadata);
+      metaClone[key] = value;
+      directory.metadata = metaClone;
+      const onChange = rootMap.get(this);
+      try {
+        await onChange();
+      } catch (error) {
+        directory.metadata = temp;
+        throw error;
+      }
+      return;
+    }
+    throw new Error("Missing permission to modify");
   }
 }
 
@@ -321,11 +380,16 @@ export class FileSystemFile<C = any> {
     onChange: OnChange,
     owner = everyone,
   ) {
+    const now = Date.now();
     const fileData: FileData<C> = {
       name,
       type,
       content,
       permission: new Map(),
+      metadata: {
+        dateCreated: now,
+        dateModified: now,
+      },
     };
     fileData.permission.set(owner.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
     fileData.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
@@ -347,11 +411,18 @@ export class FileSystemFile<C = any> {
     throw new Error("Missing permission to read");
   }
 
-  setContent<CC = C>(content: CC, owner = everyone) {
+  async setContent<CC = C>(content: CC, owner = everyone) {
     const file = files.get(this);
     if (!file) throw new Error("File has been deleted!");
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (_canModifyFileOrDirectory(permission)) {
+      const onChange = rootMap.get(this);
+      if (!onChange) {
+        throw new Error("Missing root folder!");
+      }
+      const tempContent = file.content;
+      const tempDateModified = file.metadata.dateModified;
+
       if (file.type === "json") {
         try {
           JSON.stringify(content);
@@ -360,6 +431,15 @@ export class FileSystemFile<C = any> {
         }
       }
       file.content = content;
+      file.metadata.dateModified = Date.now();
+      try {
+        await onChange();
+      } catch (error) {
+        file.content = tempContent;
+        file.metadata.dateModified = tempDateModified;
+        throw error;
+      }
+
       return;
     }
     throw new Error("Missing permission to read");
@@ -381,6 +461,7 @@ export class FileSystemFile<C = any> {
     const permission = file.permission.get(owner.getHash(verificationSymbol));
     if (_canModifyFileOrDirectory(permission)) {
       file.type = type;
+      file.metadata.dateModified = Date.now();
       return;
     }
     throw new Error("Missing permission to read");
@@ -395,16 +476,13 @@ export class FileSystemFile<C = any> {
       const directory = directoryLink.get(this);
       const data = directoriesMap.get(directory);
       if (data) {
-        const index = data.contents.indexOf(this);
-        if (index !== -1) {
-          data.contents.splice(index, 1);
-        }
+        data.contents.delete(this.name);
       }
       const onChange = rootMap.get(this);
       try {
         await onChange();
       } catch (error) {
-        data.contents.push(this);
+        data.contents.set(this.name, this);
         throw error;
       }
       rootMap.delete(this);
@@ -437,8 +515,8 @@ export class FileSystemFile<C = any> {
   setPermission(owner = everyone, permission: FileSystemPermissions) {
     const file = files.get(this);
     if (!file) throw new Error("Directory has been deleted!");
-    const directoryPermission = file.permission.get(owner.getHash(verificationSymbol));
-    if (_canModifyFileOrDirectory(directoryPermission)) {
+    const filePermission = file.permission.get(owner.getHash(verificationSymbol));
+    if (_canModifyFileOrDirectory(filePermission)) {
       file.permission.set(owner.getHash(verificationSymbol), permission);
       file.permission.set(systemSymbol.getHash(verificationSymbol), FileSystemPermissions.ReadAndWrite);
       return;
@@ -452,7 +530,7 @@ export class FileSystemFile<C = any> {
     return file.name;
   }
 
-  setName(name: string, owner = everyone) {
+  async setName(name: string, owner = everyone) {
     const file = files.get(this);
     if (!file) throw new Error("File has been deleted!");
     const permission = file.permission.get(owner.getHash(verificationSymbol));
@@ -463,15 +541,78 @@ export class FileSystemFile<C = any> {
       if (sameNameFolder) {
         throw new Error("Duplicate name!");
       }
+      const temp = upper.contents.get(file.name);
+      const tempName = file.name;
+      const tempDateModified = file.metadata.dateModified;
+      upper.contents.delete(file.name);
+      if (!temp) throw new Error("Invalid name");
       file.name = name;
+      file.metadata.dateModified = Date.now();
+      upper.contents.set(file.name, this);
+      const onChange = rootMap.get(this);
+      try {
+        await onChange();
+      } catch (error) {
+        file.name = tempName;
+        file.metadata.dateModified = tempDateModified;
+        throw error;
+      }
+
       return;
     }
     throw new Error("Missing permission to write");
   }
+  getMetadata(key: undefined, owner?: StringSymbol): ContentMetaData;
+  getMetadata(key?: string, owner = everyone) {
+    const file = files.get(this);
+    if (!file) throw new Error("Directory has been deleted!");
+    const filePermission = file.permission.get(owner.getHash(verificationSymbol));
+    if (_canReadFileOrDirectory(filePermission)) {
+      if (key) {
+        if (file.metadata[key]) {
+          return cloneDeep(file.metadata[key]);
+        }
+      } else {
+        return cloneDeep(file.metadata);
+      }
+      return null;
+    }
+    throw new Error("Missing Permission to read");
+  }
+  async setMetaData(key: string, value: boolean | string | number, owner = everyone) {
+    const type = typeof value;
+    switch (type) {
+      case "string":
+      case "number":
+      case "boolean":
+        break;
+      default:
+        throw new Error(`Invalid value type`);
+    }
+
+    const file = files.get(this);
+    if (!file) throw new Error("File has been deleted!");
+    const filePermission = file.permission.get(owner.getHash(verificationSymbol));
+    if (_canModifyFileOrDirectory(filePermission)) {
+      const temp = file.metadata;
+      const metaClone = cloneDeep(file.metadata);
+      metaClone[key] = value;
+      file.metadata = metaClone;
+      const onChange = rootMap.get(this);
+      try {
+        await onChange();
+      } catch (error) {
+        file.metadata = temp;
+        throw error;
+      }
+      return;
+    }
+    throw new Error("Missing permission to modify");
+  }
+
   get deleted() {
     return !files.get(this);
   }
-
   get path() {
     const file = files.get(this);
     const directory = directoryLink.get(this);
@@ -559,6 +700,7 @@ export interface ObjectDirectory {
   name: string;
   contents: (ObjectDirectory | ObjectFile)[];
   permission: ObjectPermission;
+  metadata: ContentMetaData;
 }
 
 interface ObjectFile {
@@ -576,13 +718,14 @@ export function objectifyDirectory(directory: FileSystemDirectory, systemPermiss
   const data = directoriesMap.get(directory);
   if (!data) throw new Error("Directory has been deleted!");
   const name = directory.name;
+  const metadata = directory.getMetadata(undefined, systemPermission);
   const contents = directory
     .contents(systemPermission)
     .map(f => objectifyDirectoryFile(f, systemPermission))
     .filter(e => e);
   const permission = objectifyPermission(data.permission);
 
-  return { name, contents, permission };
+  return { name, contents, permission, metadata };
 }
 
 function objectifyFile(file: FileSystemFile, systemPermission = everyone): ObjectFile {

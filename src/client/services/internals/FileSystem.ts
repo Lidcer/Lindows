@@ -28,9 +28,13 @@ export class FileSystem extends BaseService {
   constructor(_internal: Internal) {
     super();
     internal.set(this, _internal);
-    const system = _internal.systemSymbol;
+    this._root = this.createRootSaveable();
+  }
 
-    this._root = new FileSystemDirectory("root", system, async () => {
+  private createRootSaveable = () => {
+    const int = internal.get(this);
+    const system = int.systemSymbol;
+    return new FileSystemDirectory("root", system, async () => {
       if (this.saving) {
         const objected = objectifyDirectory(this._root, system);
         const string = JSON.stringify(objected);
@@ -39,7 +43,7 @@ export class FileSystem extends BaseService {
       }
       return;
     });
-  }
+  };
 
   init() {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
@@ -48,6 +52,8 @@ export class FileSystem extends BaseService {
     const system = int.systemSymbol;
 
     const createRoot = async () => {
+      this._root = this.createRootSaveable();
+
       let homeDirectory: FileSystemDirectory;
 
       const systemSymbol = system;
@@ -88,18 +94,21 @@ export class FileSystem extends BaseService {
       }
       //homeDirector.createDirectory(this.username());
 
-      const rawObjectDirectory = localStorage.getItem(fileSystemKey);
-      const objectDirectoryString = await compress.gzip(rawObjectDirectory);
-      const directoryToParse = JSON.parse(objectDirectoryString);
+      // const rawObjectDirectory = localStorage.getItem(fileSystemKey);
+      // console.log(rawObjectDirectory);
+      // if (rawObjectDirectory) {
+      //   const objectDirectoryString = await compress.gzip(rawObjectDirectory);
+      //   const directoryToParse = JSON.parse(objectDirectoryString);
 
-      const populateHomeDirectory = async () => {
-        if (directoryToParse) {
-          for (const file of directoryToParse.contents) {
-            parseDirectoryOrFile(homeDirectory, file, systemSymbol);
-          }
-        }
-      };
-      populateHomeDirectory();
+      //   const populateHomeDirectory = async () => {
+      //     if (directoryToParse) {
+      //       for (const file of directoryToParse.contents) {
+      //         parseDirectoryOrFile(homeDirectory, file, systemSymbol);
+      //       }
+      //     }
+      //   };
+      //   populateHomeDirectory();
+      // }
     };
 
     const start = async () => {
@@ -108,7 +117,7 @@ export class FileSystem extends BaseService {
       const system = int.systemSymbol;
       const fsString = localStorage.getItem(fileSystemKey);
       if (!fsString) {
-        createRoot();
+        await createRoot();
       } else {
         try {
           const int = internal.get(this);
@@ -124,14 +133,14 @@ export class FileSystem extends BaseService {
           }
         } catch (error) {
           DEV && console.error(error);
-          createRoot();
+          await createRoot();
         }
       }
 
       const objected = objectifyDirectory(this._root, system);
       const string = JSON.stringify(objected);
       const compressed = await compress.gzip(string);
-      localStorage.setItem("fs", compressed);
+      localStorage.setItem(fileSystemKey, compressed);
       this._status = SystemServiceStatus.Ready;
     };
 
@@ -229,42 +238,32 @@ export class FileSystem extends BaseService {
     return newName;
   }
 
-  async saveHome() {
-    const int = internal.get(this);
-    const system = int.systemSymbol;
-    const objectDir = objectifyDirectory(this.home, system);
-    const stringified = JSON.stringify(objectDir);
-    try {
-      const compressed = await compress.gzip(stringified);
-      localStorage.setItem(fileSystemKey, compressed);
-    } catch (error) {
-      DEV && console.error(error);
-    }
-  }
+  // async saveHome() {
+  //   const int = internal.get(this);
+  //   const system = int.systemSymbol;
+  //   const objectDir = objectifyDirectory(this.home, system);
+  //   const stringified = JSON.stringify(objectDir);
+  //   try {
+  //     const compressed = await compress.gzip(stringified);
+  //     localStorage.setItem(fileSystemKey, compressed);
+  //   } catch (error) {
+  //     DEV && console.error(error);
+  //   }
+  // }
   _setSaving(value: boolean) {
     this.saving = value;
   }
 
-  async createUserDirectory(username: string) {
+  async createUserDirectory(username: string, userSymbol: StringSymbol) {
     username = sanitizeName(username);
     const int = internal.get(this);
     const system = int.systemSymbol;
 
-    const user = await this.home.createDirectory(sanitizeName(username), system);
-    const userSymbol = new StringSymbol(username);
+    const user = await this.home.createDirectory(username, system);
     user.setPermissionFor(system, userSymbol, FileSystemPermissions.ReadAndWrite);
     const userDirectories = ["Desktop", "Documents", "Downloads", "Music", "Pictures", "Videos"];
     for (const userDir of userDirectories) {
       user.createDirectory(userDir, userSymbol);
-    }
-
-    const objectDir = objectifyDirectory(this.home, system);
-    try {
-      const stringified = JSON.stringify(objectDir);
-      const compressed = await compress.gzip(stringified);
-      localStorage.setItem(fileSystemKey, compressed);
-    } catch (error) {
-      DEV && console.error(error);
     }
     return user;
   }
