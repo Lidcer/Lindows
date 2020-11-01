@@ -12,19 +12,18 @@ export interface INotification {
   block: () => void;
 }
 
+const regkey = "__notificationsBlockers";
 export class NotificationSystem {
-  private SERVICE_NAME = "__notification__";
   private eventEmitter = new EventEmitter();
-  private blocks: string[] = [];
-  //private browserStorage: BrowserStorage;
+  private blocked: string[] = [];
   private processor: Processor;
   constructor() {
     attachToWindowIfDev("notif", this);
-    //this.browserStorage = internal.browserStorage;
+    const blockers = internal.system.registry.getRootItem(regkey, internal.systemSymbol);
+    if (blockers && Array.isArray(blockers.data)) {
+      this.blocked = blockers.data;
+    }
     this.processor = internal.system.processor;
-    // if (!this.browserStorage.ready) {
-    //   throw new Error("BrowserStorage is not ready");
-    // }
     if (!this.processor.ready) {
       throw new Error("processor is not ready");
     }
@@ -53,7 +52,7 @@ export class NotificationSystem {
       throw new Error("Unknown origin of the app");
     }
 
-    if (this.blocks.includes(senderString)) return;
+    if (this.blocked.includes(senderString)) return;
 
     const notification: INotification = {
       sender: senderString,
@@ -65,18 +64,18 @@ export class NotificationSystem {
     this.emit("notification", notification);
   }
 
-  block(sender: string) {
-    const indexOf = this.blocks.indexOf(sender);
+  async block(sender: string) {
+    const indexOf = this.blocked.indexOf(sender);
     if (indexOf !== -1) return;
-    this.blocks.push(sender);
-    // this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
+    this.blocked.push(sender);
+    await internal.system.registry.setRootItem(regkey, this.blocked, internal.systemSymbol);
   }
 
-  unblock(sender: string) {
-    const indexOf = this.blocks.indexOf(sender);
+  async unblock(sender: string) {
+    const indexOf = this.blocked.indexOf(sender);
     if (indexOf === -1) return;
-    this.blocks.splice(indexOf, 1);
-    //this.browserStorage.setItem(this.SERVICE_NAME, this.blocks);
+    this.blocked.splice(indexOf, 1);
+    await internal.system.registry.setRootItem(regkey, this.blocked, internal.systemSymbol);
   }
 
   destroy() {

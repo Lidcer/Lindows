@@ -14,6 +14,8 @@ import {
 } from "../../utils/FileSystemDirectory";
 import { BaseService, SystemServiceStatus } from "./BaseSystemService";
 import prettysize from "prettysize";
+import { inIframe } from "../../utils/util";
+import { random } from "lodash";
 
 const fileSystemKey = "__fileSystem__";
 
@@ -35,6 +37,16 @@ export class FileSystem extends BaseService {
     const int = internal.get(this);
     const system = int.systemSymbol;
     return new FileSystemDirectory("root", system, async () => {
+      if (inIframe()) {
+        if (this.saving && int.broadcaster.status() === SystemServiceStatus.Ready) {
+          const objected = objectifyDirectory(this._root, system);
+          const string = JSON.stringify(objected);
+          const compressed = await compress.gzip(string);
+          int.broadcaster.emit("vm", { type: "request-store", origin, compressed });
+          return;
+        }
+        return;
+      }
       if (this.saving) {
         const objected = objectifyDirectory(this._root, system);
         const string = JSON.stringify(objected);
@@ -115,33 +127,75 @@ export class FileSystem extends BaseService {
       this._status = SystemServiceStatus.Starting;
       const int = internal.get(this);
       const system = int.systemSymbol;
-      const fsString = localStorage.getItem(fileSystemKey);
-      if (!fsString) {
-        await createRoot();
-      } else {
-        try {
-          const int = internal.get(this);
-          const system = int.systemSymbol;
-          const uncompressed = await compress.gunzip(fsString);
-          const objectFolder = JSON.parse(uncompressed);
-          for (const content of objectFolder.contents) {
-            parseDirectory(this._root, content, system);
-          }
-          this._home = this._root.getDirectory("home", system);
-          if (!this._home) {
-            this._root.createDirectory("home", system);
-          }
-        } catch (error) {
-          DEV && console.error(error);
-          await createRoot();
-        }
-      }
 
-      const objected = objectifyDirectory(this._root, system);
-      const string = JSON.stringify(objected);
-      const compressed = await compress.gzip(string);
-      localStorage.setItem(fileSystemKey, compressed);
-      this._status = SystemServiceStatus.Ready;
+      if (!inIframe()) {
+        const fsString = localStorage.getItem(fileSystemKey);
+        if (!fsString) {
+          await createRoot();
+        } else {
+          try {
+            const int = internal.get(this);
+            const system = int.systemSymbol;
+            const uncompressed = await compress.gunzip(fsString);
+            const objectFolder = JSON.parse(uncompressed);
+            for (const content of objectFolder.contents) {
+              parseDirectory(this._root, content, system);
+            }
+            this._home = this._root.getDirectory("home", system);
+            if (!this._home) {
+              this._root.createDirectory("home", system);
+            }
+          } catch (error) {
+            this._status = SystemServiceStatus.Failed;
+            return;
+            //DEV && console.error(error);
+            //await createRoot();
+          }
+        }
+
+        const objected = objectifyDirectory(this._root, system);
+        const string = JSON.stringify(objected);
+        const compressed = await compress.gzip(string);
+        localStorage.setItem(fileSystemKey, compressed);
+        this._status = SystemServiceStatus.Ready;
+      } else {
+        return new Promise<void>(async (resolve, reject) => {
+          if (int.broadcaster.status() !== SystemServiceStatus.Ready) {
+            this._status = SystemServiceStatus.Failed;
+            return reject("Unable to communitace with vm");
+          }
+          const key = random(0, 9999999);
+          const onData = async (data: any) => {
+            if (data.key !== key) return;
+            if (data && data.type === "response-data") {
+              if (data.response) {
+                try {
+                  const int = internal.get(this);
+                  const system = int.systemSymbol;
+                  const uncompressed = await compress.gunzip(data.response);
+                  const objectFolder = JSON.parse(uncompressed);
+                  for (const content of objectFolder.contents) {
+                    parseDirectory(this._root, content, system);
+                  }
+                  this._home = this._root.getDirectory("home", system);
+                  if (!this._home) {
+                    this._root.createDirectory("home", system);
+                  }
+                } catch (error) {
+                  this._status = SystemServiceStatus.Failed;
+                  return;
+                }
+              } else {
+                await createRoot();
+              }
+              this._status = SystemServiceStatus.Ready;
+              resolve();
+            }
+          };
+          int.broadcaster.on("vm", onData);
+          int.broadcaster.emit("vm", { type: "request-data", origin, key });
+        });
+      }
     };
 
     const destroy = () => {

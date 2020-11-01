@@ -1,10 +1,8 @@
 import React from "react";
-import { internal } from "../../services/internals/Internal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCog, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { popup } from "../Popup/popupRenderer";
-import { ContextMenu, IElement } from "../ContextMenu/ContextMenu";
-import { SECOND } from "../../../shared/constants";
+import { ContextMenu, IElement, showContext } from "../ContextMenu/ContextMenu";
 import {
   NotificationContent,
   NotificationImage,
@@ -13,9 +11,11 @@ import {
   NotificationToast,
 } from "./NotificationsDisplayStyled";
 import { getNotification, INotification } from "../Desktop/Notifications";
+import { removeFromArray } from "../../utils/util";
+import { internal } from "../../services/internals/Internal";
 
 interface INotificationDisplay extends INotification {
-  className: "animated" | "none";
+  time: number;
 }
 
 interface INotificationsDisplayState {
@@ -23,8 +23,15 @@ interface INotificationsDisplayState {
 }
 
 export class NotificationsDisplay extends React.Component<{}, INotificationsDisplayState> {
-  private timeouts: NodeJS.Timeout[] = [];
+  private readonly MAX_NOTIFICATOIN_DISPLAYTIME = 10000;
+  private readonly NOTIFICATION_WIDTH = 400;
+  private readonly OFFSET = 10;
+  private readonly EASE = Math.round(this.MAX_NOTIFICATOIN_DISPLAYTIME * 0.05);
+  private destroyed = false;
+  private now: number;
+  private frame: number;
   private notification = getNotification();
+
   constructor(props) {
     super(props);
     this.state = {
@@ -33,13 +40,41 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
   }
   componentDidMount() {
     this.notification.on("notification", this.newNotification);
+    this.now = performance.now();
+    this.frame = requestAnimationFrame(this.eventLoop);
   }
 
   componentWillUnmount() {
     this.notification.removeListener("notification", this.newNotification);
-    for (const timeout of this.timeouts) {
-      this.removeTimeout(timeout);
+    this.destroyed = true;
+    cancelAnimationFrame(this.frame);
+  }
+
+  eventLoop = () => {
+    if (this.destroyed) return;
+    const now = performance.now();
+    const delta = now - this.now;
+    this.now = now;
+
+    const state = { ...this.state };
+    for (const notification of state.notifications) {
+      const remove = this.update(notification, delta);
+      if (remove) {
+        removeFromArray(state.notifications, notification);
+      }
     }
+    this.setState(state);
+
+    this.frame = requestAnimationFrame(this.eventLoop);
+  };
+
+  update(notification: INotificationDisplay, delta: number): boolean {
+    notification.time += delta;
+    if (notification.time > this.MAX_NOTIFICATOIN_DISPLAYTIME) {
+      return true;
+    }
+
+    return false;
   }
 
   newNotification = (notification: INotification) => {
@@ -49,35 +84,13 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
       title: notification.title,
       icon: notification.icon,
       content: notification.content,
-      className: "animated",
+      time: 0,
     };
 
     const state = { ...this.state };
     state.notifications.unshift(alert);
     this.setState(state);
-
-    const t = setTimeout(() => {
-      this.removeTimeout(t);
-      const state = { ...this.state };
-      const thatAlert = state.notifications.find(n => n === alert);
-      if (thatAlert) {
-        thatAlert.className = "none";
-        this.setState(state);
-      }
-    }, 1000);
-    this.timeouts.push(t);
-
-    const timeout = setTimeout(() => {
-      this.removeNotification(alert);
-    }, SECOND * 7);
-    this.timeouts.push(timeout);
   };
-
-  private removeTimeout(timeout: NodeJS.Timeout) {
-    clearTimeout(timeout);
-    const indexOf = this.timeouts.indexOf(timeout);
-    if (indexOf !== -1) this.timeouts.splice(indexOf, 1);
-  }
 
   getImageNotification(notification: INotification) {
     if (!notification.icon) return null;
@@ -98,6 +111,14 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
     );
   }
 
+  get notificationWidth() {
+    const innerWidth = window.innerWidth;
+    if (innerWidth < this.NOTIFICATION_WIDTH) {
+      return innerWidth;
+    }
+    return this.NOTIFICATION_WIDTH;
+  }
+
   getIcons(notification: INotification, key: number) {
     const remove = () => {
       const state = { ...this.state };
@@ -111,15 +132,7 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
         { content: `Turn off all notification for ${notification.sender}`, onClick: notification.block },
       ];
 
-      const element = (
-        <ContextMenu
-          elements={elements}
-          x={e.clientX - 50}
-          y={e.clientY - 50}
-          onAnyClick={() => popup.remove(element)}
-        />
-      );
-      popup.add(element);
+      showContext(elements, e.clientX - 50, e.clientY - 50);
     };
 
     return (
@@ -135,31 +148,28 @@ export class NotificationsDisplay extends React.Component<{}, INotificationsDisp
   }
 
   alert(notification: INotificationDisplay, key: number) {
+    const width = this.notificationWidth;
+    const widthOffest = width - this.OFFSET;
+    const time = notification.time;
+    //const precentage = time / this.MAX_NOTIFICATOIN_DISPLAYTIME;
+
+    let precentage = 1;
+    const range = this.MAX_NOTIFICATOIN_DISPLAYTIME - this.EASE;
+    if (time < this.EASE) {
+      precentage = time / this.EASE;
+    } else if (time > range) {
+      const nTime = time - range;
+      precentage = 1 - nTime / this.EASE;
+    }
+    const right = -widthOffest + this.notificationWidth * precentage;
+    const style: React.CSSProperties = { right: `${right}px`, width: `${width}px` };
     return (
-      <NotificationToast className={`notification-${notification.className}`} key={key}>
+      <NotificationToast style={style} key={key}>
         {this.getImageNotification(notification)}
         {this.getContent(notification)}
         {this.getIcons(notification, key)}
       </NotificationToast>
     );
-  }
-
-  removeNotification(notification: INotificationDisplay) {
-    const state = { ...this.state };
-    const alert = state.notifications.find(a => a === notification);
-    if (!alert) return;
-    alert.className = "animated";
-    this.setState(state);
-    const t = setTimeout(() => {
-      this.removeTimeout(t);
-      const tState = { ...this.state };
-      const indexOf = state.notifications.indexOf(notification);
-      if (indexOf !== -1) {
-        state.notifications.slice(indexOf, 1);
-        this.setState(tState);
-      }
-    }, SECOND);
-    this.timeouts.push(t);
   }
 
   render() {

@@ -12,6 +12,7 @@ export const NotificationOverlay = styled.div`
 `;
 
 export const NotificationToast = styled.div`
+  position: fixed;
   margin: 5px 0;
   height: 100px;
   width: 370px;
@@ -20,7 +21,6 @@ export const NotificationToast = styled.div`
   background-image: url(/assets/images/noise.png);
   display: flex;
   pointer-events: all;
-  transition: margin 1s;
   flex: none;
 
   &:hover {

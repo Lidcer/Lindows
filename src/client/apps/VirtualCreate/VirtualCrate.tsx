@@ -15,6 +15,10 @@ import { faCertificate, faCog, faStar, faArrowDown, faArrowRight } from "@fortaw
 import { VirtualOs } from "./VirtualOs";
 import { WindowEvent } from "../BaseWindow/WindowEvent";
 import { inIframe } from "../../utils/util";
+import { internal } from "../../services/internals/Internal";
+import { sanitizeName } from "../../utils/FileSystemDirectory";
+import { SystemServiceStatus } from "../../services/internals/BaseSystemService";
+import { initial } from "lodash";
 
 export interface WebsiteOperationSystems {
   url: string;
@@ -34,8 +38,9 @@ export class VirtualCreate extends BaseWindow<VirtualCreateState> {
     launchName: "VirtualCrate",
     icon: "/assets/images/appsIcons/VirtualCreate.svg",
   };
-
-  private websiteOperationSystems = [{ icon: "/assets/images/LindowsOs.svg", url: origin, name: "Lindows" }];
+  private websiteOperationSystems: WebsiteOperationSystems[] = [
+    { icon: "/assets/images/LindowsOs.svg", url: origin, name: "Lindows" },
+  ];
 
   constructor(props) {
     super(
@@ -83,29 +88,98 @@ export class VirtualCreate extends BaseWindow<VirtualCreateState> {
   startButton = async () => {
     if (this.variables.freeze) return;
     if (this.variables.selected !== undefined) {
-      if (inIframe()) {
-        await MessageBox.Show(this, "This machine does not support hyper-L technology");
+      const wos = this.websiteOperationSystems[this.variables.selected];
+      return this.startOs(wos);
+    }
+  };
+
+  async startOs(wos: WebsiteOperationSystems) {
+    const existingOs = this.variables.os.get(wos);
+    if (existingOs) {
+      existingOs.focus();
+      return;
+    }
+
+    if (inIframe()) {
+      await MessageBox.Show(this, "This machine does not support hyper-L technology");
+      return;
+    }
+    if (internal.broadcaster.status() !== SystemServiceStatus.Ready) {
+      await MessageBox.Show(this, "This machine does not support brodcaster technology");
+      return;
+    }
+
+    const usr = internal.system.user.userSymbol;
+    const usrDirectory = internal.system.user.userDirectory;
+    let vm = usrDirectory.getDirectory("vm", usr);
+    if (!vm) {
+      vm = await usrDirectory.createDirectory("vm", usr);
+    }
+
+    this.setVariables({ freeze: true });
+
+    const killOs = () => {
+      internal.broadcaster.removeListener("vm", communicator);
+      const vars = { ...this.variables };
+      vars.os.delete(wos);
+      this.setVariables(vars);
+    };
+
+    const communicator = async data => {
+      if (data && data.type === "request-data") {
+        const os = this.websiteOperationSystems.find(o => o.url === data.origin);
+        if (!os) return;
+        const fileName = `${sanitizeName(os.name)}.vmc`;
+        let osDir = vm.getFile(fileName, usr);
+        if (!osDir) {
+          osDir = await vm.createFile(fileName, "text", "", usr);
+        }
+        const contnet = osDir.getContent(usr);
+        if (typeof contnet === "string") {
+          internal.broadcaster.emit("vm", { type: "response-data", response: contnet, key: data.key });
+        } else {
+          internal.broadcaster.emit("vm", { type: "response-data", response: null, key: data.key });
+        }
         return;
       }
 
-      const wos = this.websiteOperationSystems[this.variables.selected];
-      const existingOs = this.variables.os.get(wos);
-      if (existingOs) {
-        existingOs.focus();
-        return;
+      if (data && data.type === "request-store" && data.origin && data.compressed) {
+        const os = this.websiteOperationSystems.find(o => o.url === data.origin);
+        if (!os) return;
+        const fileName = `${sanitizeName(os.name)}.vmc`;
+        let osDir = vm.getFile(fileName, usr);
+        if (!osDir) {
+          osDir = await vm.createFile(fileName, "text", data.compressed, usr);
+        } else {
+          await osDir.setContent(data.compressed, usr);
+        }
       }
-      this.setVariables({ freeze: true });
-      const os = (await VirtualOs.New(this.props.launchFile)) as VirtualOs;
-      os.onExit = () => {
-        const vars = { ...this.variables };
-        vars.os.delete(wos);
-        this.setVariables(vars);
-      };
-      this.variables.os.set(wos, os);
-      os.loadSystem(wos);
-      this.setVariables({ freeze: false });
-    }
-  };
+
+      if (data && data.type === "request-clear-data") {
+        const os = this.websiteOperationSystems.find(o => o.url === data.origin);
+        if (!os) return;
+        const rOs = this.variables.os.get(os);
+        const fileName = `${sanitizeName(os.name)}.vmc`;
+        let osDir = vm.getFile(fileName, usr);
+        if (!osDir) {
+          osDir = await vm.createFile(fileName, "text", "", usr);
+        } else {
+          await osDir.setContent("", usr);
+        }
+        await rOs.exit();
+        killOs();
+        this.startOs(os);
+      }
+    };
+
+    internal.broadcaster.on("vm", communicator);
+
+    const os = (await VirtualOs.New(this.props.launchFile)) as VirtualOs;
+    os.onExit = () => killOs();
+    this.variables.os.set(wos, os);
+    os.loadSystem(wos);
+    this.setVariables({ freeze: false });
+  }
 
   newButton() {
     const enabled = false;

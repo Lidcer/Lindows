@@ -35,9 +35,9 @@ export class Internal {
   }
 
   async init() {
+    this._broadcaster = await this.initService(new Broadcaster(), "Broadcaster");
     this._fileSystem = await this.initService(new FileSystem(this), "FileSystem");
     this._hardwareInfo = await this.initService(new HardwareInfo(), "HardwareInfo");
-    this._broadcaster = await this.initService(new Broadcaster(), "Broadcaster");
 
     this._readyToBoot = true;
 

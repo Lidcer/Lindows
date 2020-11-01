@@ -10,6 +10,7 @@ import {
   BootScreenInfo,
 } from "./bootScreenStyled";
 import { inIframe } from "../../utils/util";
+import { SystemServiceStatus } from "../../services/internals/BaseSystemService";
 
 interface IBootScreenProps {
   next: (bios?: "bios" | "bootLindows") => void;
@@ -24,6 +25,7 @@ interface IBootScreenState {
 export class BootScreen extends React.Component<IBootScreenProps, IBootScreenState> {
   private timeout: NodeJS.Timeout;
   private takingToLong = false;
+  private error = false;
   onTouchTimeoutFunction: NodeJS.Timeout;
 
   constructor(props: IBootScreenProps) {
@@ -72,10 +74,14 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
   componentDidMount() {
     if (this.timeout === undefined) {
       this.timeout = setTimeout(() => {
-        this.state.messageToDisplay.push(
-          "This is taking to long! Your system might be broken you can try and reset browser storage!",
-        );
-        this.takingToLong = true;
+        if (!this.error) {
+          const state = { ...this.state };
+          state.messageToDisplay.push("This is taking to long!");
+          state.messageToDisplay.push("Your system might be broken. You can resolve issues in Setup.");
+          state.messageToDisplay.push("Press DEL to run Setup.");
+          this.takingToLong = true;
+          this.setState(state);
+        }
       }, SECOND * 15);
     }
 
@@ -123,14 +129,24 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
 
   keypress = (ev: KeyboardEvent) => {
     if (ev.key.toLowerCase() === "delete") {
-      if (this.takingToLong) {
-        return this.props.next("bios");
+      if (this.takingToLong || this.error) {
+        return this.props.goToBios();
       }
       this.setState({ goToBios: true });
     }
   };
 
   readyToBoot = () => {
+    if (internal.fileSystem.status() === SystemServiceStatus.Failed) {
+      const state = { ...this.state };
+      this.error = true;
+      state.messageToDisplay.push(``);
+      state.messageToDisplay.push(`File system error!`);
+      state.messageToDisplay.push(`Press DEL to run Setup`);
+      this.setState(state);
+      return;
+    }
+
     const bootTime = inIframe() ? 5000 : STATIC ? 1000 : 500;
     setTimeout(() => {
       if (this.state.goToBios) {
