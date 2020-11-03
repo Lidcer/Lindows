@@ -29,7 +29,7 @@ export class WebSocket {
       logger.debug("[WebSocket]", "connected", client.id);
       this.clients.push(client);
 
-      let values: string[] = [];
+      const values: string[] = [];
 
       for (const [value] of this.callbacks) {
         values.push(value);

@@ -1,11 +1,12 @@
 import { Document, Schema } from "mongoose";
 import { attachDebugMethod } from "../devDebugger";
-import { getUTCTime } from "../../shared/time";
 import moment from "moment";
 import chalk from "chalk";
 import { mongoose } from "./database";
 import { IS_DEV } from "../config";
 import { WebSocket } from "../websocket/SocketHandler";
+import path from "path";
+import { writeFile, appendFile } from "fs";
 
 const { white, yellow, red } = chalk;
 
@@ -110,14 +111,29 @@ class Logger {
     this.logLevel = logLevel;
   }
 
+  writeLog = (...args) => {
+    const logPath = path.join(process.cwd(), "logs.txt");
+    const { text } = this.getTime();
+    const line = `${text} ${args.join("\n")}\n${new Error().stack}`;
+    appendFile(logPath, line, "utf-8", err => {
+      if (err) {
+        writeFile(logPath, line, "utf-8", err => {
+          console.log(err, "done");
+        });
+      }
+    })
+  };
+
   debug(message: string, ...optionalParams: any[]) {
     if (!IS_DEV) return;
+    this.writeLog([message, ...(optionalParams || [])]);
     const { text } = this.getTime();
     const args = [yellow(`${text}`), white("[debug]"), message, ...optionalParams].filter(a => a);
     console.debug.apply(null, args);
   }
 
   log(message: string, ...optionalParams: any[]) {
+    this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), white("[log]"), message, ...optionalParams].filter(a => a);
     console.log.apply(null, args);
@@ -127,6 +143,7 @@ class Logger {
   }
 
   info(message: string, ...optionalParams: any[]) {
+    this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), yellow("[INFO]"), message, ...optionalParams].filter(a => a);
     console.info.apply(null, args);
@@ -136,6 +153,7 @@ class Logger {
   }
 
   warn(message: string, ...optionalParams: any[]) {
+    this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), red("[WARN]"), message, ...optionalParams].filter(a => a);
     console.warn.apply(null, args);
@@ -145,18 +163,20 @@ class Logger {
   }
 
   error(message: string, ...optionalParams: any[]) {
+    this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), red("[ERROR]"), message, ...optionalParams].filter(a => a);
-    console.error.apply(null, args);
+    console.error.apply(null, [...args, new Error().stack]);
     if (this.logLevel > 1) {
       this.saveToDataBase("error", date, message, optionalParams, new Error().stack);
     }
   }
 
   fatal(message: string, ...optionalParams: any[]) {
+    this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), red("[FATAL]"), message, ...optionalParams].filter(a => a);
-    console.error.apply(null, args);
+    console.error.apply(null, [...args, new Error().stack]);
     if (this.logLevel > 0) {
       this.saveToDataBase("fatal", date, message, optionalParams, new Error().stack);
     }

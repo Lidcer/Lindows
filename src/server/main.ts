@@ -70,11 +70,12 @@ export const mailService = new MailService(config.SENDGRIND_API_KEY);
 async function start() {
   try {
     await setupDatabase();
+
+    logger.info("Server started");
   } catch (error) {
     console.error(error);
-    process.exit(1);
+    //process.exit(1);
   }
-  logger.info("Ready");
 }
 start();
 

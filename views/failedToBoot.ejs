@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title> Lindows </title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1 user-scalable=no">
+    <link rel="stylesheet" href="/assets/basic.css">
+    <link rel="icon" href="/assets/favicon.ico" type="image/x-icon"/>
+
+<body style="overflow: hidden;">
+    <div id="log">
+        <div hidden>Configuring ISR PRN</div>
+        <div hidden>Setting system time for hardware clock</div>
+        <div hidden>Using /bin/var/ to initialize</div>
+        <div hidden>Updating shared libraries</div>
+        <div hidden>Setting up system logger</div>
+        <div hidden>Initializing network</div>
+        <div hidden>Setting up localhost</div>
+        <div hidden>Setting up inet1</div>
+        <div hidden>Setting up route</div>
+        <div hidden>Connecting to base....</div>
+        <div hidden>Connection failed! Please try later</div>
+
+    </div>
+    <div style="display: inline-block;" id="boot-cursor"></div>
+
+
+    <script>
+        var app = document.getElementById("log");
+        var time = 0;
+        var children = app.children;
+        for (var i = 0; i < children.length ; i++) {
+            var child = children[i];
+            var rand = Math.floor(Math.random() * 500) + 250;
+            time += rand;
+            show(child, time);
+        }
+
+        function show(child, time) {
+            setTimeout(() => {
+                child.hidden = false;
+                console.log(child);
+                console.log("?")
+            }, time);
+        }
+
+
+    </script>
+</body>
+
+</html>

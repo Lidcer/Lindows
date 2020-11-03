@@ -31,7 +31,7 @@ export class IAdminWebSocket extends EventEmitter {
         link = link.replace(/\${location.hostname}/g, location.hostname);
         return link;
       };
-      this._socket = io(origin);
+      this._socket = io();
       this._socket.on("connect", () => {
         this.connection();
         resolve();
