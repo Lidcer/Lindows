@@ -15,36 +15,36 @@ const options: ConnectionOptions = {
 export const mongoose = new Mongoose();
 export let dbConnection = false;
 
-// mongoose.connection.on("open", () => {
-//   dbConnection = true;
-//   IS_DEV && console.log("open connection to mongo server.");
-// });
+mongoose.connection.on("open", () => {
+  dbConnection = true;
+  IS_DEV && console.log("open connection to mongo server.");
+});
 
-// mongoose.connection.on("connected", () => {
-//   dbConnection = true;
-//   IS_DEV && console.log("connected to mongo server.");
-// });
+mongoose.connection.on("connected", () => {
+  dbConnection = true;
+  IS_DEV && console.log("connected to mongo server.");
+});
 
-// mongoose.connection.on("disconnected", () => {
-//   dbConnection = false;
-//   IS_DEV && console.log("disconnected from mongo server.");
-// });
+mongoose.connection.on("disconnected", () => {
+  dbConnection = false;
+  IS_DEV && console.log("disconnected from mongo server.");
+});
 
-// mongoose.connection.on("close", () => {
-//   dbConnection = false;
-//   IS_DEV && console.log("close connection to mongo server");
-// });
+mongoose.connection.on("close", () => {
+  dbConnection = false;
+  IS_DEV && console.log("close connection to mongo server");
+});
 
-// mongoose.connection.on("error", err => {
-//   dbConnection = false;
-//   IS_DEV && console.log("error connection to mongo server!");
-//   console.error(err);
-// });
+mongoose.connection.on("error", err => {
+  dbConnection = false;
+  IS_DEV && console.log("error connection to mongo server!");
+  console.error(err);
+});
 
-// mongoose.connection.on("reconnect", () => {
-//   dbConnection = true;
-//   IS_DEV && console.log("reconnect to mongo server.");
-// });
+mongoose.connection.on("reconnect", () => {
+  dbConnection = true;
+  IS_DEV && console.log("reconnect to mongo server.");
+});
 
 export async function setupDatabase(): Promise<void> {
   await mongoose.connect(DATABASE_CONNECTION_STRING, options);
