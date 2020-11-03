@@ -9,7 +9,7 @@ export function pagesRouter() {
   if (IS_DEV) {
     router.get(`/test/**`, async (_, res) => {
       if (!dbConnection) {
-        return res.render("KernelPanic.ejs");
+        return res.render("failedToBoot.ejs");
       }
 
       const manifest = await getManifest();
@@ -19,7 +19,7 @@ export function pagesRouter() {
 
   router.get(`/admin/**`, async (req, res) => {
     if (!dbConnection) {
-      return res.render("KernelPanic.ejs");
+      return res.render("failedToBoot.ejs");
     }
     const manifest = await getManifest();
     if (await isUserAdmin(req)) {
@@ -30,16 +30,13 @@ export function pagesRouter() {
   });
 
   router.get(`/unsupported-browser**`, async (_, res) => {
-    if (!dbConnection) {
-      return res.render("KernelPanic.ejs");
-    }
     const manifest = await getManifest();
     res.render("unsupported-browser.ejs", { manifest });
   });
 
   router.get(`/**`, async (req, res) => {
     if (!dbConnection) {
-      return res.render("KernelPanic.ejs");
+      return res.render("failedToBoot.ejs");
     }
     const userAgent = req.headers["user-agent"];
     const manifest = await getManifest();
