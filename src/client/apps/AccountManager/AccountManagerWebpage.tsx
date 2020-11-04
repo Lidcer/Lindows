@@ -705,10 +705,16 @@ export class AccountManagerWebpage extends React.Component<IAccountProps, IAccou
     // })
     // .catch((error: Error) => this.setState({ verifyResult: error.message }));
   }
+  readyToBoot = async () => {
+    await internal.system.init();
+  };
 
   componentDidMount() {
     if (internal.ready) return this.startup();
+    if (!internal.ready && internal.readyToBoot) return this.readyToBoot();
+
     internal.on("allReady", this.startup);
+    internal.on("readyToBoot", this.readyToBoot);
   }
 
   componentWillUnmount() {

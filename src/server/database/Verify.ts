@@ -1,6 +1,6 @@
 import { Schema, Document } from "mongoose";
 import { mongoose } from "./database";
-import { getUserById, IMongooseUserSchema } from "../routes/users/users-database";
+import { getUserById, MongooseUserSchema } from "../routes/users/users-database";
 
 declare type RequestType = "email-change" | "verify-account" | "password-change";
 export interface IMongooseVerificationSchema extends Document {
@@ -82,36 +82,36 @@ export function addVerificationCodeToDatabase(
   });
 }
 
-export function verifyCode(verificationCode: string): Promise<IMongooseUserSchema> {
+export function verifyCode(verificationCode: string): Promise<MongooseUserSchema> {
   return new Promise(async (resolve, rejects) => {
-    try {
-      const schema = await findVerificationByVerificationKey(verificationCode);
-      if (!schema) {
-        rejects(new Error("Code not found"));
-        return;
-      }
-      const user = await getUserById(schema.id);
-      if (!user) {
-        rejects(new Error("User not found"));
-        return;
-      }
-      switch (schema.requestType) {
-        case "password-change":
-          user.password = schema.storage;
-          break;
-        case "email-change":
-          user.email = schema.storage;
-          break;
-        default:
-          break;
-      }
-      user.verified = true;
-      await schema.remove();
-      await user.save();
-      resolve(user);
-    } catch (error) {
-      rejects(error);
-    }
+    // try {
+    //   const schema = await findVerificationByVerificationKey(verificationCode);
+    //   if (!schema) {
+    //     rejects(new Error("Code not found"));
+    //     return;
+    //   }
+    //   const user = await getUserById(schema.id);
+    //   if (!user) {
+    //     rejects(new Error("User not found"));
+    //     return;
+    //   }
+    //   switch (schema.requestType) {
+    //     case "password-change":
+    //       user.password = schema.storage;
+    //       break;
+    //     case "email-change":
+    //       user.email = schema.storage;
+    //       break;
+    //     default:
+    //       break;
+    //   }
+    //   user.verified = true;
+    //   await schema.remove();
+    //   await user.save();
+    //   resolve(user);
+    // } catch (error) {
+    //   rejects(error);
+    // }
   });
 }
 

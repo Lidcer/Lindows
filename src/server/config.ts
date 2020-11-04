@@ -4,12 +4,20 @@ import path from "path";
 import fs from "fs";
 import { randomBytes } from "crypto";
 
+type DatabaseType = "mongoDB" | "mySql" | "none";
+
 interface IConfig {
   SERVER_PORT?: number;
   PRIVATE_KEY?: string;
-  DATABASE_CONNECTION_STRING?: string;
+  MODNGO_DATABASE_CONNECTION_STRING?: string;
   SENDGRIND_API_KEY?: string;
   SECRET?: string;
+  DATABASE?: {
+    USERNAME: string;
+    HOST: string;
+    PASSWORD: string;
+    DATABASE: string;
+  };
 }
 
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -19,7 +27,7 @@ if (IS_DEV) {
 }
 
 let config: IConfig = {
-  DATABASE_CONNECTION_STRING: "",
+  MODNGO_DATABASE_CONNECTION_STRING: "",
   PRIVATE_KEY: "",
   SECRET: "",
   SENDGRIND_API_KEY: "",
@@ -47,9 +55,21 @@ if (!config.PRIVATE_KEY || !config.SECRET) {
 const SERVER_PORT = process.env.PORT || config.SERVER_PORT || 5050;
 const WEBPACK_PORT = 8085; // For dev environment only
 const PRIVATE_KEY = config.PRIVATE_KEY;
-const DATABASE_CONNECTION_STRING = config.DATABASE_CONNECTION_STRING || "mongodb://localhost:27017/lindows";
+const MONGO_DATABASE_CONNECTION_STRING =
+  config.MODNGO_DATABASE_CONNECTION_STRING || "mongodb://localhost:27017/lindows";
+const DATABASE_CRIENDTIALS = config.DATABASE;
 const SENDGRIND_API_KEY = config.SENDGRIND_API_KEY;
 const SECRET = config.SECRET;
+const DATA_BASE_TYPE = getDataBaseType();
+
+function getDataBaseType(): DatabaseType {
+  if (config.MODNGO_DATABASE_CONNECTION_STRING) {
+    return "mongoDB";
+  } else if (config.DATABASE && config.DATABASE.USERNAME && config.DATABASE.PASSWORD) {
+    return "mySql";
+  }
+  return "none";
+}
 
 export function regenerateConfig(shouldShutDownServer = false) {
   config.PRIVATE_KEY = randomBytes(64).toString("base64");
@@ -71,9 +91,11 @@ function updateConfig() {
 export {
   IS_DEV,
   VERSION,
+  DATABASE_CRIENDTIALS,
+  DATA_BASE_TYPE,
   SERVER_PORT,
   WEBPACK_PORT,
-  DATABASE_CONNECTION_STRING,
+  MONGO_DATABASE_CONNECTION_STRING as DATABASE_CONNECTION_STRING,
   PRIVATE_KEY,
   SENDGRIND_API_KEY,
   SECRET,

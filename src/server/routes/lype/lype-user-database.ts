@@ -1,19 +1,29 @@
 import { Document, Schema } from "mongoose";
 import { mongoose } from "../../database/database";
-import { IMongooseUserSchema, getUserById, getUserImage, findSimilarUser } from "../users/users-database";
+import {
+  MongooseUserSchema,
+  getUserImage,
+  UserModifiable,
+  getUserById,
+  findSimilarUser,
+} from "../users/users-database";
 import { ILypeAccount, LypeStatus } from "../../../shared/ApiLypeRequestsResponds";
 import { logger } from "../../database/EventLog";
+import { Model, where } from "sequelize";
+import { ID, isMongo, isMySql, Modifiable } from "../../database/modifiable";
 
-export interface IMongooseLypeUserSchema extends Document {
+interface LypeUser {
   userID: string;
-  friends: string[];
-  blocked: string[];
-  friendRequests: string[];
+  friends: string[] | string;
+  blocked: string[] | string;
+  friendRequests: string[] | string;
   customStatus: string;
   easyDiscoverable: boolean;
   status: LypeStatus;
   online: boolean;
 }
+
+export interface IMongooseLypeUserSchema extends Document, LypeUser {}
 
 const LypeUserSchema = new Schema<IMongooseLypeUserSchema>(
   {
@@ -35,7 +45,96 @@ const LypeUserSchema = new Schema<IMongooseLypeUserSchema>(
   },
 );
 
-const LypeUser = mongoose.model<IMongooseLypeUserSchema>("LypeUser", LypeUserSchema);
+const MongoLypeUser = mongoose.model<IMongooseLypeUserSchema>("LypeUser", LypeUserSchema);
+
+interface SqlLypeUser extends LypeUser, ID {}
+class LypeUserMySql extends Model<SqlLypeUser, LypeUser> implements LypeUser {
+  public readonly id: number;
+  public userID: string;
+  public friends: string[];
+  public blocked: string[];
+  public friendRequests: string[];
+  public customStatus: string;
+  public easyDiscoverable: boolean;
+  public status: LypeStatus;
+  public online: boolean;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+export class LypeUserModifiable extends Modifiable<IMongooseLypeUserSchema, LypeUserMySql> implements LypeUser {
+  get id() {
+    if (this.isMongo(this.db)) {
+      return this.db._id.toString();
+    } else if (this.isMySql) {
+      return this.db.id;
+    }
+  }
+
+  get userID(): string {
+    return this.db.userID;
+  }
+  set userID(userID: string) {
+    this.db.userID = userID;
+  }
+  get friends(): string[] {
+    return this.toArray(this.db.friends);
+  }
+  set friends(friends: string[]) {
+    this.db.friends = this.fromArray(friends);
+  }
+  get blocked(): string[] {
+    return this.toArray(this.db.blocked);
+  }
+  set blocked(blocked: string[]) {
+    this.db.blocked = blocked;
+  }
+  get friendRequests(): string[] {
+    return this.toArray(this.db.friendRequests);
+  }
+  set friendRequests(friendRequests: string[]) {
+    this.db.friendRequests = friendRequests;
+  }
+  get customStatus(): string {
+    return this.db.customStatus;
+  }
+  set customStatus(customStatus: string) {
+    this.db.customStatus = customStatus;
+  }
+  get easyDiscoverable(): boolean {
+    return this.db.easyDiscoverable;
+  }
+  set easyDiscoverable(easyDiscoverable: boolean) {
+    this.db.easyDiscoverable = easyDiscoverable;
+  }
+  get status(): LypeStatus {
+    return this.db.status;
+  }
+  set status(status: LypeStatus) {
+    this.db.status = status;
+  }
+  get online(): boolean {
+    return this.db.online;
+  }
+  set online(online: boolean) {
+    this.db.online = online;
+  }
+
+  async save() {
+    await this.db.save();
+    return this;
+  }
+  async remove() {
+    if (this.isMongo(this.db)) {
+      await this.db.remove();
+    } else if (this.isMySql(this.db)) {
+      await this.db.destroy();
+    }
+  }
+}
+
+type LypeUserDbType = IMongooseLypeUserSchema | LypeUserMySql;
 
 export async function findUsers(query: string) {
   try {
@@ -60,7 +159,7 @@ export async function findUsers(query: string) {
   }
 }
 
-export async function getLypeUsers(users: IMongooseUserSchema[]) {
+export async function getLypeUsers(users: UserModifiable[]) {
   const lypeUsers: ILypeAccount[] = [];
   for (const user of users) {
     try {
@@ -74,17 +173,29 @@ export async function getLypeUsers(users: IMongooseUserSchema[]) {
 }
 
 export async function getLypeUserWithUserID(id: string) {
-  const result = await LypeUser.findOne({ userID: id });
-  return result;
+  let userUser: LypeUserDbType | undefined = undefined;
+  if (isMongo()) {
+    userUser = await MongoLypeUser.findById({ userID: id });
+  } else if (isMySql()) {
+    userUser = await LypeUserMySql.findOne({ where: { userID: id } });
+  }
+  if (!userUser) return undefined;
+  return new LypeUserModifiable(userUser);
 }
 
-export async function getLypeUser(id: string) {
-  const result = await LypeUser.findOne({ _id: id });
-  return result;
+export async function getLypeUserById(id: string) {
+  let userUser: LypeUserDbType | undefined = undefined;
+  if (isMongo()) {
+    userUser = await MongoLypeUser.findById(id);
+  } else if (isMySql()) {
+    userUser = await LypeUserMySql.findByPk(parseInt(id));
+  }
+  if (!userUser) return undefined;
+  return new LypeUserModifiable(userUser);
 }
 
 export async function getLypeUserWithUserWithUserID(id: string) {
-  const lypeUser = await LypeUser.findOne({ userID: id });
+  const lypeUser = await getLypeUserWithUserID(id);
   if (lypeUser) {
     const user = await getUserById(id);
     if (!user) return undefined;
@@ -94,7 +205,7 @@ export async function getLypeUserWithUserWithUserID(id: string) {
 }
 
 export async function getLypeUserWithUser(id: string) {
-  const lypeUser = await LypeUser.findOne({ _id: id });
+  const lypeUser = await getLypeUserById(id);
   if (lypeUser) {
     const user = await getUserById(lypeUser.userID);
     if (!user) return undefined;
@@ -103,24 +214,35 @@ export async function getLypeUserWithUser(id: string) {
   return undefined;
 }
 
-export async function setupLypeUser(user: IMongooseUserSchema): Promise<IMongooseLypeUserSchema> {
-  const result = await LypeUser.findOne({ userID: user._id.toString() });
+export async function setupLypeUser(user: UserModifiable): Promise<LypeUserModifiable> {
+  const result = await getLypeUserWithUserID(user.id);
   if (result) return result;
-  const lypeUser = new LypeUser({
-    userID: user._id,
-    friends: [],
+
+  const lypeUser: LypeUser = {
+    userID: user.id,
+    friends: isMongo() ? [] : "[]",
     blocked: [],
     easyDiscoverable: true,
     customStatus: null,
     status: "online",
     online: false,
-  });
+    friendRequests: isMongo() ? [] : "[]",
+  };
 
-  await lypeUser.save();
-  return lypeUser;
+  if (isMongo()) {
+    const mongoUser = new MongoLypeUser(lypeUser);
+    await mongoUser.save();
+    return new LypeUserModifiable(mongoUser);
+  } else if (isMySql()) {
+    const lypeUserMySql = await LypeUserMySql.create(lypeUser);
+    await lypeUserMySql.save();
+    return new LypeUserModifiable(lypeUserMySql);
+  }
+
+  return undefined;
 }
 
-export async function getUserFriendsForClient(lypeUser: IMongooseLypeUserSchema) {
+export async function getUserFriendsForClient(lypeUser: LypeUserModifiable) {
   const friendsID = lypeUser.friends;
   const blockedID = lypeUser.blocked;
   const filteredFriends: string[] = [];
@@ -134,7 +256,7 @@ export async function getUserFriendsForClient(lypeUser: IMongooseLypeUserSchema)
     try {
       const fetchedFriend = await getLypeUserWithUser(friend);
       if (!fetchedFriend) continue;
-      if (!fetchedFriend.lypeUser.friends.includes(lypeUser._id.toString())) continue;
+      if (!fetchedFriend.lypeUser.friends.includes(lypeUser.id.toString())) continue;
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
@@ -145,7 +267,7 @@ export async function getUserFriendsForClient(lypeUser: IMongooseLypeUserSchema)
   return result;
 }
 
-export async function getUserPendingFriendRequest(lypeUser: IMongooseLypeUserSchema) {
+export async function getUserPendingFriendRequest(lypeUser: LypeUserModifiable) {
   const friendsID = lypeUser.friends;
   const blockedID = lypeUser.blocked;
   const filteredFriends: string[] = [];
@@ -157,7 +279,7 @@ export async function getUserPendingFriendRequest(lypeUser: IMongooseLypeUserSch
     try {
       const fetchedFriend = await getLypeUserWithUser(friend);
       if (!fetchedFriend) continue;
-      if (!fetchedFriend.lypeUser.friendRequests.includes(lypeUser._id.toString())) continue;
+      if (!fetchedFriend.lypeUser.friendRequests.includes(lypeUser.id.toString())) continue;
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
@@ -168,10 +290,9 @@ export async function getUserPendingFriendRequest(lypeUser: IMongooseLypeUserSch
   return result;
 }
 
-export async function getUserBlocksForClient(lypeUser: IMongooseLypeUserSchema) {
+export async function getUserBlocksForClient(lypeUser: LypeUserModifiable) {
   const blockedIDs = lypeUser.blocked;
   const result: ILypeAccount[] = [];
-
   for (const friend of blockedIDs) {
     try {
       const fetchedFriend = await getLypeUserWithUser(friend);
@@ -185,21 +306,19 @@ export async function getUserBlocksForClient(lypeUser: IMongooseLypeUserSchema) 
   return result;
 }
 
-export async function getUserFriendsRequestForClient(lypeUser: IMongooseLypeUserSchema) {
+export async function getUserFriendsRequestForClient(lypeUser: LypeUserModifiable) {
   const friendsID = lypeUser.friendRequests;
   const blockedID = lypeUser.blocked;
   const filteredFriends: string[] = [];
   friendsID.forEach(e => {
     if (!blockedID.includes(e)) filteredFriends.push(e);
   });
-
   const result: ILypeAccount[] = [];
-
   for (const friend of filteredFriends) {
     try {
       const fetchedFriend = await getLypeUserWithUser(friend);
-      logger.log("friend user", lypeUser._id.toString());
-      if (!fetchedFriend.lypeUser.friends.includes(lypeUser._id.toString())) continue;
+      logger.log("friend user", lypeUser.id.toString());
+      if (!fetchedFriend.lypeUser.friends.includes(lypeUser.id.toString())) continue;
       if (fetchedFriend.user.banned) continue;
       result.push(lypeAccountForClient(fetchedFriend.user, fetchedFriend.lypeUser));
     } catch (error) {
@@ -212,15 +331,15 @@ export async function getUserFriendsRequestForClient(lypeUser: IMongooseLypeUser
 
 // returns true if friend has been added or
 // false if friend has already been added
-export async function addFriend(target: IMongooseLypeUserSchema, friend: IMongooseLypeUserSchema, shouldSave = true) {
-  const isBlocked = target.blocked.find(u => u === friend._id.toString());
+export async function addFriend(target: LypeUserModifiable, friend: LypeUserModifiable, shouldSave = true) {
+  const isBlocked = target.blocked.find(u => u === friend.id.toString());
   if (isBlocked) throw new Error("User is on your user block list");
-  const isFriend = target.friends.indexOf(friend._id.toString());
-  const onFriendList = target.friendRequests.indexOf(friend._id.toString());
+  const isFriend = target.friends.indexOf(friend.id.toString());
+  const onFriendList = target.friendRequests.indexOf(friend.id.toString());
   if (onFriendList !== -1) {
     target.friendRequests.splice(onFriendList, 1);
     if (isFriend === -1) {
-      target.friends.push(friend._id.toString());
+      target.friends.push(friend.id.toString());
     }
     if (shouldSave) {
       await target.save();
@@ -233,8 +352,8 @@ export async function addFriend(target: IMongooseLypeUserSchema, friend: IMongoo
     return false;
   }
 
-  target.friends.push(friend._id.toString());
-  if (friend.friendRequests.indexOf(target._id.toString()) === -1) friend.friendRequests.push(target._id.toString());
+  target.friends.push(friend.id.toString());
+  if (friend.friendRequests.indexOf(target.id.toString()) === -1) friend.friendRequests.push(target.id.toString());
   if (shouldSave) {
     await target.save();
     await friend.save();
@@ -244,21 +363,17 @@ export async function addFriend(target: IMongooseLypeUserSchema, friend: IMongoo
 
 // returns true if friend has been removed or
 // false if friend has already been removed
-export async function removeFriend(
-  target: IMongooseLypeUserSchema,
-  friend: IMongooseLypeUserSchema,
-  shouldSave = true,
-) {
-  const targetIndexOf = target.friends.indexOf(friend._id.toString());
+export async function removeFriend(target: LypeUserModifiable, friend: LypeUserModifiable, shouldSave = true) {
+  const targetIndexOf = target.friends.indexOf(friend.id.toString());
   if (targetIndexOf !== -1) target.friends.splice(targetIndexOf, 1);
 
-  const targetIndexOfFriendRequests = target.friendRequests.indexOf(friend._id.toString());
+  const targetIndexOfFriendRequests = target.friendRequests.indexOf(friend.id.toString());
   if (targetIndexOfFriendRequests !== -1) target.friendRequests.splice(targetIndexOfFriendRequests, 1);
 
-  const friendOfFriends = friend.friends.indexOf(target._id.toString());
+  const friendOfFriends = friend.friends.indexOf(target.id.toString());
   if (friendOfFriends !== -1) friend.friends.splice(friendOfFriends, 1);
 
-  const friendsIndexOfFriendRequest = friend.friendRequests.indexOf(target._id.toString());
+  const friendsIndexOfFriendRequest = friend.friendRequests.indexOf(target.id.toString());
   if (friendsIndexOfFriendRequest !== -1) friend.friendRequests.splice(friendsIndexOfFriendRequest, 1);
 
   if (friendsIndexOfFriendRequest === -1 && friendOfFriends === -1 && friendOfFriends === -1 && targetIndexOf === -1) {
@@ -272,25 +387,25 @@ export async function removeFriend(
   return true;
 }
 
-export function areUsersFriends(user: IMongooseLypeUserSchema, anotherUser: IMongooseLypeUserSchema): boolean {
+export function areUsersFriends(user: LypeUserModifiable, anotherUser: LypeUserModifiable): boolean {
   return !!user.friends.find(f => f === anotherUser.toString());
 }
 
 // returns true if friend has been blocked or
 // false if friend has already been blocked
 export async function blockUser(
-  target: IMongooseLypeUserSchema,
-  userToBlock: IMongooseLypeUserSchema,
+  target: LypeUserModifiable,
+  userToBlock: LypeUserModifiable,
   shouldSave = true,
 ): Promise<boolean> {
-  const friend = await target.friends.find(f => f === userToBlock._id.toString());
+  const friend = await target.friends.find(f => f === userToBlock.id.toString());
   if (friend) {
     const indexOf = target.friends.indexOf(friend);
     if (indexOf !== -1) {
       target.friends.splice(indexOf, 1);
     }
   }
-  const isBlocked = target.blocked.find(b => b === userToBlock._id.toString());
+  const isBlocked = target.blocked.find(b => b === userToBlock.id.toString());
   if (isBlocked) {
     await target.save();
     return false;
@@ -304,13 +419,13 @@ export async function blockUser(
 // returns true if friend isn't on block list or
 // false if friend has already been blocked
 export async function unBlockUser(
-  target: IMongooseLypeUserSchema,
-  userToUnblock: IMongooseLypeUserSchema,
+  target: LypeUserModifiable,
+  userToUnblock: LypeUserModifiable,
   shouldSave = true,
 ): Promise<boolean> {
-  const isBlocked = await target.blocked.find(b => b === userToUnblock._id.toString());
+  const isBlocked = await target.blocked.find(b => b === userToUnblock.id);
   if (!isBlocked) return false;
-  const indexOf = target.blocked.indexOf(userToUnblock._id.toString());
+  const indexOf = target.blocked.indexOf(userToUnblock.id.toString());
   if (indexOf !== -1) {
     target.blocked.splice(indexOf, 1);
   }
@@ -319,7 +434,7 @@ export async function unBlockUser(
 }
 
 export async function updateCustomStatus(
-  lypeUser: IMongooseLypeUserSchema,
+  lypeUser: LypeUserModifiable,
   constStatus: string,
   shouldSave = true,
 ): Promise<void> {
@@ -327,11 +442,11 @@ export async function updateCustomStatus(
   if (shouldSave) await lypeUser.save();
 }
 
-export async function getLypeAccount(user: IMongooseUserSchema) {
-  const lypeUser = await getLypeUserWithUserID(user._id.toString());
+export async function getLypeAccount(user: UserModifiable) {
+  const lypeUser = await getLypeUserWithUserID(user.id.toString());
   if (!lypeUser) throw new Error("User does not have lype account");
   const lypeAccount: ILypeAccount = {
-    id: user._id.toString(),
+    id: user.id.toString(),
     username: user.username,
     customStatus: lypeUser.customStatus,
     displayedName: user.displayedName,
@@ -341,9 +456,9 @@ export async function getLypeAccount(user: IMongooseUserSchema) {
   return { lypeAccount, lypeUser };
 }
 
-export function lypeAccountForClient(user: IMongooseUserSchema, lypeUser: IMongooseLypeUserSchema) {
+export function lypeAccountForClient(user: UserModifiable, lypeUser: LypeUserModifiable) {
   const lypeAccount: ILypeAccount = {
-    id: user._id.toString(),
+    id: user.id.toString(),
     username: user.username,
     customStatus: lypeUser.customStatus,
     displayedName: user.displayedName,

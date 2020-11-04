@@ -45,3 +45,14 @@ export function mkdir(path: string) {
     });
   });
 }
+
+export function unlink(path: string) {
+  return new Promise<void>((resolve, reject) => {
+    fs.unlink(path, err => {
+      if (err) {
+        return reject(err);
+      }
+      resolve();
+    });
+  });
+}

@@ -22,8 +22,9 @@ import {
   addFriend,
   getLypeUserWithUserWithUserID,
   removeFriend,
+  LypeUserModifiable,
 } from "./lype-user-database";
-import { getUserById, IMongooseUserSchema } from "../users/users-database";
+import { getUserById, MongooseUserSchema, UserModifiable } from "../users/users-database";
 import { joi$LypeSearchQuery, joi$LypeUserID } from "./lype-joies";
 import { logger } from "../../database/EventLog";
 import { TOKEN_HEADER } from "../../../shared/constants";
@@ -206,11 +207,8 @@ export async function unblockLypeUser(req: Request, res: Response) {
   respondWithError(res, 500, "Checking out lype user");
 }
 
-async function getClientLypeUser(
-  lypeUser: IMongooseLypeUserSchema,
-  user: IMongooseUserSchema,
-): Promise<IClientAccount> {
-  if (lypeUser.userID.toString() !== user._id.toString()) throw new Error("Lype user does not match with user");
+async function getClientLypeUser(lypeUser: LypeUserModifiable, user: UserModifiable): Promise<IClientAccount> {
+  if (lypeUser.userID.toString() !== user.id.toString()) throw new Error("Lype user does not match with user");
 
   const friends = await getUserFriendsForClient(lypeUser);
   const friendRequest = await getUserFriendsRequestForClient(lypeUser);

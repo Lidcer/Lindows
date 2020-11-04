@@ -1,10 +1,9 @@
 import { attachDebugMethod } from "../devDebugger";
 import { logger } from "../database/EventLog";
-import { IMongooseUserSchema, getUserById } from "../routes/users/users-database";
+import { getUserById, MongooseUserSchema, UserModifiable } from "../routes/users/users-database";
 import { getTokenData } from "../routes/common";
 import { SocketValidator } from "./WebsocketSecurity";
 import { IWebsocketPromise } from "../../shared/Websocket";
-import { response } from "express";
 
 type WebsocketCallback = (client: SocketIO.Socket, ...args: any[] | any) => void;
 type WebsocketCallbackPromise = (client: SocketIO.Socket, ...args: any[] | any) => Promise<any>;
@@ -19,7 +18,7 @@ export class WebSocket {
   private clients: SocketIO.Socket[] = [];
   private callbacks = new Map<string, WebsocketCallback[]>();
   private promiseCallback = new Map<string, WebsocketCallbackPromise[]>();
-  private userSchema = new Map<SocketIO.Socket, IMongooseUserSchema>();
+  private userModifiables = new Map<SocketIO.Socket, UserModifiable>();
   readonly socketValidator = new SocketValidator(this);
 
   constructor(socketServer: SocketIO.Server) {
@@ -63,9 +62,9 @@ export class WebSocket {
           return client.emit("authenticate-failed", "Invalid token");
         }
         try {
-          let user: IMongooseUserSchema;
-          for (const [_, schema] of this.userSchema) {
-            if (schema._id.toString() === decode.id) {
+          let user: UserModifiable;
+          for (const [_, schema] of this.userModifiables) {
+            if (schema.id.toString() === decode.id) {
               user = schema;
               break;
             }
@@ -75,7 +74,7 @@ export class WebSocket {
           }
 
           if (!user) throw new Error("User does not exist");
-          this.userSchema.set(client, user);
+          this.userModifiables.set(client, user);
           return client.emit("authenticate-success", `Authentication succeeded Welcome ${user.displayedName}`);
         } catch (error) {
           return client.emit("authenticate-failed", "Invalid token");
@@ -84,7 +83,7 @@ export class WebSocket {
 
       client.on("unauthenticate", async (und: undefined) => {
         if (!this.socketValidator.validateUndefined(client, und)) return;
-        this.userSchema.delete(client);
+        this.userModifiables.delete(client);
       });
     });
   }
@@ -182,21 +181,21 @@ export class WebSocket {
     }
   }
 
-  getClientUserSchema(client: SocketIO.Socket): IMongooseUserSchema {
-    return this.userSchema.get(client);
+  getClientUserSchema(client: SocketIO.Socket): UserModifiable {
+    return this.userModifiables.get(client);
   }
 
-  getUserSchemaClients(userSchema: IMongooseUserSchema): SocketIO.Socket[] {
+  getUserSchemaClients(userSchema: MongooseUserSchema): SocketIO.Socket[] {
     const clients: SocketIO.Socket[] = [];
-    for (const [client, us] of this.userSchema) {
-      if (us && userSchema._id.toString() === us._id.toString()) clients.push(client);
+    for (const [client, us] of this.userModifiables) {
+      if (us && userSchema.id.toString() === us.id.toString()) clients.push(client);
     }
     return clients;
   }
 
   getClientByRoles(role: string) {
     const clients: SocketIO.Socket[] = [];
-    for (const [client, us] of this.userSchema) {
+    for (const [client, us] of this.userModifiables) {
       if (us && us.roles.includes(role)) clients.push(client);
     }
     return clients;

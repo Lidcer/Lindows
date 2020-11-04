@@ -3,7 +3,7 @@ import { Router, Request } from "express";
 import { logger } from "../../database/EventLog";
 import { TOKEN_HEADER } from "../../../shared/constants";
 import { IJWTAccount, getTokenData } from "../common";
-import { IMongooseUserSchema, getUserById } from "../users/users-database";
+import { MongooseUserSchema, getUserById, UserModifiable } from "../users/users-database";
 import { checkUser, resetPasswordLink } from "../users/users-responses";
 import {
   executeCommand,
@@ -107,7 +107,7 @@ export function setupAdminApi(router: Router) {
   });
 }
 
-export async function isUserAdmin(req: Request): Promise<IMongooseUserSchema | null> {
+export async function isUserAdmin(req: Request): Promise<UserModifiable | null> {
   const token = req.headers[TOKEN_HEADER] || req.session.token;
   logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
   const decoded: IJWTAccount = await getTokenData(req, token);
@@ -115,7 +115,7 @@ export async function isUserAdmin(req: Request): Promise<IMongooseUserSchema | n
     logger.warn(`Unable to decode token`);
     return null;
   }
-  let user: IMongooseUserSchema;
+  let user: UserModifiable;
   try {
     user = await getUserById(decoded.id);
     if (!user) return null;

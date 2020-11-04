@@ -1,5 +1,5 @@
 import { Response, Request } from "express";
-import { IMongooseUserSchema, getUserImage } from "./users/users-database";
+import { getUserImage, UserModifiable } from "./users/users-database";
 import { IResponse, IAccount, VerificationType } from "../../shared/ApiUsersRequestsResponds";
 import { ObjectSchema } from "@hapi/joi";
 import { TOKEN_HEADER } from "../../shared/constants";
@@ -17,7 +17,7 @@ export interface IJWVerificationCode extends IJWTAccount {
   data?: string;
 }
 
-export function rIsUserForbidden(res: Response, user: IMongooseUserSchema, verification = false): boolean {
+export function rIsUserForbidden(res: Response, user: UserModifiable, verification = false): boolean {
   if (!user) {
     respondWithError(res, 400, "Account does not exist");
     return true;
@@ -59,10 +59,10 @@ export function respondWithError(res: Response, status: number, error: string, d
   res.status(status).json(response);
 }
 
-export function getClientAccount(user: IMongooseUserSchema): IAccount {
+export function getClientAccount(user: UserModifiable): IAccount {
   return {
     displayedName: user.displayedName,
-    id: user._id,
+    id: user.id,
     username: user.username,
     avatar: getUserImage(user),
   };

@@ -10,11 +10,12 @@ import {
   getUserByAccountOrEmail,
   changePasswordOnAccount,
   getUserById,
-  IMongooseUserSchema,
+  MongooseUserSchema,
   changeAvatar,
   getUserImage,
   changeEmailOnAccount,
   doesUserWithDisplayedNamesExist,
+  UserModifiable,
 } from "./users-database";
 import { PRIVATE_KEY } from "../../config";
 import {
@@ -87,13 +88,11 @@ export async function registerUser(req: Request, res: Response) {
     return respondWithError(res, 500, "Internal server error");
   }
 
-  if (!spamProtector.addIP(req.ip)) return respondWithError(res, 429, "To many requests");
-
   try {
     logger.debug(`Registering user`);
     const user = await registerUserInDatabase(request.username, request.email, request.password, req.ip);
     const tokenData: IJWVerificationCode = {
-      id: user._id,
+      id: user.id,
       exp: Date.now() + HOUR,
       type: VerificationType.Verificaiton,
     };
@@ -101,7 +100,7 @@ export async function registerUser(req: Request, res: Response) {
     const verificationURL = `${req.headers.origin}/account?v=${token}`;
     mailService
       .sendVerification(request.email, {
-        id: user._id,
+        id: user.id,
         ip: req.ip,
         username: user.username,
         verificationURL,
@@ -145,7 +144,7 @@ export async function loginUser(req: Request, res: Response) {
   }
 
   const jwtTokenData: IJWTAccount = {
-    id: user._id,
+    id: user.id,
     exp: Date.now() + WEEK * 2,
   };
   const data = getClientAccount(user);
@@ -164,8 +163,7 @@ export async function checkUser(req: Request, res: Response) {
   logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
   const decoded: IJWTAccount = await rGetTokenData(req, res);
   if (!decoded) return;
-
-  let user: IMongooseUserSchema;
+  let user: UserModifiable;
   try {
     user = await getUserById(decoded.id);
   } catch (error) {
@@ -271,7 +269,7 @@ export async function changeEmail(req: Request, res: Response) {
     if (!correctPassword) return respondWithError(res, 400, "Incorrect password");
 
     const jwtTokenData: IJWVerificationCode = {
-      id: user._id,
+      id: user.id,
       exp: Date.now() + WEEK * 2,
       type: VerificationType.ChangeEmail,
       data: request.newEmail,
@@ -280,7 +278,7 @@ export async function changeEmail(req: Request, res: Response) {
     const verificationURL = `${req.headers.origin}/account/?v=${jwtToken}`;
     await mailService
       .sendNewVerification(user.email, {
-        id: user._id,
+        id: user.id,
         ip: req.ip,
         username: user.username,
         verificationURL,
@@ -318,7 +316,7 @@ export async function resetPasswordLink(req: Request, res: Response) {
     if (!user || user.banned) return;
 
     const jwtTokenData: IJWVerificationCode = {
-      id: user._id,
+      id: user.id,
       exp: Date.now() + HOUR,
       type: VerificationType.PasswordReset,
     };
@@ -328,7 +326,7 @@ export async function resetPasswordLink(req: Request, res: Response) {
 
     mailService
       .sendNewPasswordReset(request.email, {
-        id: user._id,
+        id: user.id,
         ip: req.ip,
         username: user.username,
         verificationURL,
@@ -400,7 +398,7 @@ export async function deleteAccount(req: Request, res: Response) {
 
   const email = user.email;
   const emailData: IMailAccountInfo = {
-    id: user._id,
+    id: user.id,
     ip: "",
     reason: "Requested by user",
     username: user.username,
@@ -417,15 +415,20 @@ export async function deleteAccount(req: Request, res: Response) {
 }
 
 export async function checkOutTemporarilyToken(req: Request, res: Response) {
+  console.log(1)
   const token = req.headers[TOKEN_HEADER];
   logger.debug("Checking token", token);
+  console.log(2)
   const isTokenBlackListedResult = await isTokenBlackListed(token as string);
   if (isTokenBlackListedResult) return respondWithError(res, 400, "This token has already been used");
+  console.log(3)
   const decoded = (await rGetTokenData(req, res, true)) as IJWVerificationCode;
   if (!decoded) return;
+  console.log(4)
   const response: IResponse<VerificationType> = {
     success: decoded.type,
   };
+  console.log(5)
   logger.debug("Token checked", response);
   res.status(200).json(response);
 }

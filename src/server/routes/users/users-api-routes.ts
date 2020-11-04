@@ -4,13 +4,13 @@ import {
   loginUser,
   checkUser,
   uploadImage,
-  temporarilyTokenAccountAltering,
-  checkOutTemporarilyToken,
   resetPasswordLink,
   changePassword,
-  changeDisplayedName,
   changeEmail,
   deleteAccount,
+  changeDisplayedName,
+  checkOutTemporarilyToken,
+  temporarilyTokenAccountAltering,
   logOutUser,
 } from "./users-responses";
 import { imagesPath } from "./users-database";

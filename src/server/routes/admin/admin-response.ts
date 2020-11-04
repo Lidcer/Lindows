@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { IResponse } from "../../../shared/ApiUsersRequestsResponds";
-import { IMongooseUserSchema, MongoUser, UserAccountFlags, changeAvatar, getUserImage } from "../users/users-database";
-import { logger, getAllEvents, prettifyEvent, IEventLog, getEventById } from "../../database/EventLog";
+import { UserModifiable, UserAccountFlags, getUserImage, getAllUsers, getUserById } from "../users/users-database";
+import { logger, getAllEvents, prettifyEvent, getEventById, DataEventLog } from "../../database/EventLog";
 import * as os from "os";
 import * as disk from "node-disk-info";
 import { respondWithError } from "../common";
@@ -43,7 +43,7 @@ interface IDisk {
   used: number;
 }
 
-export async function serverInfo(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function serverInfo(req: Request, res: Response, account: UserModifiable) {
   const response: IResponse<IServerInfo> = {};
   const rawDiskData = await disk.getDiskInfo();
   const diskData: IDisk[] = [];
@@ -69,11 +69,11 @@ export async function serverInfo(req: Request, res: Response, account: IMongoose
     },
   };
 
-  logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()}  obtained data from server info`);
+  logger.log("[ADMIN]", `User ${account.username} : ${account.id.toString()}  obtained data from server info`);
   res.status(200).json(response);
 }
 
-export async function eventLog(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function eventLog(req: Request, res: Response, account: UserModifiable) {
   const joi$EventLog = Joi.object({
     eventID: Joi.string(),
   });
@@ -85,13 +85,13 @@ export async function eventLog(req: Request, res: Response, account: IMongooseUs
   try {
     const eventsRaw = await getEventById(req.body.eventID);
 
-    const response: IResponse<IEventLog> = {
+    const response: IResponse<DataEventLog> = {
       success: prettifyEvent(eventsRaw),
     };
 
     logger.log(
       "[ADMIN]",
-      `User ${account.username} : ${account._id.toString()} obtained event log ${response.success.id}`,
+      `User ${account.username} : ${account.id.toString()} obtained event log ${response.success.id}`,
     );
     res.status(200).json(response);
   } catch (error) {
@@ -99,7 +99,7 @@ export async function eventLog(req: Request, res: Response, account: IMongooseUs
   }
 }
 
-export async function eventLogDelete(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function eventLogDelete(req: Request, res: Response, account: UserModifiable) {
   const joi$eventLog = Joi.object({
     eventID: Joi.string(),
   });
@@ -110,34 +110,35 @@ export async function eventLogDelete(req: Request, res: Response, account: IMong
   }
   try {
     const schema = await getEventById(req.body.eventID);
-    const id = schema._id.toString();
+    const id = schema.id.toString();
     await schema.remove();
 
     const response: IResponse<string> = {
       success: "Deleted successfully",
     };
 
-    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} removed event ${id}`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account.id.toString()} removed event ${id}`);
     res.status(200).json(response);
   } catch (error) {
     return respondWithError(res, 500, "Internal server error");
   }
 }
 
-export async function eventLogs(req: Request, res: Response, account: IMongooseUserSchema) {
-  const response: IResponse<IEventLog[]> = {};
+export async function eventLogs(req: Request, res: Response, account: UserModifiable) {
+  const response: IResponse<DataEventLog[]> = {};
   try {
     const eventsRaw = await getAllEvents();
 
-    const eventLog: IEventLog[] = [];
-    for (const eventRat of eventsRaw) {
-      eventLog.push(prettifyEvent(eventRat));
+    const eventLog: DataEventLog[] = [];
+    for (const eventRaw of eventsRaw) {
+      eventLog.push(prettifyEvent(eventRaw));
     }
 
     response.success = eventLog;
-    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained data from event log`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account.id.toString()} obtained data from event log`);
     res.status(200).json(response);
   } catch (error) {
+    console.error(error);
     return respondWithError(res, 500, "Internal server error");
   }
 }
@@ -159,13 +160,13 @@ interface IAdminAccount {
   flags: UserAccountFlags[];
 }
 
-function stripAccountData(accountRaw: IMongooseUserSchema) {
+function stripAccountData(accountRaw: UserModifiable) {
   return {
-    id: accountRaw._id.toString(),
+    id: accountRaw.id.toString(),
     avatar: getUserImage(accountRaw),
     banned: accountRaw.banned,
     compromised: accountRaw.compromised,
-    createdAt: accountRaw.createdAt,
+    createdAt: accountRaw.accountCreatedAt,
     displayedName: accountRaw.displayedName,
     email: accountRaw.email,
     flags: accountRaw.flags,
@@ -178,10 +179,10 @@ function stripAccountData(accountRaw: IMongooseUserSchema) {
   };
 }
 
-export async function accounts(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function accounts(req: Request, res: Response, account: UserModifiable) {
   const response: IResponse<IAdminAccount[]> = {};
   try {
-    const accountsRaw = await MongoUser.find();
+    const accountsRaw = await getAllUsers();
     const accounts: IAdminAccount[] = [];
 
     for (const accountRaw of accountsRaw) {
@@ -189,7 +190,7 @@ export async function accounts(req: Request, res: Response, account: IMongooseUs
     }
 
     response.success = accounts;
-    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained accounts data`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account.id.toString()} obtained accounts data`);
     res.status(200).json(response);
   } catch (error) {
     return respondWithError(res, 500, "Internal server error");
@@ -198,7 +199,7 @@ export async function accounts(req: Request, res: Response, account: IMongooseUs
 interface IAccountID {
   accountID: string;
 }
-export async function account(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function account(req: Request, res: Response, account: UserModifiable) {
   const joi$broadcaster = Joi.object<IAccountID>({
     accountID: Joi.string(),
   });
@@ -208,14 +209,14 @@ export async function account(req: Request, res: Response, account: IMongooseUse
     return adminJoiErrorResponse(res, result);
   }
   try {
-    const schema = await MongoUser.findById(req.body.accountID);
+    const schema = await getUserById(req.body.accountID);
 
     const response: IResponse<IAdminAccount> = {
       success: stripAccountData(schema),
     };
     logger.log(
       "[ADMIN]",
-      `User ${account.username} : ${account._id.toString()} obtained account data ${response.success.username} ${
+      `User ${account.username} : ${account.id.toString()} obtained account data ${response.success.username} ${
         response.success.id
       }`,
     );
@@ -225,7 +226,7 @@ export async function account(req: Request, res: Response, account: IMongooseUse
   }
 }
 
-export async function accountDelete(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function accountDelete(req: Request, res: Response, account: UserModifiable) {
   const joi$Account = Joi.object<IAccountID>({
     accountID: Joi.string(),
   });
@@ -235,7 +236,7 @@ export async function accountDelete(req: Request, res: Response, account: IMongo
     return adminJoiErrorResponse(res, result);
   }
   try {
-    const schema = await MongoUser.findById(req.body.accountID);
+    const schema = await getUserById(req.body.accountID);
     await schema.remove();
 
     const response: IResponse<string> = {
@@ -243,9 +244,9 @@ export async function accountDelete(req: Request, res: Response, account: IMongo
     };
     logger.log(
       "[ADMIN]",
-      `User ${account.username} : ${account._id.toString()} obtained account data ${
+      `User ${account.username} : ${account.id.toString()} obtained account data ${
         schema.username
-      } ${schema._id.toString()}`,
+      } ${schema.id.toString()}`,
     );
     res.status(200).json(response);
   } catch (error) {
@@ -253,7 +254,7 @@ export async function accountDelete(req: Request, res: Response, account: IMongo
   }
 }
 
-export async function accountUpdate(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function accountUpdate(req: Request, res: Response, account: UserModifiable) {
   return res.status(501).json({});
   const joi$broadcaster = Joi.object<IAccountID>({
     accountID: Joi.string(),
@@ -264,7 +265,7 @@ export async function accountUpdate(req: Request, res: Response, account: IMongo
     return adminJoiErrorResponse(res, result);
   }
   try {
-    const schema = await MongoUser.findById(req.body.accountID);
+    const schema = await getUserById(req.body.accountID);
 
     // res.status(200).json(response);
   } catch (error) {
@@ -279,7 +280,7 @@ interface IWebSocketInfo {
   fingerprint?: fingerprintjs.Component[];
 }
 
-export async function webSocketsInfo(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function webSocketsInfo(req: Request, res: Response, account: UserModifiable) {
   const response: IResponse<IWebSocketInfo[]> = {};
   try {
     const clientsRaw = websocket.getClients();
@@ -297,7 +298,7 @@ export async function webSocketsInfo(req: Request, res: Response, account: IMong
     }
 
     response.success = websocketInfo;
-    logger.log("[ADMIN]", `User ${account.username} : ${account._id.toString()} obtained websocket data`);
+    logger.log("[ADMIN]", `User ${account.username} : ${account.id.toString()} obtained websocket data`);
     res.status(200).json(response);
   } catch (error) {
     logger.error("API Websockets info", error);
@@ -309,7 +310,7 @@ interface ISocketID {
   socketID: string;
 }
 
-export async function webSocketInfo(req: Request, res: Response, account: IMongooseUserSchema) {
+export async function webSocketInfo(req: Request, res: Response, account: UserModifiable) {
   const joi$Account = Joi.object<ISocketID>({
     socketID: Joi.string(),
   });
@@ -338,7 +339,7 @@ export async function webSocketInfo(req: Request, res: Response, account: IMongo
     response.success = { id: clientRaw.id, ip, account: socketAccount, fingerprint };
     logger.log(
       "[ADMIN]",
-      `User ${account.username} : ${account._id.toString()} obtained websocket info ${clientRaw.id}`,
+      `User ${account.username} : ${account.id.toString()} obtained websocket info ${clientRaw.id}`,
     );
     res.status(200).json(response);
   } catch (error) {
@@ -354,7 +355,7 @@ interface IWebSocketBroadcast {
   arg2?: string;
 }
 
-export function broadcastWebSocket(req: Request, res: Response, account: IMongooseUserSchema) {
+export function broadcastWebSocket(req: Request, res: Response, account: UserModifiable) {
   const joi$broadcaster = Joi.object<IWebSocketBroadcast>({
     value: Joi.string(),
     arg0: Joi.string(),
@@ -370,7 +371,7 @@ export function broadcastWebSocket(req: Request, res: Response, account: IMongoo
 
   logger.info(
     "[Admin broadcast]",
-    `User ${account.username}:${account._id.toString()} broadcasted ${req.body.value} ${args.join(", ")}`,
+    `User ${account.username}:${account.id.toString()} broadcasted ${req.body.value} ${args.join(", ")}`,
   );
   websocket.broadcast(req.body.value, req.body.arg0, req.body.arg1, req.body.arg2);
 
@@ -384,7 +385,7 @@ interface IWebSocketDisconnectClient {
   socketID: string;
 }
 
-export function disconnectClient(req: Request, res: Response, account: IMongooseUserSchema) {
+export function disconnectClient(req: Request, res: Response, account: UserModifiable) {
   const joi$broadcaster = Joi.object<IWebSocketDisconnectClient>({
     socketID: Joi.string(),
   });
@@ -403,8 +404,8 @@ export function disconnectClient(req: Request, res: Response, account: IMongoose
 
   logger.info(
     "[Admin client disconnect]",
-    `Client ${account.username}:${account._id.toString()} disconnected client ${client.id} ${
-      schema ? `${schema.username} ${schema._id.toString()}` : ""
+    `Client ${account.username}:${account.id.toString()} disconnected client ${client.id} ${
+      schema ? `${schema.username} ${schema.id.toString()}` : ""
     }}`,
   );
 
@@ -414,7 +415,7 @@ export function disconnectClient(req: Request, res: Response, account: IMongoose
   res.status(200).json(response);
 }
 
-export function fingerprintClient(req: Request, res: Response, account: IMongooseUserSchema) {
+export function fingerprintClient(req: Request, res: Response, account: UserModifiable) {
   const joi$fingerprint = Joi.object<IWebSocketDisconnectClient>({
     socketID: Joi.string(),
   });
@@ -460,7 +461,7 @@ export function fingerprintClient(req: Request, res: Response, account: IMongoos
   }, SECOND * 10);
 }
 
-export function executeCommand(req: Request, res: Response, account: IMongooseUserSchema) {}
+export function executeCommand(req: Request, res: Response, account: UserModifiable) {}
 
 function adminJoiErrorResponse(res: Response, joi: Joi.ValidationResult) {
   const response: IResponse<any> = {

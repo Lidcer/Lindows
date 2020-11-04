@@ -5,6 +5,7 @@ import { setupUsersApi } from "./users/users-api-routes";
 import { setupLypeUsersApi } from "./lype/lype-api-routes";
 import { setupAdminApi } from "./admin/admin-api-routes";
 import { setupIpApi } from "./ip/ip-api-routes";
+import { IS_DEV } from "../config";
 
 export function apiRouter() {
   const router = Router();
@@ -13,7 +14,10 @@ export function apiRouter() {
   router.use(fileUpload.default());
 
   setupUsersApi(router);
-  setupLypeUsersApi(router);
+  if (IS_DEV) {
+    setupLypeUsersApi(router);
+  }
+
   setupAdminApi(router);
   setupIpApi(router);
 

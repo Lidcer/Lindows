@@ -121,7 +121,7 @@ export class SocketValidator {
   private getClientUserId(client: SocketIO.Socket) {
     const userSchema = this.webSocket.getClientUserSchema(client);
     let message = "";
-    if (userSchema) message = `User ID: ${userSchema._id.toString()}`;
+    if (userSchema) message = `User ID: ${userSchema.id.toString()}`;
     return message;
   }
 }

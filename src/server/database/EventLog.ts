@@ -2,29 +2,29 @@ import { Document, Schema } from "mongoose";
 import { attachDebugMethod } from "../devDebugger";
 import moment from "moment";
 import chalk from "chalk";
-import { mongoose } from "./database";
+import { mongoose, sql } from "./database";
 import { IS_DEV } from "../config";
 import { WebSocket } from "../websocket/SocketHandler";
 import path from "path";
 import { writeFile, appendFile } from "fs";
+import { DataTypes, Model } from "sequelize";
+import { isMongo, isMySql, Modifiable } from "./modifiable";
 
 const { white, yellow, red } = chalk;
 
-export interface IMongooseEventLog extends Document {
+export interface EventLog {
   type: string;
-  time: Date;
+  time: number;
   message?: string;
-  details?: string[];
+  details?: string;
   error?: string;
 }
-export interface IEventLog {
+
+export interface DataEventLog extends EventLog {
   id: string;
-  type: string;
-  time: Date;
-  message?: string;
-  details?: string[];
-  error?: string;
 }
+
+export interface IMongooseEventLog extends Document, EventLog {}
 
 const EventLogSchema = new Schema<IMongooseEventLog>(
   {
@@ -43,27 +43,118 @@ const EventLogSchema = new Schema<IMongooseEventLog>(
   },
 );
 
+interface SqlEventLog extends EventLog {
+  id: number;
+}
+class EventLogMySql extends Model<SqlEventLog, EventLog> implements SqlEventLog {
+  public id: number;
+  public type: string;
+  public time: number;
+  public message?: string;
+  public details?: string;
+  public error?: string;
+
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+EventLogMySql.init(
+  {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    type: DataTypes.STRING,
+    time: DataTypes.BIGINT,
+    message: DataTypes.TEXT,
+    details: DataTypes.TEXT,
+    error: DataTypes.TEXT,
+  },
+  { sequelize: sql, modelName: "event_log" },
+);
+
+export class EventLogModifiable extends Modifiable<IMongooseEventLog, EventLogMySql> implements EventLog {
+  get type(): string {
+    return this.db.type;
+  }
+  get time(): number {
+    return this.db.time;
+  }
+  get message(): string {
+    return this.db.message;
+  }
+  get error(): string {
+    return this.db.error || null;
+  }
+
+  get id(): number {
+    if (this.isMongo(this.db)) {
+      return this.db._id;
+    } else if (this.isMySql) {
+      return this.db.id;
+    }
+  }
+  get details(): string {
+    return this.db.details;
+  }
+  set details(details) {
+    this.db.details = details;
+  }
+
+  async save() {
+    await this.db.save();
+    return this;
+  }
+  async remove() {
+    if (this.isMongo(this.db)) {
+      await this.db.remove();
+    } else if (this.isMySql(this.db)) {
+      await this.db.destroy();
+    }
+  }
+}
+
 const MongoEventLog = mongoose.model<IMongooseEventLog>("events", EventLogSchema);
 
 export async function getAllEvents() {
-  const data = await MongoEventLog.find();
-  return data;
+  let result: EventLogModifiable[] | undefined;
+  if (isMongo()) {
+    const found = await MongoEventLog.find();
+    if (found) {
+      result = found.map(m => new EventLogModifiable(m));
+    }
+  } else if (isMySql()) {
+    const found = await EventLogMySql.findAll();
+    if (found) {
+      result = found.map(m => new EventLogModifiable(m));
+    }
+  }
+  if (!result) return [];
+  return result;
 }
 
 export async function getEventById(id: string) {
-  const data = await MongoEventLog.findById(id);
-  return data;
+  if (isMongo()) {
+    const data = await MongoEventLog.findById(id);
+    if (!data) return undefined;
+    return new EventLogModifiable(data);
+  } else if (isMySql) {
+    const data = await EventLogMySql.findByPk(parseInt(id));
+    if (!data) return undefined;
+    return new EventLogModifiable(data);
+  }
 }
 
-export function prettifyEvent(mongooseEventLogs: IMongooseEventLog) {
-  const eventLog: IEventLog = {
-    id: mongooseEventLogs._id.toString(),
-    type: mongooseEventLogs.type,
-    time: mongooseEventLogs.time,
+export function prettifyEvent(eventLogModifiabel: EventLogModifiable) {
+  const eventLog: DataEventLog = {
+    id: eventLogModifiabel.id.toString(),
+    type: eventLogModifiabel.type,
+    time: eventLogModifiabel.time,
   };
-  if (mongooseEventLogs.message) eventLog.message = mongooseEventLogs.message;
-  if (mongooseEventLogs.details) eventLog.details = mongooseEventLogs.details;
-  if (mongooseEventLogs.error) eventLog.error = mongooseEventLogs.error;
+  if (eventLogModifiabel.message) eventLog.message = eventLogModifiabel.message;
+  if (eventLogModifiabel.details) eventLog.details = eventLogModifiabel.details;
+  if (eventLogModifiabel.error) eventLog.error = eventLogModifiabel.error;
   return eventLog;
 }
 
@@ -80,27 +171,41 @@ class Logger {
   }
 
   async saveToDataBase(type: string, time: Date, message?: string, details?: string[], error?: string) {
-    const schema = new MongoEventLog({
-      type,
-      time,
-    });
+    let event: EventLogModifiable | undefined = undefined;
 
-    if (message) schema.message = message;
-    if (details) schema.details = details;
-    if (error) schema.error = error;
+    const eventLog: EventLog = {
+      type,
+      time: time.getTime(),
+    };
+    if (message) eventLog.message = message.toString();
+    if (details) eventLog.details = details.map(e => e.toString).join("\n");
+    if (error) eventLog.error = error.toString();
+    if (isMongo()) {
+      const schema = new MongoEventLog(eventLog);
+
+      await schema.save();
+      event = new EventLogModifiable(schema);
+    } else if (isMySql()) {
+      const mySqlEventLog = await EventLogMySql.create(eventLog);
+      await mySqlEventLog.save();
+      event = new EventLogModifiable(mySqlEventLog);
+    }
+    if (!event) {
+      console.error("Unable to write event");
+      return;
+    }
 
     try {
-      await schema.save();
       if (this._websocket) {
         const clients = this._websocket.getClientByRoles("admin");
         for (const client of clients) {
-          client.emit("admin-event-log-report", prettifyEvent(schema));
+          client.emit("admin-event-log-report", prettifyEvent(event));
         }
       }
     } catch (error) {
       console.error(`Cannot store error`, error);
     }
-    return schema;
+    return event;
   }
 
   _setWebSocket(webSocket: WebSocket) {
@@ -121,7 +226,7 @@ class Logger {
           console.log(err, "done");
         });
       }
-    })
+    });
   };
 
   debug(message: string, ...optionalParams: any[]) {
