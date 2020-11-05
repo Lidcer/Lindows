@@ -46,7 +46,7 @@ TokenBlackListMySql.init(
     deleteTime: { type: DataTypes.BIGINT, allowNull: false },
     token: { type: DataTypes.STRING, allowNull: false },
   },
-  { sequelize: sql, modelName: "blackListTokens" },
+  { sequelize: sql, modelName: "blackList_tokens" },
 );
 
 type TokenBlackListDbType = IMongooseTokenBlackList | TokenBlackListMySql;

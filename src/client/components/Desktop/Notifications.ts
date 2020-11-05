@@ -3,6 +3,7 @@ import { internal } from "../../services/internals/Internal";
 import { BaseWindow, MessageBox } from "../../apps/BaseWindow/BaseWindow";
 import { attachToWindowIfDev } from "../../essential/requests";
 import { Processor } from "../../services/system/ProcessorSystem";
+import { StringSymbol } from "../../utils/FileSystemDirectory";
 
 export interface INotification {
   icon?: string;
@@ -60,6 +61,19 @@ export class NotificationSystem {
       content,
       icon,
       block: () => this.block(senderString),
+    };
+    this.emit("notification", notification);
+  }
+
+  raiseSystem(systemSymbol: StringSymbol, content: string) {
+    if (!internal.systemSymbol.equals(systemSymbol)) {
+      return;
+    }
+    const notification: INotification = {
+      sender: "System",
+      title: "System info",
+      content,
+      block: () => {},
     };
     this.emit("notification", notification);
   }

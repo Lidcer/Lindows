@@ -159,7 +159,7 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
       <Link className='router-link' to={`/admin/event-log/${event.id}`} style={{ textDecoration: "none" }}>
         <div className={`m-2 p-2 event-log admin-clickable ${borderClass}`} style={style}>
           <div>
-            <b>{event.type.toUpperCase()}</b>
+            <b className='mr-2'>{event.type.toUpperCase()}</b>
             {moment(event.time).format("MMMM Do YYYY, HH:mm:ss")} {moment(event.time).fromNow()}
           </div>
           <div>{event.message}</div>
@@ -184,7 +184,11 @@ export class AdminEventLogList extends Component<IAdminEventLogProps, IAdminEven
         </div>
       );
     return events.map((e, i) => {
-      return <div key={i}> {this.getEvent(e)} </div>;
+      return (
+        <div style={{ whiteSpace: "pre" }} key={i}>
+          {this.getEvent(e)}
+        </div>
+      );
     });
   }
 

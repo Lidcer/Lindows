@@ -3,8 +3,12 @@ import { UAParser } from "ua-parser-js";
 import MobileDetect from "mobile-detect";
 import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService";
 import { SECOND } from "../../../shared/constants";
+import { EventEmitter } from "events";
 
 export class HardwareInfo extends BaseService {
+  private readonly _eventEmitter = new EventEmitter();
+  private _active = false;
+
   private result: fingerprintjs.Component[] = [];
   private _status = SystemServiceStatus.Uninitialized;
 
@@ -16,6 +20,7 @@ export class HardwareInfo extends BaseService {
       this._status = SystemServiceStatus.Starting;
       return new Promise<void>((resolve, reject) => {
         let done = false;
+        document.addEventListener("visibilitychange", this.visibilityChange);
         fingerprintjs.get(result => {
           this.result = result;
           this.injectPlugin();
@@ -42,6 +47,8 @@ export class HardwareInfo extends BaseService {
       if (!/windows/i.test(navigator.userAgent)) {
         window.removeEventListener("touchstart", this.setTouch);
       }
+      document.removeEventListener("visibilitychange", this.visibilityChange);
+      this._eventEmitter.removeAllListeners();
     };
 
     return {
@@ -54,6 +61,26 @@ export class HardwareInfo extends BaseService {
   status = () => {
     return this._status;
   };
+
+  private visibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      this._active = true;
+    } else {
+      this._active = false;
+    }
+
+    this._eventEmitter.emit("visibilityChange", this._active);
+  };
+  onVisibilityChange(listener: (visiable: boolean) => void) {
+    this._eventEmitter.on("visibilityChange", listener);
+  }
+  removeListenerVisibilityChange(listener: (visiable: boolean) => void) {
+    this._eventEmitter.removeListener("visibilityChange", listener);
+  }
+
+  get active() {
+    return this._active;
+  }
 
   private injectPlugin() {
     this.result.push({ key: "usesTouch", value: false });

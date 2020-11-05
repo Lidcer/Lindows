@@ -5,6 +5,8 @@ import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService
 import { randomString } from "../../../shared/utils";
 import { IWebsocketPromise } from "../../../shared/Websocket";
 import { Internal } from "../internals/Internal";
+import { getNotification } from "../../components/Desktop/Notifications";
+import { Test } from "../../test/test";
 
 const internal = new WeakMap<Network, Internal>();
 export class Network extends BaseService {
@@ -21,9 +23,23 @@ export class Network extends BaseService {
   init() {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
+    const beforeunload = () => {
+      if (this.socket.connected) {
+        this.socket.close();
+      }
+    };
+    const int = internal.get(this);
+
+    const visibilityChange = (active: boolean) => {
+      if (this.socket.connected) {
+        this.socket.emit("focused", active);
+      }
+    };
+
     const start = async () => {
       if (this._status !== SystemServiceStatus.WaitingForStart) throw new Error("Service is not in state for start");
       this._status = SystemServiceStatus.Starting;
+
       if (STATIC) {
         this._status = SystemServiceStatus.Failed;
         return;
@@ -37,11 +53,13 @@ export class Network extends BaseService {
           link = link.replace(/\${location.hostname}/g, location.hostname);
           return link;
         };
-
+        window.addEventListener("beforeunload", beforeunload);
         this._socket = io(origin);
         this._socket.on("connect", () => {
           this.connection();
           this._status = SystemServiceStatus.Ready;
+          visibilityChange(false);
+          int.hardwareInfo.onVisibilityChange(visibilityChange);
           resolve();
         });
 
@@ -55,6 +73,9 @@ export class Network extends BaseService {
         this._socket.on("redirect", (redirectLink: string) => window.location.replace(replaceLink(redirectLink)));
         this._socket.on("open-new-tab", (redirectLink: string) => {
           this.windowTabs.push(window.open(replaceLink(redirectLink), "_blank"));
+        });
+        this._socket.on("notify", (text: string) => {
+          getNotification().raiseSystem(int.systemSymbol, text);
         });
 
         this._socket.on("admin-event-log-report", (redirectLink: string) => {
@@ -92,6 +113,8 @@ export class Network extends BaseService {
     const destroy = () => {
       if (this._status === SystemServiceStatus.Destroyed) throw new Error("Service has already been destroyed");
       this._status = SystemServiceStatus.Destroyed;
+      window.removeEventListener("beforeunload", beforeunload);
+      int.hardwareInfo.removeListenerVisibilityChange(visibilityChange);
       internal.delete(this);
       if (STATIC) return;
       this._socket.disconnect();

@@ -75,7 +75,8 @@ export function getToken(req: Request) {
 export async function rGetTokenData(
   req: Request,
   res: Response,
-  verificaiton = false,
+  verification = false,
+  privateKey = PRIVATE_KEY,
 ): Promise<IJWTAccount | IJWVerificationCode | null> {
   const token = getToken(req);
   if (!token) {
@@ -86,7 +87,15 @@ export async function rGetTokenData(
     respondWithError(res, 400, "Invalid token provided");
     return null;
   }
-  const data = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
+  let data: IJWVerificationCode;
+  try {
+    const d = (await jwt.verify(token, privateKey)) as IJWVerificationCode;
+    data = d;
+  } catch (error) {
+    respondWithError(res, 400, "Invalid token");
+    return null;
+  }
+
   if (!data) {
     respondWithError(res, 400, "Invalid token");
     return null;
@@ -100,7 +109,7 @@ export async function rGetTokenData(
       respondWithError(res, 401, "Token has expired");
       return null;
     }
-    if (verificaiton && !data.type) {
+    if (verification && !data.type) {
       respondWithError(res, 401, "Problem with token");
       return null;
     }
@@ -119,7 +128,14 @@ export async function getTokenData(req?: Request, token?: string): Promise<IJWTA
   }
   if (!token) return null;
   if (typeof token !== "string") return null;
-  const data = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
+  let data: IJWVerificationCode;
+  try {
+    const d = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
+    data = d;
+  } catch (error) {
+    logger.debug("Token varify", error)
+    return null;
+  }
   if (!data) return null;
 
   if (data.id && data.exp) {

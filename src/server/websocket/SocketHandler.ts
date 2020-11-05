@@ -2,6 +2,7 @@ import { attachDebugMethod } from "../devDebugger";
 import { logger } from "../database/EventLog";
 import { getUserById, MongooseUserSchema, UserModifiable } from "../routes/users/users-database";
 import { getTokenData } from "../routes/common";
+import { removeFromArray } from "../../shared/utils";
 import { SocketValidator } from "./WebsocketSecurity";
 import { IWebsocketPromise } from "../../shared/Websocket";
 
@@ -16,6 +17,7 @@ interface SocketPromise<A = undefined> {
 
 export class WebSocket {
   private clients: SocketIO.Socket[] = [];
+  private active = new Map<SocketIO.Socket, boolean>();
   private callbacks = new Map<string, WebsocketCallback[]>();
   private promiseCallback = new Map<string, WebsocketCallbackPromise[]>();
   private userModifiables = new Map<SocketIO.Socket, UserModifiable>();
@@ -41,13 +43,15 @@ export class WebSocket {
       }
 
       client.on("disconnect", () => {
-        const indexOf = this.clients.indexOf(client);
+        this.active.delete(client);
         client.removeAllListeners();
-        if (indexOf === -1) {
-          throw new Error("Unable to disconnect client from websocket");
-        }
+        removeFromArray(this.clients, client);
         logger.debug("[WebSocket]", "disconnected", client.id);
-        this.clients.splice(indexOf, 1);
+      });
+
+      client.on("focused", active => {
+        if (!this.socketValidator.validateBoolean(client, active)) return;
+        this.active.set(client, active);
       });
 
       client.on("ping-request", arg => {
@@ -93,6 +97,10 @@ export class WebSocket {
     if (!promise.id) return false;
     if (!promise.status) return false;
     return true;
+  }
+
+  isClientActive(client: SocketIO.Socket) {
+    return !!this.active.get(client);
   }
 
   broadcast(message: string, arg1?: any, arg2?: any, arg3?: any) {

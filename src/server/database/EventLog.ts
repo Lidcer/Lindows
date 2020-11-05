@@ -3,6 +3,7 @@ import { attachDebugMethod } from "../devDebugger";
 import moment from "moment";
 import chalk from "chalk";
 import { mongoose, sql } from "./database";
+import { Stringify } from "../../shared/utils";
 import { IS_DEV } from "../config";
 import { WebSocket } from "../websocket/SocketHandler";
 import path from "path";
@@ -19,7 +20,6 @@ export interface EventLog {
   details?: string;
   error?: string;
 }
-
 export interface DataEventLog extends EventLog {
   id: string;
 }
@@ -31,7 +31,7 @@ const EventLogSchema = new Schema<IMongooseEventLog>(
     type: { type: String, required: true },
     time: { type: Date, required: true },
     message: String,
-    details: [String],
+    details: String,
     error: String,
   },
   {
@@ -65,8 +65,14 @@ EventLogMySql.init(
       autoIncrement: true,
       primaryKey: true,
     },
-    type: DataTypes.STRING,
-    time: DataTypes.BIGINT,
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    time: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
     message: DataTypes.TEXT,
     details: DataTypes.TEXT,
     error: DataTypes.TEXT,
@@ -177,18 +183,22 @@ class Logger {
       type,
       time: time.getTime(),
     };
-    if (message) eventLog.message = message.toString();
-    if (details) eventLog.details = details.map(e => e.toString).join("\n");
-    if (error) eventLog.error = error.toString();
-    if (isMongo()) {
-      const schema = new MongoEventLog(eventLog);
+    if (message) eventLog.message = Stringify.do(message, true);
+    if (details && details.length) eventLog.details = Stringify.do(details, true);
+    if (error) eventLog.error = Stringify.do(error, true);
 
-      await schema.save();
-      event = new EventLogModifiable(schema);
-    } else if (isMySql()) {
-      const mySqlEventLog = await EventLogMySql.create(eventLog);
-      await mySqlEventLog.save();
-      event = new EventLogModifiable(mySqlEventLog);
+    try {
+      if (isMongo()) {
+        const schema = new MongoEventLog(eventLog);
+        await schema.save();
+        event = new EventLogModifiable(schema);
+      } else if (isMySql()) {
+        const mySqlEventLog = await EventLogMySql.create(eventLog);
+        await mySqlEventLog.save();
+        event = new EventLogModifiable(mySqlEventLog);
+      }
+    } catch (error) {
+      console.error(error);
     }
     if (!event) {
       console.error("Unable to write event");
@@ -220,6 +230,7 @@ class Logger {
     const logPath = path.join(process.cwd(), "logs.txt");
     const { text } = this.getTime();
     const line = `${text} ${args.join("\n")}\n${new Error().stack}`;
+    return;
     appendFile(logPath, line, "utf-8", err => {
       if (err) {
         writeFile(logPath, line, "utf-8", err => {
@@ -238,6 +249,7 @@ class Logger {
   }
 
   log(message: string, ...optionalParams: any[]) {
+    if (!IS_DEV) return;
     this.writeLog([message, ...(optionalParams || [])]);
     const { date, text } = this.getTime();
     const args = [yellow(`${text}`), white("[log]"), message, ...optionalParams].filter(a => a);

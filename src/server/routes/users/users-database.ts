@@ -109,7 +109,7 @@ UserMySql.init(
     avatar: { type: DataTypes.STRING, allowNull: false },
     email: { type: DataTypes.STRING, allowNull: false },
     note: { type: DataTypes.STRING, allowNull: false },
-    verified: { type: DataTypes.STRING, allowNull: false },
+    verified: { type: DataTypes.BOOLEAN, allowNull: false },
     ip: { type: DataTypes.STRING, allowNull: false },
     roles: { type: DataTypes.STRING, allowNull: false },
     flags: { type: DataTypes.STRING, allowNull: false },

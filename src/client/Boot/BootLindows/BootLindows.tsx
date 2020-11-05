@@ -78,7 +78,7 @@ export class BootLindows extends React.Component<BootProps, BootState> {
 
     setTimeout(() => {
       this.props.next();
-    }, SECOND * 5);
+    }, SECOND * 2);
   };
 
   get loaderStyle(): React.CSSProperties {

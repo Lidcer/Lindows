@@ -46,7 +46,7 @@ import {
 import { verifyPassword } from "../../database/passwordHasher";
 import { SpamProtector } from "../SpamProtector";
 import fileUpload = require("express-fileupload");
-import { randomBytes } from "crypto";
+//import { randomBytes } from "crypto";
 import { mailService } from "../../main";
 import { isTokenBlackListed, addTokenToBlackList } from "../../database/tokensBlacklist";
 import { IMailAccountInfo } from "../mail";
@@ -58,12 +58,10 @@ import {
   rGetTokenData,
   IJWTAccount,
   IJWVerificationCode,
-  getToken,
 } from "../common";
 import { logger } from "../../database/EventLog";
-import { EDESTADDRREQ } from "constants";
 
-const temporaryToken = randomBytes(64).toString("base64");
+const temporaryToken = PRIVATE_KEY; //randomBytes(64).toString("base64");
 
 const spamProtector = new SpamProtector();
 
@@ -97,7 +95,7 @@ export async function registerUser(req: Request, res: Response) {
       type: VerificationType.Verificaiton,
     };
     const token = jwt.sign(tokenData, temporaryToken);
-    const verificationURL = `${req.headers.origin}/account?v=${token}`;
+    const verificationURL = `${req.headers.origin}/account?v=${encodeURI(token)}`;
     mailService
       .sendVerification(request.email, {
         id: user.id,
@@ -130,7 +128,7 @@ export async function loginUser(req: Request, res: Response) {
   const response: IAccountResponse = {};
 
   const user = await getUserByAccountOrEmail(request.usernameOrEmail);
-  if (rIsUserForbidden(res, user)) return;
+  if (rIsUserForbidden(res, user, true)) return;
 
   logger.debug(`User found`, user.username);
 
@@ -155,7 +153,7 @@ export async function loginUser(req: Request, res: Response) {
   logger.debug(`User loggined`, response);
   res.header(TOKEN_HEADER, jwtToken);
   res.status(200).json(response);
-  req.session.token = jwtTokenData;
+  req.session.token = jwtToken;
 }
 
 //Check user
@@ -170,13 +168,13 @@ export async function checkUser(req: Request, res: Response) {
     logger.error("Cannot get user by id", error);
     return respondWithError(res, 500, "Internal server error");
   }
-  if (rIsUserForbidden(res, user)) return;
+  if (rIsUserForbidden(res, user, true)) return;
 
   const response: IAccountResponse = {
     success: getClientAccount(user),
   };
   logger.debug(`User checked`, response);
-  const usedToken = getToken(req);
+  const usedToken = req.header(TOKEN_HEADER);
   if (usedToken) {
     req.session.token = usedToken;
   }
@@ -193,7 +191,7 @@ export async function changeDisplayedName(req: Request, res: Response) {
   if (!decoded) return;
 
   const user = await getUserById(decoded.id);
-  if (rIsUserForbidden(res, user)) return;
+  if (rIsUserForbidden(res, user, true)) return;
 
   logger.debug("User found", user.username);
   const correctPassword = await verifyPassword(request.password, user.password);
@@ -232,7 +230,7 @@ export async function changePassword(req: Request, res: Response) {
   const response: IAccountResponse = {};
 
   const user = await getUserById(decoded.id);
-  if (rIsUserForbidden(res, user)) return;
+  if (rIsUserForbidden(res, user, true)) return;
   logger.debug("User found", user.username);
 
   const correctPassword = await verifyPassword(request.oldPassword, user.password);
@@ -261,7 +259,7 @@ export async function changeEmail(req: Request, res: Response) {
   if (!decoded) return;
 
   const user = await getUserById(decoded.id);
-  if (rIsUserForbidden(res, user)) return;
+  if (rIsUserForbidden(res, user, true)) return;
   logger.debug("User found", user.username);
 
   try {
@@ -360,7 +358,7 @@ export async function uploadImage(req: Request, res: Response) {
   try {
     const user = await getUserById(decoded.id);
     logger.debug("User found", user.username);
-    if (rIsUserForbidden(res, user)) return;
+    if (rIsUserForbidden(res, user, true)) return;
     const correctPassword = await verifyPassword(request.password, user.password);
     if (!correctPassword) return respondWithError(res, 400, "Incorrect password");
 
@@ -415,20 +413,15 @@ export async function deleteAccount(req: Request, res: Response) {
 }
 
 export async function checkOutTemporarilyToken(req: Request, res: Response) {
-  console.log(1)
   const token = req.headers[TOKEN_HEADER];
   logger.debug("Checking token", token);
-  console.log(2)
   const isTokenBlackListedResult = await isTokenBlackListed(token as string);
   if (isTokenBlackListedResult) return respondWithError(res, 400, "This token has already been used");
-  console.log(3)
-  const decoded = (await rGetTokenData(req, res, true)) as IJWVerificationCode;
+  const decoded = (await rGetTokenData(req, res, true, temporaryToken)) as IJWVerificationCode;
   if (!decoded) return;
-  console.log(4)
   const response: IResponse<VerificationType> = {
     success: decoded.type,
   };
-  console.log(5)
   logger.debug("Token checked", response);
   res.status(200).json(response);
 }
@@ -436,14 +429,14 @@ export async function checkOutTemporarilyToken(req: Request, res: Response) {
 export async function temporarilyTokenAccountAltering(req: Request, res: Response) {
   logger.debug("Checking temporary token", req.headers[TOKEN_HEADER]);
   const response: IResponse<string> = {};
-  const decoded = (await rGetTokenData(req, res, true)) as IJWVerificationCode;
+  const decoded = (await rGetTokenData(req, res, true, temporaryToken)) as IJWVerificationCode;
   if (!decoded) return;
   const token = req.headers[TOKEN_HEADER];
   try {
     const isTokenBlackListedResult = await isTokenBlackListed(token as string);
     if (isTokenBlackListedResult) return respondWithError(res, 400, "This token has already been used");
     const user = await getUserById(decoded.id);
-    if (rIsUserForbidden(res, user)) return;
+    if (rIsUserForbidden(res, user, false)) return;
 
     logger.debug("User found", user.username);
 
@@ -488,7 +481,9 @@ export async function temporarilyTokenAccountAltering(req: Request, res: Respons
 export async function logOutUser(req: Request, res: Response) {
   logger.debug(`Logout`, req.body);
   req.session.destroy(err => {
-    logger.error("Cannot destroy session", err);
+    if (err) {
+      logger.error("Cannot destroy session", err);
+    }
   });
 
   const response: IResponse<string> = {};

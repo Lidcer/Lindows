@@ -11,8 +11,7 @@ import {
   NotificationToast,
 } from "./NotificationsDisplayStyled";
 import { getNotification, INotification } from "../Desktop/Notifications";
-import { removeFromArray } from "../../utils/util";
-import { internal } from "../../services/internals/Internal";
+import { removeFromArray } from "../../../shared/utils";
 
 interface INotificationDisplay extends INotification {
   time: number;

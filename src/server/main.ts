@@ -24,7 +24,7 @@ const SequelizeStore = sequelizeGBStore(session.Store);
 export const name = "Lindows";
 export const version = "0.0.1 Alpha";
 export const fullName = `${name} ,${version}`;
-const sessionName = "LindowsSessions";
+const sessionName = "Lindows_sessions";
 
 console.info(`*******************************************`);
 console.info(`App: ${fullName}`);
@@ -76,7 +76,7 @@ app.use(theSession);
 app.use(apiRouter());
 app.use(staticsRouter());
 app.use(pagesRouter());
-
+app.disable("x-powered-by");
 const http = app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);
 });

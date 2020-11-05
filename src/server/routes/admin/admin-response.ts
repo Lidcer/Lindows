@@ -155,9 +155,9 @@ interface IAdminAccount {
   email: string;
   verified: boolean;
   note: string;
-  ip: string[];
-  roles: string[];
-  flags: UserAccountFlags[];
+  ip: string[] | string;
+  roles: string[] | string;
+  flags: UserAccountFlags[] | string;
 }
 
 function stripAccountData(accountRaw: UserModifiable) {
@@ -276,6 +276,7 @@ export async function accountUpdate(req: Request, res: Response, account: UserMo
 interface IWebSocketInfo {
   id: string;
   ip: string;
+  active: boolean;
   account?: IAdminAccount;
   fingerprint?: fingerprintjs.Component[];
 }
@@ -294,7 +295,8 @@ export async function webSocketsInfo(req: Request, res: Response, account: UserM
         stripedAccountData = stripAccountData(schema);
       }
       const ip = clientRaw.conn.remoteAddress;
-      websocketInfo.push({ id: clientRaw.id, ip, account: stripedAccountData, fingerprint });
+      const active = websocket.isClientActive(clientRaw);
+      websocketInfo.push({ id: clientRaw.id, active, ip, account: stripedAccountData, fingerprint });
     }
 
     response.success = websocketInfo;
@@ -336,7 +338,8 @@ export async function webSocketInfo(req: Request, res: Response, account: UserMo
       socketAccount = stripAccountData(schema);
     }
     const ip = clientRaw.conn.remoteAddress;
-    response.success = { id: clientRaw.id, ip, account: socketAccount, fingerprint };
+    const active = websocket.isClientActive(clientRaw);
+    response.success = { id: clientRaw.id, ip, active, account: socketAccount, fingerprint };
     logger.log(
       "[ADMIN]",
       `User ${account.username} : ${account.id.toString()} obtained websocket info ${clientRaw.id}`,
@@ -381,12 +384,19 @@ export function broadcastWebSocket(req: Request, res: Response, account: UserMod
   res.status(200).json(response);
 }
 
-interface IWebSocketDisconnectClient {
+interface IWebSocket {
   socketID: string;
+}
+interface WebScoketNotification extends IWebSocket {
+  notification: string;
+}
+
+interface WebScoketRedirect extends IWebSocket {
+  redirect: string;
 }
 
 export function disconnectClient(req: Request, res: Response, account: UserModifiable) {
-  const joi$broadcaster = Joi.object<IWebSocketDisconnectClient>({
+  const joi$broadcaster = Joi.object<IWebSocket>({
     socketID: Joi.string(),
   });
 
@@ -416,7 +426,7 @@ export function disconnectClient(req: Request, res: Response, account: UserModif
 }
 
 export function fingerprintClient(req: Request, res: Response, account: UserModifiable) {
-  const joi$fingerprint = Joi.object<IWebSocketDisconnectClient>({
+  const joi$fingerprint = Joi.object<IWebSocket>({
     socketID: Joi.string(),
   });
 
@@ -440,11 +450,13 @@ export function fingerprintClient(req: Request, res: Response, account: UserModi
     if (schema) {
       stripedAccountData = stripAccountData(schema);
     }
+    const active = websocket.isClientActive(client);
 
     const response: IResponse<IWebSocketInfo> = {
       success: {
         id: client.id,
         ip: client.conn.remoteAddress,
+        active,
         account: stripedAccountData,
         fingerprint: result,
       },
@@ -459,6 +471,48 @@ export function fingerprintClient(req: Request, res: Response, account: UserModi
     client.removeListener("fingerprint-result", success);
     return respondWithError(res, 400, "Unable to fingerprint client");
   }, SECOND * 10);
+}
+export function notifyClient(req: Request, res: Response, account: UserModifiable) {
+  const joi$fingerprint = Joi.object<WebScoketNotification>({
+    socketID: Joi.string(),
+    notification: Joi.string(),
+  });
+
+  const result = joi$fingerprint.validate(req.body);
+  if (result.error) {
+    return adminJoiErrorResponse(res, result);
+  }
+  const client = websocket.getClients().find(w => w.id === req.body.socketID);
+  if (!client) {
+    return respondWithError(res, 400, "Client is not connected to websocket");
+  }
+
+  client.emit("notify", req.body.notification);
+  const response: IResponse<string> = {
+    success: `Notification sent`,
+  };
+  res.status(200).json(response);
+}
+export function redirectClient(req: Request, res: Response, account: UserModifiable) {
+  const joi$fingerprint = Joi.object<WebScoketRedirect>({
+    socketID: Joi.string(),
+    redirect: Joi.string(),
+  });
+
+  const result = joi$fingerprint.validate(req.body);
+  if (result.error) {
+    return adminJoiErrorResponse(res, result);
+  }
+  const client = websocket.getClients().find(w => w.id === req.body.socketID);
+  if (!client) {
+    return respondWithError(res, 400, "Client is not connected to websocket");
+  }
+
+  client.emit("redirect", req.body.redirect);
+  const response: IResponse<string> = {
+    success: `redirected`,
+  };
+  res.status(200).json(response);
 }
 
 export function executeCommand(req: Request, res: Response, account: UserModifiable) {}

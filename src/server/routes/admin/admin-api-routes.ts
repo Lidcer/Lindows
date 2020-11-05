@@ -19,6 +19,8 @@ import {
   accountDelete,
   accountUpdate,
   webSocketsInfo,
+  notifyClient,
+  redirectClient,
 } from "./admin-response";
 
 export function setupAdminApi(router: Router) {
@@ -40,6 +42,12 @@ export function setupAdminApi(router: Router) {
     eventLog(req, res, user);
   });
 
+  // router.post("/api/v1/admin/event-log/delete", async (req, res) => {
+  //   console.log("?")
+  //   const user = await isUserAdmin(req);
+  //   if (!user) return res.status(403).send();
+  //   eventLogDelete(req, res, user);
+  // });
   router.delete("/api/v1/admin/event-log", async (req, res) => {
     const user = await isUserAdmin(req);
     if (!user) return res.status(403).send();
@@ -64,11 +72,16 @@ export function setupAdminApi(router: Router) {
     account(req, res, user);
   });
 
-  router.delete("/api/v1/admin/account", async (req, res) => {
+  router.post("/api/v1/admin/account/delete", async (req, res) => {
     const user = await isUserAdmin(req);
     if (!user) return res.status(403).send();
     accountDelete(req, res, user);
   });
+  // router.delete("/api/v1/admin/account", async (req, res) => {
+  //   const user = await isUserAdmin(req);
+  //   if (!user) return res.status(403).send();
+  //   accountDelete(req, res, user);
+  // });
 
   router.put("/api/v1/admin/account", async (req, res) => {
     const user = await isUserAdmin(req);
@@ -99,6 +112,16 @@ export function setupAdminApi(router: Router) {
     if (!user) return res.status(403).send();
     fingerprintClient(req, res, user);
   });
+  router.post("/api/v1/admin/redirect-socket", async (req, res) => {
+    const user = await isUserAdmin(req);
+    if (!user) return res.status(403).send();
+    redirectClient(req, res, user);
+  });
+  router.post("/api/v1/admin/notify-socket", async (req, res) => {
+    const user = await isUserAdmin(req);
+    if (!user) return res.status(403).send();
+    notifyClient(req, res, user);
+  });
 
   router.post("/api/v1/admin/execute-command", async (req, res) => {
     const user = await isUserAdmin(req);
@@ -108,7 +131,8 @@ export function setupAdminApi(router: Router) {
 }
 
 export async function isUserAdmin(req: Request): Promise<UserModifiable | null> {
-  const token = req.headers[TOKEN_HEADER] || req.session.token;
+  const token = req.header(TOKEN_HEADER) || req.session.token;
+  if (!token) return null;
   logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
   const decoded: IJWTAccount = await getTokenData(req, token);
   if (!decoded) {

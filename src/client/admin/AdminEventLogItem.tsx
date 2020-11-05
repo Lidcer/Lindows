@@ -52,7 +52,6 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
       headers: {},
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
-
     try {
       const response = await Axios.post<IResponse<IEventLog>>(
         "/api/v1/admin/event-log",
@@ -71,11 +70,16 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
     const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
+      data: {
+        eventID: this.eventID,
+      }
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
     axiosRequestConfig.data = { eventID: this.eventID };
+
     try {
-      await Axios.delete<IResponse<IEventLog>>("/api/v1/admin/event-log", axiosRequestConfig);
+      await Axios.delete<IResponse<IEventLog>>(`/api/v1/admin/event-log`, axiosRequestConfig);
+      //await Axios.post<IResponse<IEventLog>>(`/api/v1/admin/event-log/delete`, axiosRequestConfig);
       if (!this.mounted) return;
       this.props.notificationHandler.info("Event Remove", `Event has been removed ${this.eventID}`);
       const event = eventLogData.eventLogs.find(e => e.id === this.eventID);
@@ -118,13 +122,13 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
       <>
         <div className={`m-2 p-2 d-inline-block event-log ${borderClass}`} style={style}>
           <h1>{event.id}</h1>
-          <div>
+          <div style={{ whiteSpace: "pre" }}>
             <b>{event.type.toUpperCase()}</b> {moment(event.time).format("MMMM Do YYYY, HH:mm:ss")}{" "}
             {moment(event.time).fromNow()}
           </div>
-          <div>{event.message}</div>
-          <div>{event.error}</div>
-          <div>{event.details}</div>
+          <div style={{ whiteSpace: "pre" }}>{event.message}</div>
+          <div style={{ whiteSpace: "pre" }}>{event.error}</div>
+          <div style={{ whiteSpace: "pre" }}>{event.details}</div>
           <button className='btn btn-terminal btn-outline-danger btn-block' onClick={this.removeEvent}>
             Delete
           </button>

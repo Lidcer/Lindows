@@ -2,7 +2,8 @@ import React from "react";
 import { appConstructorGenerator } from "../essential/apps";
 import { internal } from "../services/internals/Internal";
 import { BaseWindow, MessageBox, AdminPromp } from "../apps/BaseWindow/BaseWindow";
-import { pushUniqToArray, removeFromArray } from "../utils/util";
+import { pushUniqToArray, removeFromArray } from "../../shared/utils";
+
 interface IWindowTesterState {
   display: JSX.Element;
   subWindow: BaseWindow[];

@@ -17,6 +17,7 @@ interface IAdminWebSocketItemState {
   broadcastArg0: string;
   broadcastArg1: string;
   broadcastArg2: string;
+  notify: string;
   refreshing: boolean;
   webSocketInfo: IWebSocketInfo[];
   page: number;
@@ -25,6 +26,7 @@ interface IAdminWebSocketItemState {
 
 interface IWebSocketInfo {
   id: string;
+  active: boolean;
   account?: IAdminAccount;
 }
 
@@ -64,6 +66,7 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
       broadcastArg1: "",
       broadcastArg2: "",
       redirect: "",
+      notify: "",
       newTab: "",
       closeTab: "",
       refreshing: false,
@@ -141,6 +144,16 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
     }
   };
 
+  notify = async () => {
+    if (!this.state.redirect) return;
+    const notify = this.state.notify;
+    this.setState({ notify: "" });
+    try {
+      await this.broadcast("notify", notify);
+    } catch (error) {
+      this.setState({ notify });
+    }
+  };
   redirect = async () => {
     if (!this.state.redirect) return;
     const redirect = this.state.redirect;
@@ -194,11 +207,14 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
       return <span>| {iAccount.username}</span>;
     };
 
+    const a = webSocketInfo.active;
+    const active = a ? <span>| Active</span> : null;
+
     return (
       <Link className='router-link' to={`/admin/web-sockets/${webSocketInfo.id}`}>
         <div className={`m-2 p-2 border border-terminal admin-clickable`}>
           <div>
-            {webSocketInfo.id} {getAccountInfo(webSocketInfo.account)}
+            {webSocketInfo.id} {getAccountInfo(webSocketInfo.account)} {active}
           </div>
         </div>
       </Link>
@@ -238,6 +254,19 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
     return (
       <div className='m-2 p-2 border border-terminal'>
         <div>
+          <div className='m-2 p-2 border border-terminal'>
+            <b>Notify all clients: </b>
+            <input
+              type='text'
+              className='input-terminal'
+              placeholder='Link'
+              onChange={e => this.setState({ notify: e.target.value })}
+              value={this.state.notify}
+            />
+            <button className='btn btn-terminal' onClick={() => this.redirect()}>
+              Send
+            </button>
+          </div>
           <div className='m-2 p-2 border border-terminal'>
             <b>Redirect all clients: </b>
             <input

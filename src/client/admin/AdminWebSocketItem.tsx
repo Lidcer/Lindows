@@ -12,6 +12,7 @@ import AdminFingerprint from "./AdminFingerprint";
 interface IWebSocketInfo {
   id: string;
   ip: string;
+  active: boolean;
   account?: IAdminAccount;
   fingerprint?: Fingerprint2.Component[];
 }
@@ -85,6 +86,41 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
     return <AdminFingerprint fingerprintData={this.state.websocket.fingerprint} />;
   }
 
+  sendNotification = async () => {
+    const token = localStorage.getItem("auth");
+    const axiosRequestConfig: AxiosRequestConfig = {
+      headers: {},
+    };
+    axiosRequestConfig.headers[TOKEN_HEADER] = token;
+    const notification = prompt() || "";
+    if (!notification) return;
+
+    try {
+      const response = await Axios.post<IResponse<string>>(
+        "/api/v1/admin/notify-socket",
+        { socketID: this.webSocketID, notification },
+        axiosRequestConfig,
+      );
+      if (!this.mounted) return;
+    } catch (error) {}
+  };
+  redirect = async () => {
+    const token = localStorage.getItem("auth");
+    const axiosRequestConfig: AxiosRequestConfig = {
+      headers: {},
+    };
+    axiosRequestConfig.headers[TOKEN_HEADER] = token;
+    const redirect = prompt() || "";
+    if (!redirect) return;
+    try {
+      await Axios.post<IResponse<string>>(
+        "/api/v1/admin/redirect-socket",
+        { socketID: this.webSocketID, redirect },
+        axiosRequestConfig,
+      );
+      if (!this.mounted) return;
+    } catch (error) {}
+  };
   fingerPrintSocket = async () => {
     this.setState({ fingerprinting: true });
     const token = localStorage.getItem("auth");
@@ -141,6 +177,12 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
         <>
           <button className='btn btn-terminal' onClick={this.fingerPrintSocket}>
             Take Fingerprint
+          </button>
+          <button className='btn btn-terminal' onClick={this.sendNotification}>
+            Send Notification
+          </button>
+          <button className='btn btn-terminal' onClick={this.redirect}>
+            Redirect
           </button>
           <button className='btn btn-terminal'>Disconnect</button>
         </>

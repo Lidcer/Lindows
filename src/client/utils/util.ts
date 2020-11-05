@@ -45,27 +45,6 @@ export class LindowError extends Error {
   }
 }
 
-export function removeFromArray<I = any>(array: I[], item: I): boolean {
-  const indexOf = array.indexOf(item);
-
-  if (indexOf === -1) {
-    return false;
-  }
-
-  array.splice(indexOf, 1);
-  return true;
-}
-
-export function pushUniqToArray<I = any>(array: I[], item: I): boolean {
-  const indexOf = array.indexOf(item);
-
-  if (indexOf === -1) {
-    array.push(item);
-    return true;
-  }
-  return false;
-}
-
 export function createKeyboardEvent(key: string, type = "keyup", ctrlKey = false, altKey = false) {
   return new KeyboardEvent(type, {
     bubbles: true,

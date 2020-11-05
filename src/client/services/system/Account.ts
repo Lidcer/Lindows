@@ -395,7 +395,8 @@ export class Account extends BaseService {
       data: deleteAccountRequest,
     };
     try {
-      const response = await Axios.delete<IResponse<string>>("/api/v1/users/delete-account", config);
+      //const response = await Axios.delete<IResponse<string>>("/api/v1/users/delete-account", config);
+      const response = await Axios.post<IResponse<string>>("/api/v1/users/delete-account/delete", config);
       if (response.data.error) throw new Error(response.data.error);
       else return response.data.message;
     } catch (error) {
@@ -449,7 +450,7 @@ export class Account extends BaseService {
     return true;
   }
 
-  public logout() {
+  public async logout() {
     const int = internal.get(this);
     const broadcaster = int.broadcaster;
     this.username = undefined;
@@ -458,6 +459,13 @@ export class Account extends BaseService {
     localStorage.removeItem("auth");
     this.emit("logout");
     broadcaster.emit(`${this.SERVICE_NAME}-logout`);
+
+    try {
+      const response = await Axios.post<IResponse<string>>("/api/v1/users/logout");
+      return response.data.message;
+    } catch (error) {
+      throw disassembleError(error);
+    }
   }
 
   private fetchImage() {
