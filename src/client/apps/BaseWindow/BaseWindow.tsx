@@ -53,6 +53,7 @@ import { attachToWindowIfDev } from "../../essential/requests";
 import "./baseWindows.scss";
 import { LindowError } from "../../utils/util";
 import { FileSystemFile } from "../../utils/FileSystemDirectory";
+import { AppOptions } from "../../../shared/Websocket";
 const DEFAULT_APP_IMAGE = "/assets/images/unknown-app.svg";
 
 export interface IBaseWindowProps {

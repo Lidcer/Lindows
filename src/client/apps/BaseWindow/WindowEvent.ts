@@ -1,5 +1,4 @@
 import { BaseWindow } from "./BaseWindow";
-import { EventEmitter } from "events";
 
 export declare type IBaseWindowEmitterType =
   | "exit"

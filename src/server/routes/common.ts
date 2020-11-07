@@ -68,17 +68,13 @@ export function getClientAccount(user: UserModifiable): IAccount {
   };
 }
 
-export function getToken(req: Request) {
-  return req.headers[TOKEN_HEADER];
-}
-
 export async function rGetTokenData(
   req: Request,
   res: Response,
   verification = false,
   privateKey = PRIVATE_KEY,
 ): Promise<IJWTAccount | IJWVerificationCode | null> {
-  const token = getToken(req);
+  const token = req.header(TOKEN_HEADER);
   if (!token) {
     respondWithError(res, 400, "Missing token");
     return null;
@@ -133,7 +129,7 @@ export async function getTokenData(req?: Request, token?: string): Promise<IJWTA
     const d = (await jwt.verify(token, PRIVATE_KEY)) as IJWVerificationCode;
     data = d;
   } catch (error) {
-    logger.debug("Token varify", error)
+    logger.debug("Token verify", error);
     return null;
   }
   if (!data) return null;

@@ -4,9 +4,6 @@ import { random } from "loadsh";
 const map = new Map<SocketIO.Socket, string>();
 const clientToClient = new Map<SocketIO.Socket, SocketIO.Socket>();
 
-(global as any).map = map;
-(global as any).clientToClient = clientToClient;
-
 export function setupGroupViewerWebsocket(websocket: WebSocket) {
   websocket.onPromise<string, []>("group-viewer-ready", async iClient => {
     const n = () => {

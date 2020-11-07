@@ -4,11 +4,11 @@ import { AnAppWarper } from "./AnAppStyled";
 import { WindowEvent } from "../BaseWindow/WindowEvent";
 import { getNotification, NotificationSystem } from "../../components/Desktop/Notifications";
 
-interface WebExplorerState {
+interface State {
   message: string;
 }
 
-export class AnApp extends BaseWindow<WebExplorerState> {
+export class AnApp extends BaseWindow<State> {
   public static readonly onlyOne = true;
   public notification: NotificationSystem | undefined;
 
@@ -60,7 +60,7 @@ export class AnApp extends BaseWindow<WebExplorerState> {
     // listens to keyupses
   }
 
-  onUpdate?(variables: WebExplorerState) {
+  onUpdate?(variables: State) {
     // on variables update
   }
   onExit?(event: WindowEvent) {

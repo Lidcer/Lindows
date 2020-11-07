@@ -18,6 +18,7 @@ import { WEEK } from "../shared/constants";
 import { setupGroupViewerWebsocket } from "./apps/GroupViewer/webSocket";
 import { isMongo, isMySql } from "./database/modifiable";
 import { IS_DEV } from "./config";
+import { setupAppWebsocket } from "./apps/appComunnicate";
 const MongoDBStore = mongoGBStore(session);
 const SequelizeStore = sequelizeGBStore(session.Store);
 
@@ -88,6 +89,7 @@ if (IS_DEV) {
   setupLypeWebsocket(websocket);
 }
 
+setupAppWebsocket(websocket);
 setupGroupViewerWebsocket(websocket);
 setupAdminWebsocketController(websocket);
 export const mailService = new MailService(config.SENDGRIND_API_KEY);

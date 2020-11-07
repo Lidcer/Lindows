@@ -8,3 +8,8 @@ export interface IWebsocketPromise<A = undefined> {
 export interface SocketError {
   message: string;
 }
+
+export interface AppOptions {
+  appName: string;
+  maxConnections: number;
+}

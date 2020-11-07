@@ -2,7 +2,7 @@ import { attachDebugMethod } from "../devDebugger";
 import { logger } from "../database/EventLog";
 import { getUserById, MongooseUserSchema, UserModifiable } from "../routes/users/users-database";
 import { getTokenData } from "../routes/common";
-import { removeFromArray } from "../../shared/utils";
+import { pushUniqToArray, removeFromArray } from "../../shared/utils";
 import { SocketValidator } from "./WebsocketSecurity";
 import { IWebsocketPromise } from "../../shared/Websocket";
 
@@ -92,7 +92,7 @@ export class WebSocket {
     });
   }
 
-  isPromise(promise: IWebsocketPromise) {
+  isPromise(promise: IWebsocketPromise): promise is IWebsocketPromise {
     if (typeof promise !== "object") return false;
     if (!promise.id) return false;
     if (!promise.status) return false;
@@ -126,8 +126,7 @@ export class WebSocket {
     }
 
     const callbacks = this.promiseCallback.get(value) || [];
-    const indexOf = callbacks.indexOf(callback);
-    if (indexOf === -1) callbacks.push(callback);
+    pushUniqToArray(callbacks, callback);
     this.updateEventListenersOnAllClients(value);
     this.promiseCallback.set(value, callbacks);
   }
@@ -154,7 +153,7 @@ export class WebSocket {
         if (!!promise) {
           for (const cb of promiseCallbacks) {
             try {
-              const result = await cb.apply(null, [client, ...args]);
+              const result = await cb.apply(this, [client, ...args]);
               const responsePromise: IWebsocketPromise = {
                 id: promise.id,
                 resolve: result,
@@ -182,7 +181,7 @@ export class WebSocket {
           }
         } else {
           for (const cb of callbacks) {
-            cb.apply(null, [client, ...args]);
+            cb.apply(this, [client, ...args]);
           }
         }
       });

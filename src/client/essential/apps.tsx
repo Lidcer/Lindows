@@ -15,6 +15,7 @@ import { IDELide } from "../apps/IDE-Lide.ts/IDE-Lide";
 import { SnakeGame } from "../apps/SnakeGame/SnakeGame";
 import { FileExplorer } from "../apps/FileExplorer/FileExplorer";
 import { MoneyClicker } from "../apps/MoneyClicker/MoneyClicker";
+import { SocketHostTest } from "../apps/SocketHostTest/SocketHostTest";
 import {
   everyone,
   FileSystemDirectory,
@@ -155,6 +156,7 @@ export async function installPreInstalledApps() {
     await installApp(AccountManager, AccountManager.manifest.launchName, true, internal.systemSymbol);
     if (DEV) {
       await installApp(Lype, Lype.manifest.launchName, true, internal.systemSymbol);
+      await installApp(SocketHostTest, SocketHostTest.manifest.launchName, true, internal.systemSymbol);
     }
     await installApp(GroupViewer, GroupViewer.manifest.launchName, true, internal.systemSymbol);
   }
