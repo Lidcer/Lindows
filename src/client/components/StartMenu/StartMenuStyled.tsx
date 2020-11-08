@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const StartMenuStyled = styled.div`
   position: fixed;
+  overflow: auto;
   width: 200pt;
   height: 50pt;
 

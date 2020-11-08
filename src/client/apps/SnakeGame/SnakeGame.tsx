@@ -78,20 +78,18 @@ export class SnakeGame extends NetworkBaseWindow<State> {
       this.snakeGameInput.onKeypress(event);
     }
   }
-  onSocketConnectionDestroy(...args) {
+  onSocketConnectionDestroy() {
     this.changeOptions({ title: "Connection lost" });
     this.mainMenu();
   }
 
-  onSocketHostDisconnected(...args) {
-    console.log("?")
+  onSocketHostDisconnected() {
     if (!this.destroyed) {
       this.mainMenu();
     }
   }
 
-  onSocketClientConnected(...args) {
-    //   console.log(args);
+  onSocketClientConnected() {
     this.forceUpdate();
   }
 

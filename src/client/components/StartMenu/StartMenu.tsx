@@ -2,6 +2,7 @@ import React from "react";
 import { navBarPos } from "../TaskBar/TaskBar";
 import { allInstalledApps, AppDescription, launchApp } from "../../essential/apps";
 import { StartMenuStyled, TaskBarItem } from "./StartMenuStyled";
+import { clamp } from "lodash";
 
 export interface IStartMenuProps {
   appClick: (name: string) => void;
@@ -46,9 +47,10 @@ export class StartMenu extends React.Component<IStartMenuProps, IStartMenu> {
   }
 
   componentDidMount() {
+    const n = 500;
     setTimeout(() => {
       this.setState({
-        height: 500,
+        height: clamp(n, window.innerHeight),
       });
     });
     const apps = allInstalledApps().filter(a => a.showInTaskBar);
