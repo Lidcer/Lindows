@@ -177,7 +177,6 @@ export class DesktopIcons extends React.Component<IPropertyDesktopIcon, IStateDe
             launchApp("file-explorer", `path="${selected.path}"`);
           } else if (selected.getType(this.sys) === "lindowApp") {
             try {
-              console.log(selected.getContent(this.sys));
               selected.getContent(this.sys).app.New(selected);
             } catch (error) {
               DEV && console.error(error);

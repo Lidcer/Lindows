@@ -184,12 +184,15 @@ export class IDELide extends BaseWindow.BaseWindow<IDELideState> {
           this.terminateApp();
         };
       }
-      //@ts-ignore
-      const desktop = internal.fileSystem.userDirectory.getDirectory("Desktop", internal.system.processor.symbol);
+
+      const desktop = internal.system.user.userDirectory.getDirectory(
+        "Desktop",
+        internal.system.processor.systemSymbol,
+      );
       const fileName = compiledApp.manifest.launchName;
       let file = desktop.getFile(compiledApp.manifest.launchName, internal.system.user.userSymbol);
       if (!file) {
-        file = desktop.createFile(
+        file = await desktop.createFile(
           fileName,
           "lindowApp",
           {
