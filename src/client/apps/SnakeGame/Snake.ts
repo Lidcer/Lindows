@@ -2,9 +2,30 @@ import { clamp } from "lodash";
 import { IWindowInfo } from "./SnakeGameLogic";
 import { Renderer } from "./SnakeRender";
 import { Square } from "./Square";
+import { RGB } from "../../../shared/interfaces";
+
+interface SnakeOptions {
+  gameSpeed: number;
+  x?: number;
+  y?: number;
+
+  colour?: RGB;
+}
+
+export interface CordsData {
+  _onGridX: number;
+  _onGridY: number;
+  // x: number;
+  // y: number;
+}
 
 export class Snake extends Square {
-  public static readonly snakeColour = [32, 247, 90];
+  public static readonly snakeColour: RGB = {
+    r: 32,
+    g: 247,
+    b: 90,
+  };
+  private setColour: RGB = Snake.snakeColour;
 
   private canGoThroughEdge = true;
   private squares: Square[] = [];
@@ -14,15 +35,17 @@ export class Snake extends Square {
   private snakeSize = 0.5;
   private precision = 1; // lower it is better it is at least it
 
-  constructor(renderer: Renderer, private windowInfo: IWindowInfo, gameSpeed: number, x: number, y: number) {
+  constructor(renderer: Renderer, private windowInfo: IWindowInfo, options: SnakeOptions) {
     super(renderer);
-    this.red = Snake.snakeColour[0];
-    this.green = Snake.snakeColour[1];
-    this.blue = Snake.snakeColour[2];
+    const colour = options.colour ? options.colour : Snake.snakeColour;
+    this.red = colour.r;
+    this.green = colour.g;
+    this.blue = colour.b;
+    this.setColour = colour;
     this.setSnakeSize(windowInfo);
 
-    this.onGridX = x;
-    this.onGridY = y;
+    this.onGridX = options.x;
+    this.onGridY = options.y;
     this.y = this.sPosY;
     this.x = this.sPosX;
   }
@@ -153,9 +176,9 @@ export class Snake extends Square {
       this.squares = [];
       for (let i = 0; i < 4; i++) {
         const square = new Square(this.renderer);
-        square.red = Snake.snakeColour[0];
-        square.green = Snake.snakeColour[1];
-        square.blue = Snake.snakeColour[2];
+        square.red = this.setColour.r;
+        square.green = this.setColour.g;
+        square.blue = this.setColour.b;
         this.squares.push(square);
       }
     }
@@ -213,5 +236,23 @@ export class Snake extends Square {
 
   private get xOffset() {
     return this.pixelSizeWidth - this.pixelSizeWidth * this.snakeSize;
+  }
+
+  get positionRaw() {
+    return { x: this._onGridX, y: this._onGridY };
+  }
+  get cordsValues(): CordsData {
+    return {
+      _onGridX: this._onGridX,
+      _onGridY: this._onGridY,
+      //x: this.x,
+      //y: this.y,
+    };
+  }
+  set cordsValues(cordsData: CordsData) {
+    this._onGridX = cordsData._onGridX;
+    this._onGridY = cordsData._onGridY;
+    //this.x = cordsData.x;
+    //this.y = cordsData.y;
   }
 }

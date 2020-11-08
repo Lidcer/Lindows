@@ -24,7 +24,7 @@ export class Network extends BaseService {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
     const beforeunload = () => {
-      if (this.socket.connected) {
+      if (this.socket && this.socket.connected) {
         this.socket.close();
       }
     };

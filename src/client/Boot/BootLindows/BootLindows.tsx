@@ -1,8 +1,6 @@
 import React, { createRef } from "react";
 import { SECOND } from "../../../shared/constants";
-import { installPreInstalledApps } from "../../essential/apps";
-import { installPreInstalledCommands } from "../../essential/Commands/CommandHandler";
-import { SystemServiceStatus } from "../../services/internals/BaseSystemService";
+import { launchApp } from "../../essential/apps";
 import { internal } from "../../services/internals/Internal";
 import { LindowsLoadingBar, LindowsLogo, LindowsWarper, LindowsWatermarks } from "./BootLindow";
 import "./BootLindows.scss";
@@ -78,6 +76,9 @@ export class BootLindows extends React.Component<BootProps, BootState> {
 
     setTimeout(() => {
       this.props.next();
+      setTimeout(() => {
+        launchApp("webGlSnake");
+      }, SECOND);
     }, SECOND * 2);
   };
 

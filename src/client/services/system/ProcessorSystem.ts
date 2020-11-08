@@ -5,6 +5,7 @@ import { ReactGeneratorFunction, appConstructorGenerator } from "../../essential
 import { IJSONWindowEvent } from "../../apps/BaseWindow/WindowEvent";
 import { BaseService, Service, SystemServiceStatus } from "../internals/BaseSystemService";
 import { Internal } from "../internals/Internal";
+import { attachToWindowIfDev } from "../../essential/requests";
 
 interface IStringifiedProcess {
   manifest: IManifest;
@@ -45,7 +46,7 @@ export class Processor extends BaseService {
   constructor(_internal: Internal) {
     super();
     internal.set(this, _internal);
-
+    attachToWindowIfDev("apps", () => this.displaying.map(e => e.object).filter(e => e));
     const browser = _internal.hardwareInfo.userAgent.getBrowser();
     if (browser) {
       this._deviceName = `${browser.name}${browser.version}`;

@@ -150,7 +150,7 @@ export class WindowTester extends React.Component<{}, IWindowTesterState> {
   }
 
   start() {
-    if ((window as any).app) {
+    if ((window as any).apps) {
       (window as any).apps = [];
     }
     if (!internal.ready) {

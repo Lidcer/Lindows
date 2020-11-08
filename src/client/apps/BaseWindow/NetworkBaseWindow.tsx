@@ -41,8 +41,10 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
         DEV && console.log(error);
       }
     }
-    this.network.socket.on("connection", this._connectionChange);
-    this.network.socket.on("disconnect", this._connectionChange);
+    if (!STATIC) {
+      this.network.socket.on("connection", this._connectionChange);
+      this.network.socket.on("disconnect", this._connectionChange);
+    }
   }
 
   closingNew() {
@@ -53,8 +55,10 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
         DEV && console.log(error);
       }
     }
-    this.network.socket.on("connection", this._connectionChange);
-    this.network.socket.on("disconnect", this._connectionChange);
+    if (!STATIC) {
+      this.network.socket.on("connection", this._connectionChange);
+      this.network.socket.on("disconnect", this._connectionChange);
+    }
 
     if (this._hostId) {
       this.destroyHost();
@@ -72,6 +76,20 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
     return null;
   }
 
+  broadcastServer(...args: any[]) {
+    if (this.network.socket.connected) {
+      const arg = ["app-host-broadcast", ...args];
+      this.network.socket.emit.apply(this.network.socket, arg);
+    }
+  }
+  broadcast(...args: any[]) {
+    if (this.network.socket.connected) {
+      for (const client of this.clients) {
+        const arg = ["app-host-broadcast", client.id, ...args];
+        this.network.socket.emit.apply(this.network.socket, arg);
+      }
+    }
+  }
   private _connectionChange() {
     if (!this.network.socket.connected) {
       if (this._connectionId) {
@@ -91,6 +109,7 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
 
   private _onHostDisconnected = (id: string) => {
     if (this._connectionId !== id) return;
+    console.log(2);
     this._connectionId = null;
     if (this.onSocketHostDisconnected) {
       this.onSocketHostDisconnected();
@@ -106,6 +125,7 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   private _onClientDisconnect = (id: string) => {
     const client = this.getClientByID(id);
     if (client) {
+      client.markAsDisconnected();
       removeFromArray(this._clients, client);
       if (this.onSocketClientDisconnect) {
         this.onSocketClientDisconnect(client);
@@ -122,7 +142,9 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   private _onSocketHostReceived = (appName: string, gameId: string, ...args: any[]) => {
     if (appName !== this.getManifest().fullAppName) return;
     if (this._connectionId !== gameId) return;
-    this.onSocketHostReceived.apply(this, args);
+    if (this.onSocketHostReceived) {
+      this.onSocketHostReceived.apply(this, args);
+    }
   };
 
   getClientByID(id: string) {
@@ -163,7 +185,9 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   }
   async disconnectHost() {
     if (this._connectionId) {
-      await this.network.emitPromise<string, [string]>("app-disconnet", this._connectionId);
+      try {
+        await this.network.emitPromise<string, [string]>("app-disconnet", this._connectionId);
+      } catch (_) { /* ignored */};
       this.network.socket.removeListener("app-host-on", this._onSocketHostReceived);
       this.network.socket.removeListener("app-destroyed", this._onHostDisconnected);
       this._connectionId = null;
@@ -189,15 +213,22 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   }
 }
 
-class AppClient {
+export class AppClient {
+  private _disconnected = false;
   constructor(private network: Network, private _id: string) {}
 
   /** send something to client
    * @param args
    */
-  async emit<T = any>(object: T[]): Promise<boolean> {
+  async emit<T extends any[]>(...args: T): Promise<boolean> {
     if (this.network.socket.connected) {
-      await this.network.emitPromise("app-host-emit", this._id, object);
+      const arg = ["app-host-emit", this._id, ...args];
+      try {
+        await this.network.emitPromise.apply(this.network, arg);
+      } catch (error) {
+        this.markAsDisconnected();
+        return false;
+      }
       return true;
     } else {
       return false;
@@ -216,5 +247,11 @@ class AppClient {
   }
   get id() {
     return this._id;
+  }
+  get disconnected() {
+    return this._disconnected;
+  }
+  markAsDisconnected() {
+    this._disconnected = true;
   }
 }

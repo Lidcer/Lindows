@@ -8,7 +8,6 @@ interface State {
   hostId?: string;
   joinId: string;
   connected: boolean;
-  input: string;
 }
 
 export class SocketHostTest extends NetworkBaseWindow<State> {

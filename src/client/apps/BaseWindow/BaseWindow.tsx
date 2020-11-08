@@ -54,6 +54,7 @@ import "./baseWindows.scss";
 import { LindowError } from "../../utils/util";
 import { FileSystemFile } from "../../utils/FileSystemDirectory";
 import { AppOptions } from "../../../shared/Websocket";
+import { getNotification } from "../../components/Desktop/Notifications";
 const DEFAULT_APP_IMAGE = "/assets/images/unknown-app.svg";
 
 export interface IBaseWindowProps {
@@ -1461,6 +1462,12 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         break;
     }
   };
+  raiseNotification(title?: string, content?: string, icon?: string) {
+    const notf = getNotification();
+    if (notf) {
+      notf.raise(this, title, content, icon);
+    }
+  }
 
   get minimized() {
     return this.state.options.minimized;

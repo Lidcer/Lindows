@@ -2,11 +2,12 @@ import { pushUniqToArray, randomString, removeFromArray } from "../../shared/uti
 import { AppOptions } from "../../shared/Websocket";
 import { IS_DEV } from "../config";
 import { WebSocket } from "../websocket/SocketHandler";
+const s = new Map<string, SocketIO.Socket>();
 
 interface ClientApp extends AppOptions {
   appId: string;
   host: SocketIO.Socket;
-  listeners: SocketIO.Socket[];
+  listeners: Map<string, SocketIO.Socket>;
 }
 
 const appIDs = new Map<string, ClientApp>();
@@ -24,11 +25,12 @@ export function setupAppWebsocket(websocket: WebSocket) {
       IS_DEV && console.error("Unable to destory app");
       return;
     }
-    for (const listener of clientApp.listeners) {
-      listener.emit("app-destroyed", appIDs);
+    for (const [_, listener] of clientApp.listeners) {
+      listener.emit("app-destroyed", clientApp.appId);
     }
     appIDs.delete(clientApp.appId);
     appClient.delete(clientApp.host);
+    clientApp.listeners.clear();
   };
 
   websocket.onPromise("app-host", async (client, appOptions: AppOptions) => {
@@ -48,7 +50,7 @@ export function setupAppWebsocket(websocket: WebSocket) {
       appId: randomId,
       appName: appOptions.appName,
       maxConnections: appOptions.maxConnections,
-      listeners: [],
+      listeners: new Map(),
     };
     appIDs.set(randomId, clientApp);
     appClient.set(client, clientApp);
@@ -59,10 +61,10 @@ export function setupAppWebsocket(websocket: WebSocket) {
     if (typeof clientId !== "string") throw new Error("provide client id");
     const app = appClient.get(client);
     if (!app) throw new Error(`You aren't hosting any app`);
-    const c = app.listeners.find(c => c.id === clientId);
+    const c = app.listeners.get(clientId);
     if (!c) throw new Error("client under this id is not connected!");
-    removeFromArray(app.listeners, c);
-    console.log("emitting", app.appId, c);
+    app.listeners.delete(clientId);
+
     c.emit("app-destroyed", app.appId);
     app.host.emit("app-client-disconnected", c.id);
   });
@@ -80,18 +82,18 @@ export function setupAppWebsocket(websocket: WebSocket) {
     const clientApp = appIDs.get(appId);
     if (!clientApp) throw new Error("Not found");
     if (clientApp.appName !== appName) throw new Error("Wrong app provided");
-    if (clientApp.listeners.length > clientApp.maxConnections) throw new Error("Connection is full");
-
-    const result = pushUniqToArray(clientApp.listeners, client);
-    if (result) {
+    if (clientApp.listeners.size > clientApp.maxConnections) throw new Error("Connection is full");
+    const id = client.id;
+    const exist = clientApp.listeners.has(id);
+    clientApp.listeners.set(id, client);
+    if (!exist) {
       const disconnected = (appId: string) => {
         if (appId || appId !== clientApp.appId) {
           return;
         }
-        const success = removeFromArray(clientApp.listeners, client);
-        if (success) {
-          clientApp.host.emit("app-client-disconnected", client.id);
-        }
+        const e = clientApp.listeners.has(id);
+        if (!e) return;
+        clientApp.host.emit("app-client-disconnected", client.id);
       };
       client.on("disconnect", disconnected);
       client.on("app-disconnet", disconnected);
@@ -103,14 +105,14 @@ export function setupAppWebsocket(websocket: WebSocket) {
     const clientApp = appClient.get(client);
     if (!clientApp) throw new Error("You need to host app before you can broadcast");
     const toBroadcast = ["app-host-on", clientApp.appName, clientApp.appId, ...args];
-    for (const iterator of clientApp.listeners) {
-      iterator.emit.apply(iterator, toBroadcast);
+    for (const [_, listener] of clientApp.listeners) {
+      listener.emit.apply(listener, toBroadcast);
     }
   });
   websocket.onPromise("app-host-emit", async (client, websocketID, ...args) => {
     const clientApp = appClient.get(client);
     if (!clientApp) throw new Error("You need to host app before you can broadcast");
-    const e = clientApp.listeners.find(s => s.id === websocketID);
+    const e = clientApp.listeners.get(websocketID);
     if (!e) throw new Error("Receiver not found!");
     const toBroadcast = ["app-host-on", clientApp.appName, clientApp.appId, ...args];
     e.emit.apply(e, toBroadcast);
@@ -120,11 +122,20 @@ export function setupAppWebsocket(websocket: WebSocket) {
     if (typeof appId !== "string") throw new Error("Please provide app id");
     const clientApp = appIDs.get(appId);
     if (!clientApp) throw new Error("App does not exist!");
-    const exist = clientApp.listeners.indexOf(client) !== -1;
+    const exist = clientApp.listeners.has(client.id);
     if (!exist) throw new Error("You do not have access to this connection");
     clientApp.host.emit.apply(clientApp.host, ["app-client-on", client.id, ...args]);
   });
-}
+  websocket.onPromise("app-disconnet", async (client, appId, ...args) => {
+    if (typeof appId !== "string") throw new Error("Please provide app id");
+    const clientApp = appIDs.get(appId);
+    if (!clientApp) throw new Error("App does not exist!");
+    const id = client.id;
+    const exist = clientApp.listeners.get(client.id);
+    if (!exist) throw new Error("You do not have access to this connection");
+    clientApp.listeners.delete(id);
 
-(global as any).appIDs = appIDs;
-(global as any).appClient = appClient;
+    exist.emit("app-destroyed", clientApp.appId);
+    clientApp.host.emit("app-client-disconnected", exist.id);
+  });
+}

@@ -17,15 +17,13 @@ const regkey = "__notificationsBlockers";
 export class NotificationSystem {
   private eventEmitter = new EventEmitter();
   private blocked: string[] = [];
-  private processor: Processor;
   constructor() {
     attachToWindowIfDev("notif", this);
     const blockers = internal.system.registry.getRootItem(regkey, internal.systemSymbol);
     if (blockers && Array.isArray(blockers.data)) {
       this.blocked = blockers.data;
     }
-    this.processor = internal.system.processor;
-    if (!this.processor.ready) {
+    if (!internal.system.processor.ready) {
       throw new Error("processor is not ready");
     }
   }
@@ -47,7 +45,7 @@ export class NotificationSystem {
 
   raise(sender: BaseWindow, title: string, content?: string, icon?: string) {
     const senderString = sender.getManifest().fullAppName;
-    const found = this.processor.runningApps.find(d => d.object === sender);
+    const found = internal.system.processor.runningApps.find(d => d.object === sender);
     if (!found) {
       MessageBox._anonymousShow("Notification cannot be displayed. Unknown origin of the app", "Security Violation");
       throw new Error("Unknown origin of the app");
