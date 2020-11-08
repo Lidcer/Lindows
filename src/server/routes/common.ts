@@ -141,3 +141,36 @@ export async function getTokenData(req?: Request, token?: string): Promise<IJWTA
   }
   return null;
 }
+
+export function getIpFromRequest(req: Request) {
+  return req.header("x-forwarded-for") || req.connection.remoteAddress || req.ip || "";
+}
+
+export async function setToken(req: Request, res: Response, token: string) {
+  req.session.token = token;
+  res.header(TOKEN_HEADER, token);
+  await saveSession(req);
+}
+
+export function getToken(req: Request) {
+  return getTokenFromSession(req) || getTokenFromHeader(req);
+}
+
+export function getTokenFromHeader(req: Request) {
+  return req.header(TOKEN_HEADER);
+}
+
+export function getTokenFromSession(req: Request) {
+  return req.session.token;
+}
+
+export function saveSession(req: Request) {
+  return new Promise<boolean>(resolve => {
+    req.session.save(err => {
+      if (err) {
+        logger.error("Unable to save session", err);
+      }
+      return resolve();
+    });
+  });
+}

@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import ipInfo from "ipinfo";
 import { IIPResponse } from "../../../shared/ApiUsersRequestsResponds";
+import { getIpFromRequest } from "../common";
 
 export function apiIp(req: Request, res: Response) {
   const response: IIPResponse = {};
-  const ip = req.ip.match(/\d.*/g);
+  const ip = getIpFromRequest(req).match(/\d.*/g);
   if (!ip) {
     response.error = "Unable to get IP info";
     return res.status(200).json(response);

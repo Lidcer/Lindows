@@ -58,6 +58,10 @@ import {
   rGetTokenData,
   IJWTAccount,
   IJWVerificationCode,
+  getIpFromRequest,
+  setToken,
+  getToken,
+  getTokenFromHeader,
 } from "../common";
 import { logger } from "../../database/EventLog";
 
@@ -88,7 +92,7 @@ export async function registerUser(req: Request, res: Response) {
 
   try {
     logger.debug(`Registering user`);
-    const user = await registerUserInDatabase(request.username, request.email, request.password, req.ip);
+    const user = await registerUserInDatabase(request.username, request.email, request.password, getIpFromRequest(req));
     const tokenData: IJWVerificationCode = {
       id: user.id,
       exp: Date.now() + HOUR,
@@ -99,7 +103,7 @@ export async function registerUser(req: Request, res: Response) {
     mailService
       .sendVerification(request.email, {
         id: user.id,
-        ip: req.ip,
+        ip: getIpFromRequest(req),
         username: user.username,
         verificationURL,
         reason: "Someone registered to our webpage",
@@ -133,7 +137,7 @@ export async function loginUser(req: Request, res: Response) {
   logger.debug(`User found`, user.username);
 
   try {
-    if (!spamProtector.addIP(req.ip)) return respondWithError(res, 429, "To many requests");
+    if (!spamProtector.addIP(getIpFromRequest(req))) return respondWithError(res, 429, "To many requests");
     const verified = await verifyPassword(request.password, user.password);
     if (!verified) return respondWithError(res, 400, "Incorrect password");
   } catch (error) {
@@ -148,17 +152,18 @@ export async function loginUser(req: Request, res: Response) {
   const data = getClientAccount(user);
   const jwtToken = jwt.sign(jwtTokenData, PRIVATE_KEY);
 
+  await setToken(req, res, jwtToken);
+
   response.success = data;
   response.message = "User loggined";
   logger.debug(`User loggined`, response);
-  res.header(TOKEN_HEADER, jwtToken);
   res.status(200).json(response);
-  req.session.token = jwtToken;
 }
 
 //Check user
 export async function checkUser(req: Request, res: Response) {
-  logger.debug(`Checking user`, req.headers[TOKEN_HEADER]);
+  const usedToken = getToken(req);
+  logger.debug(`Checking user`, usedToken);
   const decoded: IJWTAccount = await rGetTokenData(req, res);
   if (!decoded) return;
   let user: UserModifiable;
@@ -174,9 +179,9 @@ export async function checkUser(req: Request, res: Response) {
     success: getClientAccount(user),
   };
   logger.debug(`User checked`, response);
-  const usedToken = req.header(TOKEN_HEADER);
+
   if (usedToken) {
-    req.session.token = usedToken;
+    await setToken(req, res, usedToken);
   }
   res.status(200).json(response);
   user.lastOnlineAt = Date.now();
@@ -277,7 +282,7 @@ export async function changeEmail(req: Request, res: Response) {
     await mailService
       .sendNewVerification(user.email, {
         id: user.id,
-        ip: req.ip,
+        ip: getIpFromRequest(req),
         username: user.username,
         verificationURL,
         reason: "Someone requested change email on our webpage",
@@ -325,7 +330,7 @@ export async function resetPasswordLink(req: Request, res: Response) {
     mailService
       .sendNewPasswordReset(request.email, {
         id: user.id,
-        ip: req.ip,
+        ip: getIpFromRequest(req),
         username: user.username,
         verificationURL,
         reason: "Someone requested password reset on our webpage",
@@ -413,7 +418,7 @@ export async function deleteAccount(req: Request, res: Response) {
 }
 
 export async function checkOutTemporarilyToken(req: Request, res: Response) {
-  const token = req.headers[TOKEN_HEADER];
+  const token = getTokenFromHeader(req);
   logger.debug("Checking token", token);
   const isTokenBlackListedResult = await isTokenBlackListed(token as string);
   if (isTokenBlackListedResult) return respondWithError(res, 400, "This token has already been used");
@@ -427,11 +432,11 @@ export async function checkOutTemporarilyToken(req: Request, res: Response) {
 }
 
 export async function temporarilyTokenAccountAltering(req: Request, res: Response) {
-  logger.debug("Checking temporary token", req.headers[TOKEN_HEADER]);
+  const token = getTokenFromHeader(req);
+  logger.debug("Checking temporary token", token);
   const response: IResponse<string> = {};
   const decoded = (await rGetTokenData(req, res, true, temporaryToken)) as IJWVerificationCode;
   if (!decoded) return;
-  const token = req.headers[TOKEN_HEADER];
   try {
     const isTokenBlackListedResult = await isTokenBlackListed(token as string);
     if (isTokenBlackListedResult) return respondWithError(res, 400, "This token has already been used");
