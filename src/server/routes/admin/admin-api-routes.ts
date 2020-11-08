@@ -2,7 +2,7 @@ import { Router, Request } from "express";
 
 import { logger } from "../../database/EventLog";
 import { TOKEN_HEADER } from "../../../shared/constants";
-import { IJWTAccount, getTokenData, getIpFromRequest } from "../common";
+import { IJWTAccount, getTokenData, getIpFromRequest, getToken } from "../common";
 import { MongooseUserSchema, getUserById, UserModifiable } from "../users/users-database";
 import { checkUser, resetPasswordLink } from "../users/users-responses";
 import {
@@ -131,7 +131,8 @@ export function setupAdminApi(router: Router) {
 }
 
 export async function isUserAdmin(req: Request): Promise<UserModifiable | null> {
-  const token = req.header(TOKEN_HEADER) || req.session.token;
+  const token = getToken(req);
+  console.log("is user admin", token, ",-- should be token")
   if (!token) {
     logger.warn(`${getIpFromRequest(req)} tried to access admin panel`);
     return null;

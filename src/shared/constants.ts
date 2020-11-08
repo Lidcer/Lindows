@@ -1,4 +1,4 @@
-export const TOKEN_HEADER = "Authorization";
+export const TOKEN_HEADER = "x-auth-token";
 
 export const SECOND = 1000;
 export const MINUTE = SECOND * 60;

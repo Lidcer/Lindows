@@ -22,7 +22,6 @@ export function setupAppWebsocket(websocket: WebSocket) {
       clientApp = appIDs.get(appId);
     }
     if (!clientApp) {
-      IS_DEV && console.error("Unable to destory app");
       return;
     }
     for (const [_, listener] of clientApp.listeners) {

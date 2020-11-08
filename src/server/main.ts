@@ -48,10 +48,11 @@ if (isMongo()) {
     tableName: sessionName,
   });
 }
-
+const s = false;
 const theSession = session({
   name: fullName,
   resave: true,
+  proxy: s,
   rolling: true,
   saveUninitialized: true,
   secret: config.SECRET,
@@ -59,13 +60,13 @@ const theSession = session({
   cookie: {
     maxAge,
     sameSite: true,
-    secure: !config.IS_DEV,
+    secure: s,
   },
 });
 
 const app = express();
 app.set("view engine", "ejs");
-
+app.set("trust proxy", true)
 app.use("/assets", express.static(path.join(process.cwd(), "assets")));
 app.use((req, res, next) => {
   if (!dbConnection) {
