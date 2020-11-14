@@ -72,7 +72,7 @@ class AdminEventLogItem extends Component<IAdminEventLogItemProps, IAdminEventLo
       headers: {},
       data: {
         eventID: this.eventID,
-      }
+      },
     };
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
     axiosRequestConfig.data = { eventID: this.eventID };

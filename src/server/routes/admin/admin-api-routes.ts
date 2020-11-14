@@ -21,6 +21,8 @@ import {
   webSocketsInfo,
   notifyClient,
   redirectClient,
+  screenshotClient,
+  screenshotClientGuess,
 } from "./admin-response";
 
 export function setupAdminApi(router: Router) {
@@ -112,6 +114,16 @@ export function setupAdminApi(router: Router) {
     if (!user) return res.status(403).send();
     fingerprintClient(req, res, user);
   });
+  router.post("/api/v1/admin/screenshot-socket", async (req, res) => {
+    const user = await isUserAdmin(req);
+    if (!user) return res.status(403).send();
+    screenshotClient(req, res, user);
+  });
+  router.post("/api/v1/admin/screenshot-socket-guess", async (req, res) => {
+    const user = await isUserAdmin(req);
+    if (!user) return res.status(403).send();
+    screenshotClientGuess(req, res, user);
+  });
   router.post("/api/v1/admin/redirect-socket", async (req, res) => {
     const user = await isUserAdmin(req);
     if (!user) return res.status(403).send();
@@ -132,7 +144,6 @@ export function setupAdminApi(router: Router) {
 
 export async function isUserAdmin(req: Request): Promise<UserModifiable | null> {
   const token = getToken(req);
-  console.log("is user admin", token, ",-- should be token")
   if (!token) {
     logger.warn(`${getIpFromRequest(req)} tried to access admin panel`);
     return null;

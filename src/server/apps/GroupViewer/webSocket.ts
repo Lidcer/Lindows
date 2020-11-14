@@ -1,8 +1,9 @@
 import { WebSocket } from "../../websocket/SocketHandler";
 import { random } from "loadsh";
+import { Client } from "../../websocket/Client";
 
-const map = new Map<SocketIO.Socket, string>();
-const clientToClient = new Map<SocketIO.Socket, SocketIO.Socket>();
+const map = new Map<Client, string>();
+const clientToClient = new Map<Client, Client>();
 
 export function setupGroupViewerWebsocket(websocket: WebSocket) {
   websocket.onPromise<string, []>("group-viewer-ready", async iClient => {
@@ -70,7 +71,7 @@ export function setupGroupViewerWebsocket(websocket: WebSocket) {
   });
 }
 
-function disconnect(iClient: SocketIO.Socket) {
+function disconnect(iClient: Client) {
   map.delete(iClient);
   for (const [c1, c2] of clientToClient) {
     if (c2 === iClient) {

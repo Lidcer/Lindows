@@ -233,7 +233,7 @@ export class FileSystemDirectory {
         directoriesMap.set(this, directoriesMapBackup);
         rootMap.set(this, rootMapBackup);
         upperPath.set(this, upperPathBackup);
-        upperData.contents.set(directoriesMapBackup.name, this)
+        upperData.contents.set(directoriesMapBackup.name, this);
         throw error;
       }
       return;

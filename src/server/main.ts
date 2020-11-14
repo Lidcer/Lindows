@@ -1,5 +1,4 @@
 import express from "express";
-import { listen } from "socket.io";
 import path from "path";
 import { apiRouter } from "./routes/api-router";
 import { pagesRouter } from "./routes/pages-router";
@@ -19,12 +18,13 @@ import { setupGroupViewerWebsocket } from "./apps/GroupViewer/webSocket";
 import { isMongo, isMySql } from "./database/modifiable";
 import { IS_DEV } from "./config";
 import { setupAppWebsocket } from "./apps/appComunnicate";
+import { setupUserWebsocket } from "./routes/users/users-web-socket-handler";
 const MongoDBStore = mongoGBStore(session);
 const SequelizeStore = sequelizeGBStore(session.Store);
 
 export const name = "Lindows";
 export const version = "0.0.1 Alpha";
-export const fullName = `${name} ,${version}`;
+export const fullName = `${name}, ${version}`;
 const sessionName = "Lindows_sessions";
 
 console.info(`*******************************************`);
@@ -66,14 +66,14 @@ const theSession = session({
 
 const app = express();
 app.set("view engine", "ejs");
-app.set("trust proxy", true)
+app.set("trust proxy", true);
 app.use("/assets", express.static(path.join(process.cwd(), "assets")));
-app.use((req, res, next) => {
-  if (!dbConnection) {
-    return res.render("failedToBoot.ejs");
-  }
-  next();
-});
+// app.use((req, res, next) => {
+//   if (!dbConnection) {
+//     return res.render("failedToBoot.ejs");
+//   }
+//   next();
+// });
 app.use(theSession);
 app.use(apiRouter());
 app.use(staticsRouter());
@@ -83,9 +83,9 @@ const http = app.listen(config.SERVER_PORT, () => {
   console.log(`App listening on port ${config.SERVER_PORT}!`);
 });
 
-const io = listen(http);
-export const websocket = new WebSocket(io);
+export const websocket = new WebSocket(http);
 
+setupUserWebsocket(websocket);
 if (IS_DEV) {
   setupLypeWebsocket(websocket);
 }

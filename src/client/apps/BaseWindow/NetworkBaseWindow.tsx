@@ -1,6 +1,6 @@
 import { removeFromArray } from "../../../shared/utils";
 import { AppOptions } from "../../../shared/Websocket";
-import { Network } from "../../services/system/NetworkSystem";
+import { ClientSocket } from "../../services/system/NetworkSystem";
 import { BaseWindow, IBaseWindowProps, IWindow } from "./BaseWindow";
 
 export interface NetworkBaseWindow<B = {}> extends BaseWindow<B> {
@@ -42,8 +42,8 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
       }
     }
     if (!STATIC) {
-      this.network.socket.on("connection", this._connectionChange);
-      this.network.socket.on("disconnect", this._connectionChange);
+      this.network.on("connection", this._connectionChange);
+      this.network.on("disconnect", this._connectionChange);
     }
   }
 
@@ -56,8 +56,8 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
       }
     }
     if (!STATIC) {
-      this.network.socket.on("connection", this._connectionChange);
-      this.network.socket.on("disconnect", this._connectionChange);
+      this.network.on("connection", this._connectionChange);
+      this.network.on("disconnect", this._connectionChange);
     }
 
     if (this._hostId) {
@@ -69,7 +69,7 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   }
 
   emit(...args: any[]) {
-    if (this.connectionId && this.network.socket.connected) {
+    if (this.connectionId && this.network.connected) {
       const arg = ["app-client-emit", this.connectionId, ...args];
       return this.network.emitPromise.apply(this.network, arg);
     }
@@ -77,21 +77,21 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   }
 
   broadcastServer(...args: any[]) {
-    if (this.network.socket.connected) {
+    if (this.network.connected) {
       const arg = ["app-host-broadcast", ...args];
-      this.network.socket.emit.apply(this.network.socket, arg);
+      this.network.emit.apply(this.network, arg);
     }
   }
   broadcast(...args: any[]) {
-    if (this.network.socket.connected) {
+    if (this.network.connected) {
       for (const client of this.clients) {
         const arg = ["app-host-broadcast", client.id, ...args];
-        this.network.socket.emit.apply(this.network.socket, arg);
+        this.network.emit.apply(this.network, arg);
       }
     }
   }
   private _connectionChange() {
-    if (!this.network.socket.connected) {
+    if (!this.network.connected) {
       if (this._connectionId) {
         this._connectionId = null;
         if (this.onSocketHostDisconnected) {
@@ -160,19 +160,19 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
       maxConnections,
     };
     const hostId = await this.network.emitPromise<string, [AppOptions]>("app-host", appOptions);
-    this.network.socket.on("app-client-on", this._onSocketClientReceived);
-    this.network.socket.on("app-client-connected", this._onClientConnected);
-    this.network.socket.on("app-client-disconnected", this._onClientDisconnect);
+    this.network.on("app-client-on", this._onSocketClientReceived);
+    this.network.on("app-client-connected", this._onClientConnected);
+    this.network.on("app-client-disconnected", this._onClientDisconnect);
 
     this._hostId = hostId;
     return this._hostId;
   }
   destroyHost() {
     if (this._hostId) {
-      this.network.socket.emit("app-destroy");
-      this.network.socket.removeListener("app-client-on", this._onSocketClientReceived);
-      this.network.socket.removeListener("app-client-connected", this._onClientConnected);
-      this.network.socket.removeListener("app-client-disconnected", this._onClientDisconnect);
+      this.network.emit("app-destroy");
+      //this.network.removeListener("app-client-on", this._onSocketClientReceived);
+      //this.network.removeListener("app-client-connected", this._onClientConnected);
+      //this.network.removeListener("app-client-disconnected", this._onClientDisconnect);
       this._hostId = null;
     }
   }
@@ -180,16 +180,18 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
   async connectHost(id: string) {
     await this.network.emitPromise<string, [string, string]>("app-connect", this.getManifest().fullAppName, id);
     this._connectionId = id;
-    this.network.socket.on("app-host-on", this._onSocketHostReceived);
-    this.network.socket.on("app-destroyed", this._onHostDisconnected);
+    this.network.on("app-host-on", this._onSocketHostReceived);
+    this.network.on("app-destroyed", this._onHostDisconnected);
   }
   async disconnectHost() {
     if (this._connectionId) {
       try {
         await this.network.emitPromise<string, [string]>("app-disconnet", this._connectionId);
-      } catch (_) { /* ignored */};
-      this.network.socket.removeListener("app-host-on", this._onSocketHostReceived);
-      this.network.socket.removeListener("app-destroyed", this._onHostDisconnected);
+      } catch (_) {
+        /* ignored */
+      }
+      //this.network.removeListener("app-host-on", this._onSocketHostReceived);
+      //this.network.removeListener("app-destroyed", this._onHostDisconnected);
       this._connectionId = null;
     }
   }
@@ -215,13 +217,13 @@ export class NetworkBaseWindow<B = {}> extends BaseWindow<B> {
 
 export class AppClient {
   private _disconnected = false;
-  constructor(private network: Network, private _id: string) {}
+  constructor(private network: ClientSocket, private _id: string) {}
 
   /** send something to client
    * @param args
    */
   async emit<T extends any[]>(...args: T): Promise<boolean> {
-    if (this.network.socket.connected) {
+    if (this.network.connected) {
       const arg = ["app-host-emit", this._id, ...args];
       try {
         await this.network.emitPromise.apply(this.network, arg);
@@ -238,7 +240,7 @@ export class AppClient {
    * @param args
    */
   async disconnect() {
-    if (this.network.socket.connected) {
+    if (this.network.connected) {
       await this.network.emitPromise("app-host-disconnect-client", this.id);
       return true;
     } else {

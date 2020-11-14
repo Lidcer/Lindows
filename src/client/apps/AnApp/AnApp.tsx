@@ -108,10 +108,8 @@ export class AnApp extends BaseWindow<State> {
     }
   };
 
-  raiseNotification = () => {
-    if (this.notification) {
-      this.notification.raise(this, AnApp.manifest.fullAppName, this.variables.message || "notification");
-    }
+  raiseNotification2 = () => {
+    this.raiseNotification("test", this.variables.message || "notification");
   };
 
   renderInside() {
@@ -142,7 +140,7 @@ export class AnApp extends BaseWindow<State> {
           <button onClick={this.minimize}>minimize</button>
         </div>
 
-        <button onClick={this.raiseNotification}>Raise notification</button>
+        <button onClick={this.raiseNotification2}>Raise notification</button>
       </AnAppWarper>
     );
   }

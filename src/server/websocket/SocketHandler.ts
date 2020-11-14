@@ -1,106 +1,92 @@
 import { attachDebugMethod } from "../devDebugger";
 import { logger } from "../database/EventLog";
-import { getUserById, MongooseUserSchema, UserModifiable } from "../routes/users/users-database";
-import { getTokenData } from "../routes/common";
 import { pushUniqToArray, removeFromArray } from "../../shared/utils";
 import { SocketValidator } from "./WebsocketSecurity";
-import { IWebsocketPromise } from "../../shared/Websocket";
+import { isPromiseWebsocket } from "../../shared/Promise";
+import { Server } from "http";
+import { listen } from "socket.io";
+import { IS_DEV } from "../config";
+import { Client } from "./Client";
 
-type WebsocketCallback = (client: SocketIO.Socket, ...args: any[] | any) => void;
-type WebsocketCallbackPromise = (client: SocketIO.Socket, ...args: any[] | any) => Promise<any>;
-
-interface SocketPromise<A = undefined> {
-  resolve: (a: A) => void;
-  reject: (error: Error) => void;
-  status: IWebsocketPromise["status"];
-}
+type WebsocketCallback = (client: Client, ...args: any[] | any) => void;
+type WebsocketCallbackPromise = (client: Client, ...args: any[] | any) => Promise<any>;
 
 export class WebSocket {
-  private clients: SocketIO.Socket[] = [];
-  private active = new Map<SocketIO.Socket, boolean>();
+  private socketServer: SocketIO.Server;
+  private clients: Client[] = [];
   private callbacks = new Map<string, WebsocketCallback[]>();
-  private promiseCallback = new Map<string, WebsocketCallbackPromise[]>();
-  private userModifiables = new Map<SocketIO.Socket, UserModifiable>();
+  private promiseCallback = new Map<string, WebsocketCallbackPromise>();
   readonly socketValidator = new SocketValidator(this);
 
-  constructor(socketServer: SocketIO.Server) {
+  constructor(server: Server) {
+    this.socketServer = listen(server);
     attachDebugMethod("webSocket", this);
     logger._setWebSocket(this);
-    socketServer.on("connection", client => {
+    this.socketServer.on("connection", c => {
+      const client = new Client(c);
       logger.debug("[WebSocket]", "connected", client.id);
       this.clients.push(client);
 
-      const values: string[] = [];
-
-      for (const [value] of this.callbacks) {
-        values.push(value);
-      }
-      for (const [value] of this.promiseCallback) {
-        values.push(value);
-      }
-      for (const value of values) {
-        this.updateEventListenersOnAllClients(value);
+      for (const [value, fns] of this.callbacks) {
+        client.on(value, (...args) => {
+          for (const fn of fns) {
+            fn.apply(fn, [client, ...args]);
+          }
+        });
       }
 
       client.on("disconnect", () => {
-        this.active.delete(client);
-        client.removeAllListeners();
         removeFromArray(this.clients, client);
         logger.debug("[WebSocket]", "disconnected", client.id);
       });
 
-      client.on("focused", active => {
-        if (!this.socketValidator.validateBoolean(client, active)) return;
-        this.active.set(client, active);
-      });
+      client.on("promise", async (promise, ...args) => {
+        this.socketValidator.validateObject(client, promise);
 
-      client.on("ping-request", arg => {
-        if (!this.socketValidator.validateUndefined(client, arg)) return;
-        client.emit("ping-response");
-      });
+        if (!isPromiseWebsocket(promise)) return;
+        if (promise.status !== "pending") return;
 
-      client.on("authenticate", async (token: string) => {
-        if (!this.socketValidator.validateString(client, token)) return;
-        const decode = await getTokenData(undefined, token);
-        if (!decode) {
-          return client.emit("authenticate-failed", "Invalid token");
+        const promiseCallback = this.promiseCallback.get(promise.value);
+        if (!promiseCallback) {
+          promise.reject = {
+            message: "unknown value!",
+          };
+          promise.status = "rejected";
+
+          client.emit("promise", promise);
+          return;
         }
         try {
-          let user: UserModifiable;
-          for (const [_, schema] of this.userModifiables) {
-            if (schema.id.toString() === decode.id) {
-              user = schema;
-              break;
-            }
-          }
-          if (!user) {
-            user = await getUserById(decode.id);
-          }
+          const r = [client, ...args];
 
-          if (!user) throw new Error("User does not exist");
-          this.userModifiables.set(client, user);
-          return client.emit("authenticate-success", `Authentication succeeded Welcome ${user.displayedName}`);
+          const result = await promiseCallback.apply(this, r);
+          if (client.connected) {
+            promise.status = "fulfilled";
+            promise.resolve = result;
+            client.emit("promise", promise);
+          }
+          return;
         } catch (error) {
-          return client.emit("authenticate-failed", "Invalid token");
+          if (IS_DEV) {
+            console.error(error);
+          }
+          if (client.connected) {
+            promise.status = "rejected";
+            promise.reject = {
+              message: error.message || "Unknown error",
+            };
+            if (IS_DEV && error.stack) {
+              promise.reject.stack = error.stack;
+            }
+            client.emit("promise", promise);
+          }
         }
-      });
-
-      client.on("unauthenticate", async (und: undefined) => {
-        if (!this.socketValidator.validateUndefined(client, und)) return;
-        this.userModifiables.delete(client);
       });
     });
   }
 
-  isPromise(promise: IWebsocketPromise): promise is IWebsocketPromise {
-    if (typeof promise !== "object") return false;
-    if (!promise.id) return false;
-    if (!promise.status) return false;
-    return true;
-  }
-
-  isClientActive(client: SocketIO.Socket) {
-    return !!this.active.get(client);
+  getAllClients() {
+    return [...this.clients];
   }
 
   broadcast(message: string, arg1?: any, arg2?: any, arg3?: any) {
@@ -112,98 +98,40 @@ export class WebSocket {
     }
   }
 
-  on<T extends any[]>(value: string, callback: (client: SocketIO.Socket, ...args: T) => void) {
-    const callbacks = this.callbacks.get(value) || [];
-    const indexOf = callbacks.indexOf(callback);
-    if (indexOf === -1) callbacks.push(callback);
-    this.updateEventListenersOnAllClients(value);
-    this.callbacks.set(value, callbacks);
+  on<T extends any[]>(value: string, callback: (client: Client, ...args: T) => void) {
+    const callbackFunction = this.callbacks.get(value) || [];
+    pushUniqToArray(callbackFunction, callback);
+    this.callbacks.set(value, callbackFunction);
   }
 
-  onPromise<A, T extends any[]>(value: string, callback: (client: SocketIO.Socket, ...args: T) => Promise<A>) {
+  onPromise<A, T extends any[]>(value: string, callback: (client: Client, ...args: T) => Promise<A>) {
     if (!(callback instanceof (async () => {}).constructor)) {
       throw new Error("Promise callback expected");
     }
 
-    const callbacks = this.promiseCallback.get(value) || [];
-    pushUniqToArray(callbacks, callback);
-    this.updateEventListenersOnAllClients(value);
-    this.promiseCallback.set(value, callbacks);
+    const promiseFn = this.promiseCallback.get(value);
+    if (promiseFn) throw new Error(`Used value: "${value}" Already exist!`);
+    this.promiseCallback.set(value, callback);
   }
 
-  removeListiner(value: string, callback: (client: SocketIO.Socket, ...args: any[]) => void) {
-    const callbacks = this.callbacks.get(value) || [];
-    const indexOf = callbacks.indexOf(callback);
-    if (indexOf !== -1) callbacks.splice(indexOf, 1);
-    this.updateEventListenersOnAllClients(value);
-    this.callbacks.delete(value);
-  }
-
-  private updateEventListenersOnAllClients<T extends any[]>(value: string) {
-    const callbacks = this.callbacks.get(value) || [];
-    const promiseCallbacks = this.promiseCallback.get(value) || [];
-
-    for (const client of this.clients) {
-      client.removeAllListeners(value);
-      client.on(value, async (...args: T) => {
-        let promise: IWebsocketPromise | undefined = undefined;
-        if (args.length && this.isPromise(args[0])) {
-          promise = args.shift();
-        }
-        if (!!promise) {
-          for (const cb of promiseCallbacks) {
-            try {
-              const result = await cb.apply(this, [client, ...args]);
-              const responsePromise: IWebsocketPromise = {
-                id: promise.id,
-                resolve: result,
-                status: "fulfilled",
-              };
-              if (!client.disconnected) {
-                client.emit(`${value}-${promise.id}`, responsePromise);
-              }
-            } catch (error) {
-              const responsePromise: IWebsocketPromise = {
-                id: promise.id,
-                reject: {
-                  message: "Unknown error",
-                },
-                status: "rejected",
-              };
-
-              if (error && error.message) {
-                responsePromise.reject.message = error.message;
-              }
-              if (!client.disconnected) {
-                client.emit(`${value}-${promise.id}`, responsePromise);
-              }
-            }
-          }
-        } else {
-          for (const cb of callbacks) {
-            cb.apply(this, [client, ...args]);
-          }
-        }
-      });
+  // removeListener(value: string, callback: (client: SocketIO.Socket, ...args: any[]) => void) {
+  //   const promiseCallback = this.callbacks.get(value);
+  //   if (promiseCallback) {
+  //     removeFromArray(promiseCallback, callback);
+  //   }
+  // }
+  removePromiseListener(value: string, callback: (client: Client, ...args: any[]) => void) {
+    const promiseCallback = this.promiseCallback.get(value);
+    if (promiseCallback === callback) {
+      this.promiseCallback.delete(value);
     }
-  }
-
-  getClientUserSchema(client: SocketIO.Socket): UserModifiable {
-    return this.userModifiables.get(client);
-  }
-
-  getUserSchemaClients(userSchema: MongooseUserSchema): SocketIO.Socket[] {
-    const clients: SocketIO.Socket[] = [];
-    for (const [client, us] of this.userModifiables) {
-      if (us && userSchema.id.toString() === us.id.toString()) clients.push(client);
-    }
-    return clients;
   }
 
   getClientByRoles(role: string) {
-    const clients: SocketIO.Socket[] = [];
-    for (const [client, us] of this.userModifiables) {
-      if (us && us.roles.includes(role)) clients.push(client);
+    const clients: Client[] = [];
+    const clientsToScan = this.clients.filter(c => c.userModifiable);
+    for (const client of clientsToScan) {
+      if (client.userModifiable && client.userModifiable.roles.includes(role)) clients.push(client);
     }
     return clients;
   }

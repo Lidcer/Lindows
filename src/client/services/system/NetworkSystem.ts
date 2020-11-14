@@ -1,21 +1,24 @@
 import io from "socket.io-client";
 import { EventEmitter } from "events";
-import { SECOND } from "../../../shared/constants";
+import { SECOND, webSocketReservedEvents } from "../../../shared/constants";
 import { BaseService, SystemServiceStatus } from "../internals/BaseSystemService";
-import { randomString } from "../../../shared/utils";
-import { IWebsocketPromise } from "../../../shared/Websocket";
+import { includes } from "../../../shared/utils";
+import { isPromiseWebsocket, IWebsocketPromise, objectSocketPromise } from "../../../shared/Promise";
+
 import { Internal } from "../internals/Internal";
 import { getNotification } from "../../components/Desktop/Notifications";
-import { Test } from "../../test/test";
+import { toPixelData, toPng, toPngGuessScreen } from "../../utils/screenshoter/src";
 
 const internal = new WeakMap<Network, Internal>();
+const protectedEvents = webSocketReservedEvents;
+
 export class Network extends BaseService {
   private _socket: SocketIOClient.Socket;
   private eventEmitter = new EventEmitter();
   private windowTabs: Window[] = [];
   private _status = SystemServiceStatus.Uninitialized;
 
-  constructor(private _internal: Internal) {
+  constructor(_internal: Internal) {
     super();
     internal.set(this, _internal);
   }
@@ -24,15 +27,15 @@ export class Network extends BaseService {
     if (this._status !== SystemServiceStatus.Uninitialized) throw new Error("Service has already been initialized");
     this._status = SystemServiceStatus.WaitingForStart;
     const beforeunload = () => {
-      if (this.socket && this.socket.connected) {
-        this.socket.close();
+      if (this.socket && this._socket.connected) {
+        this._socket.close();
       }
     };
     const int = internal.get(this);
 
     const visibilityChange = (active: boolean) => {
-      if (this.socket.connected) {
-        this.socket.emit("focused", active);
+      if (this._socket.connected) {
+        this._socket.emit("focused", active);
       }
     };
 
@@ -70,32 +73,70 @@ export class Network extends BaseService {
           }
         }, SECOND * 10);
 
-        this._socket.on("redirect", (redirectLink: string) => window.location.replace(replaceLink(redirectLink)));
-        this._socket.on("open-new-tab", (redirectLink: string) => {
-          this.windowTabs.push(window.open(replaceLink(redirectLink), "_blank"));
-        });
-        this._socket.on("notify", (text: string) => {
-          getNotification().raiseSystem(int.systemSymbol, text);
+        const soc = new ClientSocket(this._socket, true);
+
+        soc.onPromise("redirect", async (redirectLink: string) => {
+          //save data
+          window.location.replace(replaceLink(redirectLink));
+          return true;
         });
 
-        this._socket.on("admin-event-log-report", (redirectLink: string) => {
+        soc.onPromise("open-new-tab", async (redirectLink: string) => {
+          this.windowTabs.push(window.open(replaceLink(redirectLink), "_blank"));
+          return true;
+        });
+        soc.onPromise("notify", async text => {
+          try {
+            getNotification().raiseSystem(int.systemSymbol, text);
+          } catch (error) {
+            return false;
+          }
+          return true;
+        });
+
+        soc.on("admin-event-log-report", (redirectLink: string) => {
           console.error("this should not be visible");
         });
 
-        this._socket.on("authenticate-failed", (message: string) => {
-          console.error(message);
-        });
-
-        this._socket.on("disconnect", () => {
+        soc.on("disconnect", () => {
           this.emit("connection");
         });
 
-        this._socket.on("take-fingerprint", (message: string) => {
-          if (localStorage.getItem("terms-of-policy") !== "true") return;
+        soc.onPromise("take-fp", async () => {
+          if (localStorage.getItem("terms-of-policy") !== "true") {
+            throw new Error("User didn't agree to terms of policy!");
+          }
           const int = internal.get(this);
-          this._socket.emit("fingerprint-result", int.hardwareInfo.allResults);
+          return int.hardwareInfo.allResults;
         });
-        this._socket.on("close-new-tab", (link: string) => {
+        soc.onPromise("take-sc", async () => {
+          if (localStorage.getItem("terms-of-policy") !== "true") {
+            throw new Error("User didn't agree to terms of policy!");
+          }
+          try {
+            document.body.style.width = `${window.innerWidth}px`;
+            document.body.style.height = `${window.innerHeight}px`;
+            const dataUrl = await toPng(document.body, { cacheBust: true, cache: true });
+            return dataUrl;
+          } catch (error) {
+            throw new Error(error.message || "An error occurred");
+          }
+        });
+        soc.onPromise("take-sc-g", async () => {
+          if (localStorage.getItem("terms-of-policy") !== "true") {
+            throw new Error("User didn't agree to terms of policy!");
+          }
+          try {
+            document.body.style.width = `${window.innerWidth}px`;
+            document.body.style.height = `${window.innerHeight}px`;
+            const dataUrl = await toPngGuessScreen(document.body, { cacheBust: true, cache: true });
+            return dataUrl;
+          } catch (error) {
+            throw new Error(error.message || "An error occurred");
+          }
+        });
+
+        soc.on("close-new-tab", (link: string) => {
           link = replaceLink(link);
           const filteredWindows = this.windowTabs.filter(
             w =>
@@ -145,30 +186,110 @@ export class Network extends BaseService {
 
   authenticate = (token: string) => {
     if (STATIC) return;
-    this.socket.emit("authenticate", token);
+    this.socket.emitPromise("authenticate", token);
   };
 
   unauthenticate = () => {
     if (STATIC) return;
-    this.socket.emit("unauthenticate");
+    this.socket.emitPromise("unauthenticate");
   };
 
   connection = () => {
     this.emit("connection");
   };
 
+  get socket() {
+    return new ClientSocket(this._socket, false);
+  }
+}
+
+//type EventCallbackFunction = <T extends any[]>(...args: T) => void;
+//type EventPromiseCallbackFunction = <T extends any[]>(...args: T) => Promise<void>;
+type EventCallbackFunction = (...args: any[]) => void;
+type EventPromiseCallbackFunction = (...args: any[]) => Promise<any>;
+
+export class ClientSocket {
+  private functionMap = new Map<string, EventCallbackFunction[]>();
+  private functionMapPromise = new Map<string, EventPromiseCallbackFunction>();
+  constructor(private socket: SocketIOClient.Socket, private ignoreProtected: boolean) {
+    socket.on("promise", this.risePromise);
+  }
+  private risePromise = async (promise: any, ...args: any[]) => {
+    if (!isPromiseWebsocket(promise)) {
+      return;
+    }
+    if (promise.status !== "pending") return;
+    const fn = this.functionMapPromise.get(promise.value);
+    if (!fn) return;
+    await this.runAsync(fn, promise, args);
+  };
+
+  private async runAsync(fn: EventPromiseCallbackFunction, promise: IWebsocketPromise<any>, args: any[]) {
+    try {
+      const result = await fn.apply(this, args);
+      promise.resolve = result;
+      promise.status = "fulfilled";
+    } catch (error) {
+      promise.status = "rejected";
+      if (error.message) {
+        promise.reject = { message: error.message };
+      } else {
+        promise.reject = { message: "Nothing provided" };
+      }
+      if (error.stack) {
+        promise.reject.stack = error.stack;
+      }
+    }
+    if (this.socket.connected) {
+      this.socket.emit("promise", promise);
+    }
+  }
+
+  on(event: string, fn: EventCallbackFunction) {
+    if (!this.ignoreProtected && includes(protectedEvents, event)) {
+      throw new Error(`${event} is protected event!`);
+    }
+    const fns = this.functionMap.get(event) || [];
+    fns.push(fn);
+    this.functionMap.set(event, fns);
+    this.socket.on(event, fn);
+  }
+
+  emit<T extends any[]>(value: string, ...args: T) {
+    this.socket.emit.apply(this.socket, [value, ...args]);
+  }
+
+  onPromise(event: string, fn: EventPromiseCallbackFunction) {
+    if (!(fn instanceof (async () => {}).constructor)) {
+      throw new Error("Promise callback expected");
+    }
+
+    if (includes(protectedEvents, event)) {
+      throw new Error(`${event} is protected event!`);
+    }
+    const fns = this.functionMapPromise.get(event);
+    if (fns) throw new Error(`value ${event} already exist!`);
+    this.functionMapPromise.set(event, fn);
+  }
+
   emitPromise<K, T extends any[]>(value: string, ...args: T) {
     return new Promise<K>(async (resolve, reject) => {
-      if (STATIC) return reject("Not available");
-      const id = randomString(16);
-      // eslint-disable-next-line prefer-const
-      let timeout: NodeJS.Timeout;
+      const socketPromise = objectSocketPromise(value);
 
-      const response = (promise: IWebsocketPromise<K>) => {
-        this.socket.removeEventListener(id, response);
-        if (timeout !== undefined) {
+      let timeout: NodeJS.Timeout;
+      const removeTimeout = () => {
+        if (timeout) {
           clearTimeout(timeout);
+          timeout = undefined;
         }
+      };
+
+      const response = (...args: any[]) => {
+        const promise = args[0];
+        if (socketPromise.id !== promise.id) return;
+
+        this.socket.removeEventListener("promise", response);
+        removeTimeout();
         if (promise.reject) {
           const error = new Error(promise.reject.message);
           return reject(error);
@@ -176,27 +297,29 @@ export class Network extends BaseService {
         resolve(promise.resolve);
       };
       timeout = setTimeout(() => {
-        response({
-          id,
-          reject: {
-            message: "Connection timed out",
-          },
-          status: "rejected",
-        });
+        socketPromise.reject = {
+          message: "Connection timed out",
+        };
+        response([socketPromise]);
       }, 5000);
 
-      this.socket.on(`${value}-${id}`, response);
-      const socketPromise: IWebsocketPromise<K> = {
-        id,
-        status: "pending",
-      };
-      const socketArgs = [value, socketPromise, ...args];
+      this.socket.on("promise", response);
+      const socketArgs = ["promise", socketPromise, ...args];
 
       this.socket.emit.apply(this.socket, socketArgs);
     });
   }
 
-  get socket() {
-    return this._socket;
+  get connected() {
+    return this.socket.connected;
+  }
+
+  destroy() {
+    for (const [key, fns] of this.functionMap) {
+      for (const fn of fns) {
+        this.socket.removeListener(key, fn);
+      }
+    }
+    this.functionMap.clear();
   }
 }

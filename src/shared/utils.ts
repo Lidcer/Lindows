@@ -26,6 +26,9 @@ export function removeFromArray<I = any>(array: I[], item: I): boolean {
   array.splice(indexOf, 1);
   return true;
 }
+export function includes<I = any>(array: I[], item: I): boolean {
+  return array.indexOf(item) !== -1;
+}
 
 export function pushUniqToArray<I = any>(array: I[], item: I): boolean {
   const indexOf = array.indexOf(item);
@@ -100,7 +103,7 @@ export class Stringify {
           return `<Failed: ${error.message}>`;
         }
       default:
-        return "<unknwon>";
+        return "<unknown>";
     }
   }
 

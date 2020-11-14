@@ -202,9 +202,21 @@ export class AdminWebSocketMain extends Component<IAdminWebSocketItemProps, IAdm
   };
 
   getWebSocketInfo(webSocketInfo: IWebSocketInfo) {
+    const me = () => {
+      if (this.props.adminWebSocket.socket.id === webSocketInfo.id) {
+        return <span>(You)</span>;
+      }
+      return null;
+    };
+
     const getAccountInfo = (iAccount?: IAdminAccount) => {
       if (!iAccount) return null;
-      return <span>| {iAccount.username}</span>;
+      return (
+        <span>
+          | {iAccount.username}
+          {me()}
+        </span>
+      );
     };
 
     const a = webSocketInfo.active;

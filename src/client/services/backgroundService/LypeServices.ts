@@ -13,6 +13,7 @@ import {
 } from "../../../shared/ApiLypeRequestsResponds";
 import { EventEmitter } from "events";
 import { IAccountInfo } from "../system/Account";
+import { ClientSocket } from "../system/NetworkSystem";
 
 export interface ILypeAccountInfo extends IAccountInfo {
   customStatus?: string;
@@ -45,6 +46,7 @@ export class LypeService extends BaseService {
   private _pendingRequest: ILypeAccount[] = [];
   private _blocked: ILypeAccount[] = [];
   private eventEmitter = new EventEmitter();
+  private socket: ClientSocket;
   // private notificationService: NotificationService;
 
   constructor() {
@@ -59,10 +61,6 @@ export class LypeService extends BaseService {
   destroy() {
     internal.system.account.removeListener("login", this.login);
     internal.system.account.removeListener("logout", this.logout);
-
-    internal.system.network.socket.removeListener("lype-friend-request", this.socketFriendRequestAdd);
-    internal.system.network.socket.removeListener("lype-friend-remove", this.socketFriendRemove);
-    internal.system.network.socket.removeListener("lype-friend-add", this.socketFriendAdd);
 
     for (const thing in LypeServiceState) {
       internal.broadcaster.removeListener(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
@@ -116,10 +114,10 @@ export class LypeService extends BaseService {
     for (const thing in LypeServiceState) {
       internal.broadcaster.on(`${this.SERVICE_NAME}-${thing}`, this.broadcaster);
     }
-
-    internal.system.network.socket.on("lype-friend-request", this.socketFriendRequestAdd);
-    internal.system.network.socket.on("lype-friend-remove", this.socketFriendRemove);
-    internal.system.network.socket.on("lype-friend-add", this.socketFriendAdd);
+    this.socket = internal.system.network.socket;
+    this.socket.on("lype-friend-request", this.socketFriendRequestAdd);
+    this.socket.on("lype-friend-remove", this.socketFriendRemove);
+    this.socket.on("lype-friend-add", this.socketFriendAdd);
 
     const token = internal.system.account.token;
     if (!token) {

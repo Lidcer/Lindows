@@ -1,20 +1,19 @@
-import { pushUniqToArray, randomString, removeFromArray } from "../../shared/utils";
+import { randomString } from "../../shared/utils";
 import { AppOptions } from "../../shared/Websocket";
-import { IS_DEV } from "../config";
+import { Client } from "../websocket/Client";
 import { WebSocket } from "../websocket/SocketHandler";
-const s = new Map<string, SocketIO.Socket>();
 
 interface ClientApp extends AppOptions {
   appId: string;
-  host: SocketIO.Socket;
-  listeners: Map<string, SocketIO.Socket>;
+  host: Client;
+  listeners: Map<string, Client>;
 }
 
 const appIDs = new Map<string, ClientApp>();
-const appClient = new Map<SocketIO.Socket, ClientApp>();
+const appClient = new Map<Client, ClientApp>();
 
 export function setupAppWebsocket(websocket: WebSocket) {
-  const appDestroy = (host?: SocketIO.Socket, appId?: string) => {
+  const appDestroy = (host?: Client, appId?: string) => {
     let clientApp: ClientApp;
     if (host) {
       clientApp = appClient.get(host);

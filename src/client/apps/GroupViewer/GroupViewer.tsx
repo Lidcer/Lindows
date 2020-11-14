@@ -6,6 +6,7 @@ import { attachToWindowIfDev } from "../../essential/requests";
 import { GroupViewerCanvas, ICanvasInteraction } from "./GroupViewerCanvas";
 import { toPixelData } from "../../utils/screenshoter/src/index";
 import { GroupViewerStyled } from "./GroupViewerStyled";
+import { ClientSocket } from "../../services/system/NetworkSystem";
 
 export interface IGroupViewerState {
   userId: string;
@@ -28,8 +29,6 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
   };
 
   private readonly EVENT_DELAY = 0;
-  private selected: BaseWindow;
-  private interval: number;
   private canvasInteraction?: ICanvasInteraction;
   private lastSentEvent = 0;
   private cursor = document.createElement("img");
@@ -72,25 +71,18 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   shown() {
     this.obtainId();
-    this.network.socket.on("disconnect", this.unexpectedDisconnect);
-    this.network.socket.on("group-viewer-password-check", this.passwordCheck);
-    this.network.socket.on("group-viewer-establish", this.establish);
-    this.network.socket.on("group-viewer-display", this.onDisplay);
-    this.network.socket.on("group-viewer-event", this.onEvent);
+    this.network.on("disconnect", this.unexpectedDisconnect);
+    this.network.on("group-viewer-password-check", this.passwordCheck);
+    this.network.on("group-viewer-establish", this.establish);
+    this.network.on("group-viewer-display", this.onDisplay);
+    this.network.on("group-viewer-event", this.onEvent);
   }
 
   closing() {
-    this.network.socket.removeEventListener("disconnect", this.unexpectedDisconnect);
-    this.network.socket.removeEventListener("group-viewer-password-check", this.passwordCheck);
-    this.network.socket.removeEventListener("group-viewer-establish", this.establish);
-    this.network.socket.removeEventListener("group-viewer-display", this.onDisplay);
-    this.network.socket.removeEventListener("group-viewer-event", this.onEvent);
     document.body.style.width = ``;
     document.body.style.height = ``;
     this.removeCursor();
-    if (this.network.socket.connected) {
-      this.network.socket.emit("group-viewer-clean");
-    }
+    this.network.emit("group-viewer-clean");
     // this.network.removeListener('group-viewer-connected', this.connectResponse);
   }
 
@@ -141,7 +133,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   reGenerate() {
     this.setVariables({ userPassword: randomString(6) });
-    this.network.socket.on("disconnect", this.unexpectedDisconnect);
+    this.network.on("disconnect", this.unexpectedDisconnect);
     //  this.network.emit('group-viewer-ready', this.variables.userId);
   }
 
@@ -211,10 +203,10 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
+          if (this.network.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit("group-viewer-event", "mousemove", {
+            this.network.emit("group-viewer-event", "mousemove", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -237,10 +229,10 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
+          if (this.network.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit("group-viewer-event", "mousedown", {
+            this.network.emit("group-viewer-event", "mousedown", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -263,10 +255,10 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
+          if (this.network.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit("group-viewer-event", "mouseup", {
+            this.network.emit("group-viewer-event", "mouseup", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -289,10 +281,10 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
+          if (this.network.connected) {
             const { left, top } = (ev.target as HTMLCanvasElement).getBoundingClientRect();
 
-            this.network.socket.emit("group-viewer-event", "click", {
+            this.network.emit("group-viewer-event", "click", {
               x: ev.clientX - left,
               y: ev.clientY - top,
               pageX: ev.pageX,
@@ -315,8 +307,8 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
-            this.network.socket.emit("group-viewer-event", "keypress", {
+          if (this.network.connected) {
+            this.network.emit("group-viewer-event", "keypress", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -332,8 +324,8 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
-            this.network.socket.emit("group-viewer-event", "keyup", {
+          if (this.network.connected) {
+            this.network.emit("group-viewer-event", "keyup", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -348,8 +340,8 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
         const date = Date.now();
         if (this.lastSentEvent + this.EVENT_DELAY < date) {
           this.lastSentEvent = date;
-          if (this.network.socket.connected) {
-            this.network.socket.emit("group-viewer-event", "keydown", {
+          if (this.network.connected) {
+            this.network.emit("group-viewer-event", "keydown", {
               altKey: ev.altKey,
               bubbles: ev.bubbles,
               char: ev.char,
@@ -413,7 +405,7 @@ export class GroupViewer extends BaseWindow<IGroupViewerState> {
 
   passwordCheck = (password: string, socketId: string) => {
     const result = password === this.variables.userPassword;
-    this.network.socket.emit("group-viewer-password-response", result, socketId);
+    this.network.emit("group-viewer-password-response", result, socketId);
   };
 
   renderInside() {

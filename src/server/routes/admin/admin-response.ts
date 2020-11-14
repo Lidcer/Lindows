@@ -7,11 +7,9 @@ import * as disk from "node-disk-info";
 import { respondWithError } from "../common";
 import { WebSocket } from "../../websocket/SocketHandler";
 import Joi from "@hapi/joi";
-import { SECOND } from "../../../shared/constants";
 import fingerprintjs from "fingerprintjs2";
 
 let websocket: WebSocket;
-const fingerprintedSockets = new Map<string, fingerprintjs.Component[]>();
 
 export function setupAdminWebsocketController(wb: WebSocket) {
   websocket = wb;
@@ -278,7 +276,6 @@ interface IWebSocketInfo {
   ip: string;
   active: boolean;
   account?: IAdminAccount;
-  fingerprint?: fingerprintjs.Component[];
 }
 
 export async function webSocketsInfo(req: Request, res: Response, account: UserModifiable) {
@@ -288,15 +285,14 @@ export async function webSocketsInfo(req: Request, res: Response, account: UserM
     const websocketInfo: IWebSocketInfo[] = [];
 
     for (const clientRaw of clientsRaw) {
-      const schema = websocket.getClientUserSchema(clientRaw);
-      const fingerprint = fingerprintedSockets.get(clientRaw.id);
+      const schema = clientRaw.userModifiable;
       let stripedAccountData = null;
       if (schema) {
         stripedAccountData = stripAccountData(schema);
       }
-      const ip = clientRaw.conn.remoteAddress;
-      const active = websocket.isClientActive(clientRaw);
-      websocketInfo.push({ id: clientRaw.id, active, ip, account: stripedAccountData, fingerprint });
+      const ip = clientRaw.remoteAddress;
+      const active = clientRaw.active;
+      websocketInfo.push({ id: clientRaw.id, active, ip, account: stripedAccountData });
     }
 
     response.success = websocketInfo;
@@ -330,16 +326,15 @@ export async function webSocketInfo(req: Request, res: Response, account: UserMo
       return respondWithError(res, 400, "Socket does not exist");
     }
 
-    const schema = websocket.getClientUserSchema(clientRaw);
+    const schema = clientRaw.userModifiable;
 
-    const fingerprint = fingerprintedSockets.get(clientRaw.id);
     let socketAccount: IAdminAccount = null;
     if (schema) {
       socketAccount = stripAccountData(schema);
     }
-    const ip = clientRaw.conn.remoteAddress;
-    const active = websocket.isClientActive(clientRaw);
-    response.success = { id: clientRaw.id, ip, active, account: socketAccount, fingerprint };
+    const ip = clientRaw.remoteAddress;
+    const active = clientRaw.active;
+    response.success = { id: clientRaw.id, ip, active, account: socketAccount };
     logger.log(
       "[ADMIN]",
       `User ${account.username} : ${account.id.toString()} obtained websocket info ${clientRaw.id}`,
@@ -408,7 +403,7 @@ export function disconnectClient(req: Request, res: Response, account: UserModif
   if (!client) {
     return respondWithError(res, 400, "Client is not connected to websocket");
   }
-  const schema = websocket.getClientUserSchema(client);
+  const schema = client.userModifiable;
 
   client.disconnect();
 
@@ -425,7 +420,7 @@ export function disconnectClient(req: Request, res: Response, account: UserModif
   res.status(200).json(response);
 }
 
-export function fingerprintClient(req: Request, res: Response, account: UserModifiable) {
+export async function fingerprintClient(req: Request, res: Response, account: UserModifiable) {
   const joi$fingerprint = Joi.object<IWebSocket>({
     socketID: Joi.string(),
   });
@@ -439,40 +434,65 @@ export function fingerprintClient(req: Request, res: Response, account: UserModi
     return respondWithError(res, 400, "Client is not connected to websocket");
   }
 
-  let to: NodeJS.Timeout = undefined;
-
-  const success = (result: fingerprintjs.Component[]) => {
-    if (!to) clearTimeout(to);
-    if (!websocket.socketValidator.validateArray(client, result)) return;
-    fingerprintedSockets.set(client.id, result);
-    const schema = websocket.getClientUserSchema(client);
-    let stripedAccountData: IAdminAccount;
-    if (schema) {
-      stripedAccountData = stripAccountData(schema);
-    }
-    const active = websocket.isClientActive(client);
-
-    const response: IResponse<IWebSocketInfo> = {
-      success: {
-        id: client.id,
-        ip: client.conn.remoteAddress,
-        active,
-        account: stripedAccountData,
-        fingerprint: result,
-      },
-      message: `Fingerprint's taken`,
+  try {
+    const result = await client.emitPromise<fingerprintjs.Component>("take-fp");
+    const response: IResponse<fingerprintjs.Component> = {
+      success: result,
     };
     res.status(200).json(response);
-  };
-
-  client.on("fingerprint-result", success);
-  client.emit("take-fingerprint", success);
-  to = setTimeout(() => {
-    client.removeListener("fingerprint-result", success);
-    return respondWithError(res, 400, "Unable to fingerprint client");
-  }, SECOND * 10);
+  } catch (error) {
+    return respondWithError(res, 400, (error && error.message) || "Something went wrong");
+  }
 }
-export function notifyClient(req: Request, res: Response, account: UserModifiable) {
+export async function screenshotClient(req: Request, res: Response, account: UserModifiable) {
+  const joi$fingerprint = Joi.object<IWebSocket>({
+    socketID: Joi.string(),
+  });
+
+  const result = joi$fingerprint.validate(req.body);
+  if (result.error) {
+    return adminJoiErrorResponse(res, result);
+  }
+  const client = websocket.getClients().find(w => w.id === req.body.socketID);
+  if (!client) {
+    return respondWithError(res, 400, "Client is not connected to websocket");
+  }
+
+  try {
+    const result = await client.emitPromise<string>("take-sc");
+    const response: IResponse<string> = {
+      success: result,
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    return respondWithError(res, 400, (error && error.message) || "Something went wrong");
+  }
+}
+export async function screenshotClientGuess(req: Request, res: Response, account: UserModifiable) {
+  const joi$fingerprint = Joi.object<IWebSocket>({
+    socketID: Joi.string(),
+  });
+
+  const result = joi$fingerprint.validate(req.body);
+  if (result.error) {
+    return adminJoiErrorResponse(res, result);
+  }
+  const client = websocket.getClients().find(w => w.id === req.body.socketID);
+  if (!client) {
+    return respondWithError(res, 400, "Client is not connected to websocket");
+  }
+
+  try {
+    const result = await client.emitPromise<string>("take-sc-g");
+    const response: IResponse<string> = {
+      success: result,
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    return respondWithError(res, 400, (error && error.message) || "Something went wrong");
+  }
+}
+export async function notifyClient(req: Request, res: Response, account: UserModifiable) {
   const joi$fingerprint = Joi.object<WebScoketNotification>({
     socketID: Joi.string(),
     notification: Joi.string(),
@@ -487,11 +507,21 @@ export function notifyClient(req: Request, res: Response, account: UserModifiabl
     return respondWithError(res, 400, "Client is not connected to websocket");
   }
 
-  client.emit("notify", req.body.notification);
-  const response: IResponse<string> = {
-    success: `Notification sent`,
-  };
-  res.status(200).json(response);
+  const response: IResponse<string> = {};
+  try {
+    const resultFromClient = (await client.emitPromise("notify", req.body.notification)) as boolean;
+    if (result && resultFromClient) {
+      response.success = `Notification sent "${req.body.notification}"`;
+      res.status(200).json(response);
+      return;
+    }
+  } catch (error) {
+    response.error = error.message;
+    res.status(400).json(response);
+    return;
+  }
+  response.error = `Notification was not sent"`;
+  res.status(400).json(response);
 }
 export function redirectClient(req: Request, res: Response, account: UserModifiable) {
   const joi$fingerprint = Joi.object<WebScoketRedirect>({

@@ -7,3 +7,11 @@ export const DAY = HOUR * 24;
 export const WEEK = DAY * 7;
 export const MONTH = Math.floor(DAY * 30.42);
 export const YEAR = Math.floor(DAY * 365.25);
+
+export const webSocketEvents = {
+  focused: "focused",
+  promise: "promise",
+  authenticate: "authenticate",
+};
+
+export const webSocketReservedEvents = Object.entries(webSocketEvents).map(e => e[1]);

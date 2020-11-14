@@ -13,7 +13,7 @@ import { internal } from "../../services/internals/Internal";
 import { random, clamp } from "lodash";
 import { ReactGeneratorFunction, appConstructorGenerator, launchApp, AppDescription } from "../../essential/apps";
 import { EventEmitter } from "events";
-import { cloneDeep, randomString } from "../../../shared/utils";
+import { cloneDeep, includes, randomString } from "../../../shared/utils";
 import {
   MsgBoxIcon,
   MsgBoxButton,
@@ -48,13 +48,13 @@ import {
 } from "./baseWindowStyled";
 import { alwaysOnTop as alwaysOnTopIndex } from "../../Constants";
 import { WindowEvent } from "./WindowEvent";
-import { Network } from "../../services/system/NetworkSystem";
 import { attachToWindowIfDev } from "../../essential/requests";
 import "./baseWindows.scss";
 import { LindowError } from "../../utils/util";
 import { FileSystemFile } from "../../utils/FileSystemDirectory";
 import { AppOptions } from "../../../shared/Websocket";
 import { getNotification } from "../../components/Desktop/Notifications";
+import { ClientSocket } from "../../services/system/NetworkSystem";
 const DEFAULT_APP_IMAGE = "/assets/images/unknown-app.svg";
 
 export interface IBaseWindowProps {
@@ -164,6 +164,7 @@ const securityKeys = new WeakMap<BaseWindow, symbol>();
 const adminAllowed = new WeakMap<BaseWindow, boolean>();
 
 function overrideProtector(baseWindow: BaseWindow) {
+  const ignore = ["_network", "network"];
   const overrideProtectionShow = (overriddenMethod: string, suggestedMethod: string) => {
     MessageBox.Show(
       baseWindow,
@@ -175,6 +176,7 @@ function overrideProtector(baseWindow: BaseWindow) {
   };
 
   const overrideProtectionBlock = (overriddenMethod: string) => {
+    DEV && console.error(`Detected overried method ${overriddenMethod}`);
     MessageBox.Show(
       baseWindow,
       `System.overrideProtection exception has occurred. ${overriddenMethod}() is system method you are not allowed to override!"`,
@@ -199,6 +201,9 @@ function overrideProtector(baseWindow: BaseWindow) {
   }
   const entries = Object.getOwnPropertyDescriptors(BaseWindow.prototype);
   for (const [key] of Object.entries(entries)) {
+    if (includes(ignore, key)) {
+      continue;
+    }
     //bound methods cannot be protected
     if (!key) continue;
     if (key === "constructor") continue;
@@ -265,6 +270,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   private _destroyed = false;
   private _error?: any;
   private _launchFlags: ILaunchFlags;
+  private _network: ClientSocket;
   private _memorizedState = {
     x: 0,
     y: 0,
@@ -428,6 +434,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         const promise = this.load();
         if (promise instanceof Promise) await promise;
       } catch (error) {
+        DEV && console.error(error);
         this.exit();
         MessageBox._anonymousShow(
           getMessageFromError(error, "An unknown error occurred on load"),
@@ -473,6 +480,7 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
           const promise = this.shown();
           if (promise instanceof Promise) await promise;
         } catch (error) {
+          DEV && console.error(error);
           MessageBox._anonymousShow(
             getMessageFromError(error, "An unknown error occurred on shown"),
             "Error",
@@ -703,7 +711,11 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
   }
 
   get network() {
-    return internal.system.network;
+    if (this._network) {
+      return this._network;
+    }
+    this._network = internal.system.network.socket;
+    return this._network;
   }
 
   /** Sets item in storage but doesn't save
@@ -1262,6 +1274,9 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
         }
       }
       securityKeys.delete(this);
+      if (this._network) {
+        this._network.destroy();
+      }
       this.setState({
         animate: "out",
       });
@@ -1351,7 +1366,6 @@ export abstract class BaseWindow<B> extends React.Component<IBaseWindowProps, IB
       });
       return;
     } else if (launchFile.getType(internal.systemSymbol) !== "lindowApp") {
-      console.log("not not lindows app");
       setTimeout(() => {
         this.exit();
       });
@@ -1659,7 +1673,6 @@ export class MessageBox extends BaseWindow<IMessageBoxState> {
   ) {
     const system = internal.systemSymbol;
     const apps = internal.fileSystem.root.getDirectory("bin", system).getDirectory("apps", system);
-
     const reactGeneratorFunction: ReactGeneratorFunction = (id: number, props?: any) => (
       <MessageBox
         key={id}

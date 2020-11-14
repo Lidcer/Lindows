@@ -1,13 +1,14 @@
 //SocketIO.Socket
 
+import { IWebsocketPromise } from "../../shared/Promise";
 import { logger } from "../database/EventLog";
+import { Client } from "./Client";
 import { WebSocket } from "./SocketHandler";
-import { IWebsocketPromise } from "../../shared/Websocket";
 
 export class SocketValidator {
   constructor(private webSocket: WebSocket) {}
 
-  validateWebSocketPromise(client: SocketIO.Socket, promise: IWebsocketPromise) {
+  validateWebSocketPromise(client: Client, promise: IWebsocketPromise) {
     const error = () => {
       client.disconnect();
       logger.error(
@@ -22,7 +23,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateString(client: SocketIO.Socket, string: string) {
+  validateString(client: Client, string: string) {
     if (typeof string !== "string") {
       client.disconnect();
       logger.error(
@@ -34,7 +35,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateNumber(client: SocketIO.Socket, number: number) {
+  validateNumber(client: Client, number: number) {
     if (typeof number !== "number") {
       client.disconnect();
       logger.error(
@@ -46,7 +47,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateBoolean(client: SocketIO.Socket, boolean: boolean) {
+  validateBoolean(client: Client, boolean: boolean) {
     if (typeof boolean !== "boolean") {
       client.disconnect();
       logger.error(
@@ -58,7 +59,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateBigInt(client: SocketIO.Socket, bigInt: bigint) {
+  validateBigInt(client: Client, bigInt: bigint) {
     if (typeof bigInt !== "bigint") {
       client.disconnect();
       logger.error(
@@ -70,7 +71,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateObject(client: SocketIO.Socket, object: object) {
+  validateObject(client: Client, object: object) {
     if (typeof object !== "object") {
       client.disconnect();
       logger.error(
@@ -82,7 +83,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateArray(client: SocketIO.Socket, array: object[]) {
+  validateArray(client: Client, array: object[]) {
     if (!Array.isArray(array)) {
       client.disconnect();
       logger.error(
@@ -94,7 +95,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateUndefined(client: SocketIO.Socket, und: undefined) {
+  validateUndefined(client: Client, und: undefined) {
     if (und !== undefined) {
       client.disconnect();
       logger.error(
@@ -106,7 +107,7 @@ export class SocketValidator {
     return true;
   }
 
-  validateNull(client: SocketIO.Socket, nu: null) {
+  validateNull(client: Client, nu: null) {
     if (nu !== null) {
       client.disconnect();
       logger.error(
@@ -118,8 +119,8 @@ export class SocketValidator {
     return true;
   }
 
-  private getClientUserId(client: SocketIO.Socket) {
-    const userSchema = this.webSocket.getClientUserSchema(client);
+  private getClientUserId(client: Client) {
+    const userSchema = client.userModifiable;
     let message = "";
     if (userSchema) message = `User ID: ${userSchema.id.toString()}`;
     return message;

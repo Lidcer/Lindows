@@ -3,6 +3,7 @@ import { HTMLNode, HTMLUseElement } from "./interfaces";
 import fontFaces from "./fontFaces";
 import Util from "./util";
 import Images from "./images";
+import { clamp } from "lodash";
 //import { saveAs } from 'file-saver';
 
 async function toSvg(node: HTMLElement, options?: OptionalOptions) {
@@ -61,12 +62,26 @@ async function toSvg(node: HTMLElement, options?: OptionalOptions) {
   return svg;
 }
 
+export async function toPngGuessScreen(node: HTMLElement, options?: OptionalOptions) {
+  options = getOptions(options);
+  const svg = await toSvg(node, options);
+  const image = await Util.makeImage(svg, options);
+  const canvas = document.createElement("canvas");
+  canvas.width = window.screen.width;
+  canvas.height = window.screen.height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(image, Math.abs(window.screenX % window.screen.width), Math.abs(window.screenY % window.screen.width));
+  return canvas.toDataURL();
+}
+
 async function toPixelData(node: HTMLElement, options?: OptionalOptions) {
   const canvas = await draw(node, options || {});
   return canvas.getContext("2d").getImageData(0, 0, Util.width(node), Util.height(node)).data;
 }
 
-async function toPng(node: HTMLElement, options?: OptionalOptions) {
+export async function toPng(node: HTMLElement, options?: OptionalOptions) {
   const canvas = await draw(node, options || {});
   return canvas.toDataURL();
 }
@@ -119,7 +134,6 @@ async function draw(domNode: HTMLElement, options: OptionalOptions) {
         options.canvas.dh || options.height,
       );
     } else {
-      (window as any).broken = image.src;
       ctx.drawImage(image, 0, 0);
     }
   }

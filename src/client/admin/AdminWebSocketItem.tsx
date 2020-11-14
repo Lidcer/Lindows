@@ -8,6 +8,7 @@ import { TOKEN_HEADER } from "../../shared/constants";
 import { IResponse } from "../../shared/ApiUsersRequestsResponds";
 import ReactLoading from "react-loading";
 import AdminFingerprint from "./AdminFingerprint";
+//import { saveAs } from "file-save";
 
 interface IWebSocketInfo {
   id: string;
@@ -20,7 +21,7 @@ interface IWebSocketInfo {
 interface IAdminWebSocketItemState {
   connected: boolean;
   fetching: boolean;
-  fingerprinting: boolean;
+  inProgress: boolean;
   websocket?: IWebSocketInfo;
 }
 
@@ -41,7 +42,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
     this.state = {
       connected: false,
       fetching: false,
-      fingerprinting: false,
+      inProgress: false,
     };
   }
 
@@ -77,7 +78,9 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
       );
       if (!this.mounted) return;
       this.setState({ websocket: response.data.success });
-    } catch (error) {}
+    } catch (error) {
+      this.props.notificationHandler.warn("Request Failed", (error && error.message) || "Unknown error");
+    }
     this.setState({ fetching: false });
   }
 
@@ -87,6 +90,7 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
   }
 
   sendNotification = async () => {
+    this.setState({ inProgress: true });
     const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -102,7 +106,12 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
         axiosRequestConfig,
       );
       if (!this.mounted) return;
-    } catch (error) {}
+      this.props.notificationHandler.info("Request success", response.data.success);
+    } catch (error) {
+      console.error(error);
+      this.props.notificationHandler.warn("Request Failed", (error && error.message) || "Unknown error");
+    }
+    this.setState({ inProgress: false });
   };
   redirect = async () => {
     const token = localStorage.getItem("auth");
@@ -119,10 +128,13 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
         axiosRequestConfig,
       );
       if (!this.mounted) return;
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      this.props.notificationHandler.warn("Request Failed", (error && error.message) || "Unknown error");
+    }
   };
   fingerPrintSocket = async () => {
-    this.setState({ fingerprinting: true });
+    this.setState({ inProgress: true });
     const token = localStorage.getItem("auth");
     const axiosRequestConfig: AxiosRequestConfig = {
       headers: {},
@@ -130,15 +142,54 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
     axiosRequestConfig.headers[TOKEN_HEADER] = token;
 
     try {
-      const response = await Axios.post<IResponse<IWebSocketInfo>>(
+      const response = await Axios.post<IResponse<Fingerprint2.Component[]>>(
         "/api/v1/admin/fingerprint-socket",
         { socketID: this.webSocketID },
         axiosRequestConfig,
       );
       if (!this.mounted) return;
-      this.setState({ websocket: response.data.success });
-    } catch (error) {}
-    this.setState({ fingerprinting: false });
+
+      const state = { ...this.state };
+      state.websocket.fingerprint = response.data.success;
+      this.setState(state);
+    } catch (error) {
+      console.error(error);
+      this.props.notificationHandler.warn("Request Failed", (error && error.message) || "Unknown error");
+    }
+    this.setState({ inProgress: false });
+  };
+  takeScreenshotSocket = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    this.setState({ inProgress: true });
+    const token = localStorage.getItem("auth");
+    const axiosRequestConfig: AxiosRequestConfig = {
+      headers: {},
+    };
+    axiosRequestConfig.headers[TOKEN_HEADER] = token;
+
+    try {
+      const shiftKey = event.shiftKey;
+      const response = await Axios.post<IResponse<string>>(
+        `/api/v1/admin/screenshot-socket${shiftKey ? "-guess" : ""}`,
+        { socketID: this.webSocketID },
+        axiosRequestConfig,
+      );
+      if (!this.mounted) return;
+      const state = { ...this.state };
+      const image = new Image();
+      image.src = response.data.success;
+
+      const w = window.open("");
+      w.document.write(image.outerHTML);
+      // const result = await fetch(response.data.success);
+      // //console.log(response.data.success);
+      // console.log(response)
+      // window.open(result.url);
+      this.setState(state);
+    } catch (error) {
+      console.error(error);
+      this.props.notificationHandler.warn("Request Failed", (error && error.message) || "Unknown error");
+    }
+    this.setState({ inProgress: false });
   };
 
   get webSocket() {
@@ -170,13 +221,16 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
     };
 
     const fingerprint = () => {
-      if (this.state.fingerprinting) {
+      if (this.state.inProgress) {
         return <ReactLoading className='m-2' type={"bars"} color={"#00ff00"} height={50} width={50} />;
       }
       return (
         <>
           <button className='btn btn-terminal' onClick={this.fingerPrintSocket}>
             Take Fingerprint
+          </button>
+          <button className='btn btn-terminal' onClick={this.takeScreenshotSocket}>
+            Take inbrowser-screenshot (BETA)
           </button>
           <button className='btn btn-terminal' onClick={this.sendNotification}>
             Send Notification
@@ -188,10 +242,16 @@ class AdminWebSocketItem extends Component<IAdminWebSocketItemProps, IAdminWebSo
         </>
       );
     };
+    const me = () => {
+      if (this.props.adminWebSocket.socket.id === socket.id) {
+        return <span>You</span>;
+      }
+      return null;
+    };
 
     return (
       <div className='m-2 p-2 d-inline-block border border-terminal'>
-        <h1>{socket.id}</h1>
+        <h1>{me()}</h1>
         <h1>{socket.ip}</h1>
         {getAccount()}
         {this.fingerPrint}

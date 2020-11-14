@@ -11,6 +11,8 @@ import {
 } from "./bootScreenStyled";
 import { inIframe } from "../../utils/util";
 import { SystemServiceStatus } from "../../services/internals/BaseSystemService";
+import { clamp, random } from "lodash";
+import Axios from "axios";
 
 interface IBootScreenProps {
   next: (bios?: "bios" | "bootLindows") => void;
@@ -18,6 +20,7 @@ interface IBootScreenProps {
 }
 
 interface IBootScreenState {
+  ramTest: string;
   messageToDisplay: string[];
   goToBios: boolean;
 }
@@ -33,27 +36,8 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     this.state = {
       messageToDisplay: [],
       goToBios: false,
+      ramTest: "",
     };
-  }
-  render() {
-    return (
-      <BootScreenStyled>
-        <BootScreenTop>
-          <BootScreenInfo>
-            <span>Lidcer BIOS v1.0, in browser bios</span>
-            <span>Copyright (C) 2020-2020, Lidcer Software, Inc </span>
-          </BootScreenInfo>
-          <img src='./assets/images/LidcerBiosLogo.svg' alt='biosLogo' />
-        </BootScreenTop>
-        <BootScreenMiddle>
-          <ul>{this.messages}</ul>
-        </BootScreenMiddle>
-        <BootScreenBottom>
-          <span>08/3/2020-489/Id2/WSD6</span>
-          {this.biosMessage}
-        </BootScreenBottom>
-      </BootScreenStyled>
-    );
   }
 
   get biosMessage() {
@@ -71,7 +55,57 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
       return <li key={i}>{m}</li>;
     });
   }
-  componentDidMount() {
+  get ramTest() {
+    return this.state.ramTest;
+  }
+
+  doRamTest() {
+    return new Promise(resolve => {
+      const ram = ((navigator as any).deviceMemory || 1) * 1000;
+      let currentValue = 0;
+      const setState = () => {
+        this.setState({ ramTest: `Testing ram ${currentValue}mb/${ram}mb` });
+      };
+
+      const increment = async () => {
+        currentValue = clamp(random(currentValue + 1, currentValue + 25), 0, ram);
+        setState();
+        if (currentValue === ram) {
+          try {
+            const result = await Axios.post<{ ready: boolean }>("/api/v1/ready");
+            const state = { ...this.state };
+            if (result.data.ready) {
+              this.setState({ ramTest: `${this.state.ramTest} Succeeded` });
+              this.forceUpdate();
+              return resolve();
+            } else {
+              this.setState({ ramTest: `${this.state.ramTest} Failed try again later` });
+              return resolve();
+            }
+            this.forceUpdate();
+          } catch (error) {
+            this.setState({ ramTest: `${this.state.ramTest} Failed` });
+            this.forceUpdate();
+          }
+          return;
+        }
+        setTimeout(() => {
+          increment();
+        }, 5);
+      };
+      setState();
+      increment();
+    });
+  }
+
+  async componentDidMount() {
+    internal.on("readyToBoot", this.readyToBoot);
+    internal.on("onServiceReady", this.onServiceReady);
+    internal.on("onServiceFailed", this.onServiceFailed);
+    document.addEventListener("keydown", this.keypress, false);
+    document.addEventListener("touchstart", this.onTouchStart, false);
+    document.addEventListener("touchend", this.onTouchEnd, false);
+
     if (this.timeout === undefined) {
       this.timeout = setTimeout(() => {
         if (!this.error) {
@@ -88,12 +122,6 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     if (internal.ready) {
       this.readyToBoot();
     }
-    internal.on("readyToBoot", this.readyToBoot);
-    internal.on("onServiceReady", this.onServiceReady);
-    internal.on("onServiceFailed", this.onServiceFailed);
-    document.addEventListener("keydown", this.keypress, false);
-    document.addEventListener("touchstart", this.onTouchStart, false);
-    document.addEventListener("touchend", this.onTouchEnd, false);
   }
   componentWillUnmount() {
     if (this.timeout !== undefined) {
@@ -136,7 +164,16 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     }
   };
 
-  readyToBoot = () => {
+  readyToBoot = async () => {
+    if (this.timeout !== undefined) {
+      clearTimeout(this.timeout);
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    const doRamTest = urlParams.get("ram-test") !== null;
+    if (doRamTest && !this.state.ramTest) {
+      await this.doRamTest();
+      window.history.pushState({}, document.title, "/");
+    }
     if (internal.fileSystem.status() === SystemServiceStatus.Failed) {
       const state = { ...this.state };
       this.error = true;
@@ -171,4 +208,25 @@ export class BootScreen extends React.Component<IBootScreenProps, IBootScreenSta
     this.state.messageToDisplay.push(`Failed to initialized ${name}`);
     this.setState(state);
   };
+  render() {
+    return (
+      <BootScreenStyled>
+        <BootScreenTop>
+          <BootScreenInfo>
+            <span>Lidcer BIOS v1.0, in browser bios</span>
+            <span>Copyright (C) 2020-2020, Lidcer Software, Inc </span>
+          </BootScreenInfo>
+          <img src='./assets/images/LidcerBiosLogo.svg' alt='biosLogo' />
+        </BootScreenTop>
+        <BootScreenMiddle>
+          <ul>{this.messages}</ul>
+          <ul>{this.ramTest}</ul>
+        </BootScreenMiddle>
+        <BootScreenBottom>
+          <span>08/3/2020-489/Id2/WSD6</span>
+          {this.biosMessage}
+        </BootScreenBottom>
+      </BootScreenStyled>
+    );
+  }
 }

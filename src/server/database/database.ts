@@ -15,12 +15,13 @@ const options: ConnectionOptions = {
 
 export let dbConnection = false;
 export const mongoose = new Mongoose(); // make monoose optional
-
-const logger = IS_DEV
-  ? function (...args) {
-      console.debug.apply(console, ["database", args]);
-    }
-  : false;
+const shouldLog = false;
+const logger =
+  IS_DEV && shouldLog
+    ? function (...args) {
+        console.debug.apply(console, ["database", args]);
+      }
+    : false;
 export const sql = new Sequelize({
   username: DATABASE_CRIENDTIALS.USERNAME,
   password: DATABASE_CRIENDTIALS.PASSWORD,
