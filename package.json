@@ -102,7 +102,7 @@
     "images-upload-middleware": "^1.1.1",
     "ipinfo": "^1.5.0",
     "jimp": "^0.16.1",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "loadsh": "0.0.4",
     "lodash": "^4.17.20",
     "mobile-detect": "^1.4.4",
